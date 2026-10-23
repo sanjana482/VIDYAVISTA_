@@ -52,31 +52,6 @@ REST_FRAMEWORK={
 }
 SIMPLE_JWT={'ACCESS_TOKEN_LIFETIME':timedelta(minutes=15),'REFRESH_TOKEN_LIFETIME':timedelta(days=7),'ROTATE_REFRESH_TOKENS':True,'BLACKLIST_AFTER_ROTATION':True}
 
-JJAZZMIN_SETTINGS = {
-    "site_title": "VidyaVista Admin",
-    "site_header": "VidyaVista",
-    "site_brand": "VidyaVista",
-    "welcome_sign": "Welcome to VidyaVista Dashboard",
-    "copyright": "VidyaVista",
-    "show_ui_builder": False,
-    "navigation_expanded": True,
-
-    "order_with_respect_to": [
-        "schools",
-        "auth",
-    ],
-
-    "icons": {
-        "schools": "fas fa-school",
-        "schools.school": "fas fa-building",
-        "schools.enquiry": "fas fa-envelope",
-        "schools.locationpage": "fas fa-map-marker-alt",
-        "auth.user": "fas fa-users",
-        "auth.group": "fas fa-user-shield",
-        "token_blacklist": "fas fa-key",
-    },
-}
-
 JAZZMIN_SETTINGS = {
     "site_title": "VidyaVista Admin",
     "site_header": "VidyaVista",
@@ -101,19 +76,30 @@ JAZZMIN_SETTINGS = {
         "token_blacklist": "fas fa-key",
     },
 }
+
+
+# Temporary logging to diagnose production admin errors
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{asctime} {levelname} {name}: {message}",
+            "style": "{",
+        },
+    },
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
+            "formatter": "verbose",
         },
     },
     "loggers": {
-        "django.request": {
+        "django": {
             "handlers": ["console"],
             "level": "ERROR",
-            "propagate": True,
+            "propagate": False,
         },
     },
 }
