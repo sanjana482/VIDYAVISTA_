@@ -2,7 +2,7 @@ from django.db import models
 from django.utils.text import slugify
 
 class School(models.Model):
-    SCHOOL_TYPES=[('Day','Day'),('Day Boarding','Day Boarding'),('Full Boarding','Full Boarding')]
+    SCHOOL_TYPES=[('Day','Day'),('Play School','Play School'),('Full Boarding','Full Boarding')]
     BOARDS=[('CBSE','CBSE'),('ICSE','ICSE'),('IB','IB'),('Cambridge','Cambridge'),('State Board','State Board')]
     GENDERS=[('Co-ed','Co-ed'),('Girls','Girls'),('Boys','Boys')]
     school_id=models.PositiveIntegerField(unique=True, null=True, blank=True, db_column='schoolId')
