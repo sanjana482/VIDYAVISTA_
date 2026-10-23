@@ -25,7 +25,7 @@ const categories = [
     type: "Day Schools",
   },
   {
-    title: "Day + Boarding",
+    title: "Play School",
     description: "Find schools offering both learning options.",
     icon: "🌿",
     color: "bg-[#E5EAF0]",
