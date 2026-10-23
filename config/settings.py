@@ -15,6 +15,8 @@ ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
 ]
+print("DEBUG:", DEBUG)
+print("ALLOWED_HOSTS:", ALLOWED_HOSTS)
 INSTALLED_APPS = [
     'jazzmin','django.contrib.admin','django.contrib.auth','django.contrib.contenttypes','django.contrib.sessions',
     'django.contrib.messages','django.contrib.staticfiles','rest_framework','rest_framework_simplejwt.token_blacklist','corsheaders','schools',
