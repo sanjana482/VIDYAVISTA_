@@ -1,5 +1,5 @@
 "use client";
-
+import { schoolPath } from "../../lib/seo";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -70,13 +70,12 @@ export default function ProfileHero({ school: s, intro, phoneHref, stats }: Prop
           {/* Photo */}
           <div className="relative h-72 overflow-hidden rounded-3xl bg-[#E1F1FA] shadow-xl shadow-[#0A5C91]/10 sm:h-96 lg:h-[475px]">
             <img src={s.image} alt={`${s.name} campus`} className="h-full w-full object-cover" />
-            <button
-              type="button"
-              onClick={() => document.getElementById("photos")?.scrollIntoView({ behavior: "smooth" })}
-              className="absolute bottom-4 left-4 rounded-full bg-white px-4 py-2.5 text-sm font-bold text-[#0B2A47] shadow-lg transition hover:bg-[#E1F1FA]"
-            >
-              📷 View photos
-            </button>
+            <Link
+  href={`${schoolPath(s)}/photos`}
+  className="absolute bottom-4 left-4 rounded-full bg-white px-4 py-2.5 text-sm font-bold text-[#0B2A47] shadow-lg transition hover:bg-[#E1F1FA]"
+>
+  📷 View photos
+</Link>
           </div>
 
           {/* Summary */}
@@ -96,14 +95,21 @@ export default function ProfileHero({ school: s, intro, phoneHref, stats }: Prop
               {intro}
             </p>
 
-            <p className="mt-5 text-sm text-[#5C6A7B]">
+                        <p className="mt-5 text-sm text-[#5C6A7B]">
               {s.reviews > 0 ? (
                 <>
                   <span className="font-extrabold text-[#C8104F]">★ {s.rating}</span> ·{" "}
-                  <a href="#reviews" className="underline underline-offset-2 hover:text-[#0A7BBF]">{s.reviews} parent reviews</a>
+                  <Link href={`${schoolPath(s)}/reviews`} className="underline underline-offset-2 hover:text-[#0A7BBF]">
+                    {s.reviews} parent reviews
+                  </Link>
                 </>
               ) : (
-                <>No reviews yet · <a href="#reviews" className="font-semibold text-[#0A7BBF] hover:underline">Write the first review</a></>
+                <>
+                  No reviews yet ·{" "}
+                  <Link href={`${schoolPath(s)}/reviews`} className="font-semibold text-[#0A7BBF] hover:underline">
+                    Write the first review
+                  </Link>
+                </>
               )}
             </p>
 

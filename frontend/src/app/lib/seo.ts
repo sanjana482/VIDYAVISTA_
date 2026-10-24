@@ -1,4 +1,12 @@
 import type { School } from "../data/schools";
+import type { Metadata } from 'next'
+
+export function schoolMetadata(id: string, section: Section): Metadata {
+  return {
+    title: `${section} | School ${id} | VidyaVista`,
+    description: `${section} details for this school on VidyaVista.`,
+  }
+}
 
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.vidyavista.com").replace(/\/$/, "");
 export const SITE_NAME = "VidyaVista";
@@ -11,6 +19,15 @@ export const slugify = (s: string) =>
 /** SEO friendly path: /schools/maplewood-academy-whitefield-bengaluru-1  (id is always last) */
 export const schoolSlug = (s: School) => `${slugify(`${s.name} ${s.area} ${s.city}`)}-${s.id}`;
 export const schoolPath = (s: School) => `/schools/${schoolSlug(s)}`;
+export const SECTIONS = ["fees", "facilities", "admission", "contact", "photos", "reviews", "faqs"] as const;
+export type Section = typeof SECTIONS[number];
+
+export const SECTION_LABEL: Record<Section, string> = {
+  fees: "Fees", facilities: "Facilities", admission: "Admission", contact: "Contact",
+  photos: "Photos", reviews: "Reviews", faqs: "FAQs",
+};
+export const schoolSectionPath = (s: School, section?: Section) =>
+  section ? `${schoolPath(s)}/${section}` : schoolPath(s);
 
 /** Accepts "1" or "maplewood-academy-whitefield-bengaluru-1" and returns the numeric id. */
 export function idFromParam(param: string): string {

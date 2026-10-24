@@ -335,10 +335,10 @@ export default function SchoolListing({ schools }: { schools: School[] }) {
                       {s.reviews > 0 ? (
                         <>
                           <span className="rounded-lg bg-[#FDE8EF] px-3 py-1.5 text-sm font-extrabold text-[#C8104F]">★ {s.rating} / 5</span>
-                          <Link href={`${schoolPath(s)}#reviews`} className="text-xs text-[#5C6A7B] underline underline-offset-2 hover:text-[#0A7BBF]">{s.reviews} parent reviews</Link>
+                          <Link href={`${schoolPath(s)}/reviews`} className="text-xs text-[#5C6A7B] underline underline-offset-2 hover:text-[#0A7BBF]">{s.reviews} parent reviews</Link>
                         </>
                       ) : (
-                        <Link href={`${schoolPath(s)}#reviews`} className="text-xs text-[#5C6A7B] underline underline-offset-2 hover:text-[#0A7BBF]">No reviews yet</Link>
+                        <Link href={`${schoolPath(s)}/reviews`} className="text-xs text-[#5C6A7B] underline underline-offset-2 hover:text-[#0A7BBF]">No reviews yet</Link>
                       )}
                     </div>
                     <div className="mt-4">
