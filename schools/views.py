@@ -17,7 +17,7 @@ class SchoolViewSet(viewsets.ModelViewSet):
     lookup_url_kwarg='school_id'
     def get_permissions(self): return [AllowAny()] if self.action in ('list','retrieve') else [IsAdminUser()]
     def get_queryset(self):
-        qs=School.objects.all()
+        qs=School.objects.prefetch_related('fee_components')
         if self.action in ('list','retrieve'): qs=qs.filter(isActive=True)
         p=self.request.query_params
         for field in ('city','state','board','type'):

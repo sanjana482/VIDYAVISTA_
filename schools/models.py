@@ -2,7 +2,7 @@ from django.db import models
 from django.utils.text import slugify
 
 class School(models.Model):
-    SCHOOL_TYPES=[('Day','Day'),('Play School','Play School'),('Full Boarding','Full Boarding')]
+    SCHOOL_TYPES=[('Day','Day'),('Play School','Play School'),('Boarding School','Boarding School')]
     BOARDS=[('CBSE','CBSE'),('ICSE','ICSE'),('IB','IB'),('Cambridge','Cambridge'),('State Board','State Board')]
     GENDERS=[('Co-ed','Co-ed'),('Girls','Girls'),('Boys','Boys')]
     school_id=models.PositiveIntegerField(unique=True, null=True, blank=True, db_column='schoolId')
@@ -18,6 +18,8 @@ class School(models.Model):
     rating=models.DecimalField(max_digits=2, decimal_places=1, default=0)
     reviews=models.PositiveIntegerField(default=0)
     fee=models.PositiveIntegerField(default=0)
+    feeMin=models.PositiveIntegerField('Minimum yearly fee (₹)', default=0, help_text='Sabse kam saalana fee, jaise 80000')
+    feeMax=models.PositiveIntegerField('Maximum yearly fee (₹)', default=0, help_text='Sabse zyada saalana fee, jaise 150000')
     facilities=models.JSONField(default=list, blank=True)
     photos=models.PositiveIntegerField(default=0)
     topRated=models.BooleanField(default=False)
@@ -36,7 +38,16 @@ class School(models.Model):
     updated_at=models.DateTimeField(auto_now=True)
     class Meta:
         ordering=['school_id','name']
+    def clean(self):
+            from django.core.exceptions import ValidationError
+            if self.feeMin and self.feeMax and self.feeMax < self.feeMin:
+                raise ValidationError('Maximum fee minimum fee se kam nahi ho sakta.')
+                
     def save(self,*args,**kwargs):
+        
+        if self.feeMin:
+            self.fee=self.feeMin
+        # ... baaki purana code waisa hi rahega    
         if not self.school_id:
             last=School.objects.order_by('-school_id').values_list('school_id',flat=True).first() or 0
             self.school_id=last+1
@@ -92,3 +103,17 @@ class LocationPage(models.Model):
         if not self.slug: self.slug=slugify(self.name)
         super().save(*args,**kwargs)
     def __str__(self): return f'{self.kind}: {self.name}'
+CLASS_CHOICES=[('','All classes'),('Nursery','Nursery'),('KG','KG')]+[(f'Class {n}',f'Class {n}') for n in range(1,13)]
+
+class FeeComponent(models.Model):
+    FREQ=[('One-time','One-time'),('Monthly','Monthly'),('Annually','Annually')]
+    SESSIONS=[('2027-28','2027-28'),('2026-27','2026-27')]
+    school=models.ForeignKey(School,on_delete=models.CASCADE,related_name='fee_components')
+    session=models.CharField(max_length=10,choices=SESSIONS,default='2027-28')
+    class_name=models.CharField('Class',max_length=20,choices=CLASS_CHOICES,blank=True,default='',help_text='Khali = saari classes ke liye')
+    name=models.CharField('Fee name',max_length=120,help_text='jaise Tuition fee, Admission fee, Transport fee')
+    frequency=models.CharField(max_length=10,choices=FREQ,default='Annually')
+    amount=models.PositiveIntegerField('Amount (₹)')
+    class Meta:
+        ordering=['session','class_name','id']
+    def __str__(self): return f'{self.name} - {self.amount}'
