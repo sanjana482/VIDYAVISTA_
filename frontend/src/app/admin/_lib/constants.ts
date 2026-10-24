@@ -1,7 +1,7 @@
 import type { EnquiryStatus } from "./types";
 
 export const BOARDS = ["CBSE", "ICSE", "IB", "Cambridge", "State Board"] as const;
-export const TYPES = ["Day School", "Boarding School", "Day + Boarding"] as const;
+export const TYPES = ["Day School", "Boarding School", "Play School"] as const;
 export const GENDERS = ["Co-ed", "Girls", "Boys"] as const;
 
 export const FACILITY_SUGGESTIONS = [

@@ -62,6 +62,7 @@ const listingSchema = (schools: School[]) => [
   },
 ];
 
+
 export default async function Schools() {
   const schools = await fetchAllSchools();
   const CITIES = citiesOf(schools);

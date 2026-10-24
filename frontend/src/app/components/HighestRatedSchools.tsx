@@ -25,7 +25,7 @@ const ratedSchools = [
     rating: 4.8,
     reviews: 186,
     board: "ICSE",
-    type: "Day + Boarding",
+    type: "Play School",
     location: "Pune",
     grades: "KG – Grade 12",
     fees: "₹85K – ₹1.6L",

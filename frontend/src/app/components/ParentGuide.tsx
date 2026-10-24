@@ -6,7 +6,7 @@ import { useActiveLocation } from "../lib/useActiveLocation";
 const types = [
   { icon: "🏠", title: "Day School", text: "Students attend classes and return home every day. Best when you want your child close to family and a shorter school-hours routine." },
   { icon: "🏫", title: "Boarding School", text: "A fully residential campus with study hours, sports and activities built into the day. Good for independence and a structured routine." },
-  { icon: "🔄", title: "Day + Boarding", text: "Offers both options on one campus, so families can choose day scholar or hostel stay depending on the child's comfort and age." },
+  { icon: "🔄", title: "Play School", text: "Offers both options on one campus, so families can choose day scholar or hostel stay depending on the child's comfort and age." },
 ];
 
 const boards = [
@@ -55,7 +55,7 @@ export default function ParentGuide() {
           Every family looks for something different: a strong academic record, a caring environment, sports and arts, or a board that fits long-term plans. With so many options {active ? `in ${place}` : "across Mumbai, Delhi, Bengaluru, Pune, Hyderabad and Chennai"}, a clear process saves time and avoids last-minute stress. This guide explains school types, boards, fees and what to check before you apply.
         </p>
 
-        <div className="mt-10"><H>Types of schools: day, boarding and day + boarding</H></div>
+        <div className="mt-10"><H>Types of schools: day, boarding and Play School</H></div>
         <div className="mt-5 grid gap-4 md:grid-cols-3">
           {types.map((t) => (
             <div key={t.title} className="rounded-2xl border border-[#E1E7EE] bg-[#F6FAFD] p-6">

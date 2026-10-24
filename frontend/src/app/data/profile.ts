@@ -28,10 +28,27 @@ const CLASSES = [
 
 const ROMAN: Record<string, number> = { I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6, VII: 7, VIII: 8, IX: 9, X: 10, XI: 11, XII: 12 };
 
+function gradeIndex(raw: string): number {
+  const t = raw.toLowerCase().replace(/\b(class|grade|std|standard)\b|\./g, "").replace(/\s+/g, "").trim();
+  if (["nursery", "nur", "prenursery", "playgroup", "pg"].includes(t)) return 0;
+  if (["kg", "lkg", "ukg", "prekg", "jrkg", "srkg"].includes(t)) return 1;
+  const roman = ROMAN[t.toUpperCase()];
+  if (roman) return 1 + roman;
+  const n = parseInt(t, 10);
+  return n >= 1 && n <= 12 ? 1 + n : -1;
+}
+
 function classRange(grades: string): [number, number] {
-  const [a, b] = grades.split("–").map((t) => t.trim());
-  const idx = (t: string) => (t === "Nursery" ? 0 : t === "KG" ? 1 : 1 + ROMAN[t]);
-  return [idx(a), idx(b)];
+  const last = CLASSES.length - 1;
+  const parts = (grades || "")
+    .replace(/pre[\s-]+(nursery|kg)/gi, "pre$1")
+    .split(/\s*(?:–|—|-|\bto\b)\s*/i)
+    .filter(Boolean);
+  let a = gradeIndex(parts[0] ?? "");
+  let b = gradeIndex(parts[parts.length - 1] ?? "");
+  if (a < 0) a = 0;
+  if (b < 0) b = last;
+  return a <= b ? [a, b] : [b, a];
 }
 
 export function classList(s: School) {
@@ -64,7 +81,7 @@ export function feeSlabs(s: School, session: "2027-28" | "2026-27"): FeeSlab[] {
   const [from] = classRange(s.grades);
   const saved = (s.feeSlabs ?? []).filter((x) => x.session === session);
   return classList(s).map((c, i) => {
-    const mine = saved.find((x) => x.cls === c.cls);
+    const mine = saved.find((x) => x.cls === c.cls) ?? saved.find((x) => x.cls === "All classes");
     if (mine && mine.rows.length) return slabFromRows(c, mine.rows);
     const base = s.id === 9 ? VSPK_ANNUAL[from + i] : Math.round(s.fee * c.m);
     const target = session === "2027-28" ? base : Math.round(base * 0.94);
@@ -90,8 +107,10 @@ export function feeSlabs(s: School, session: "2027-28" | "2026-27"): FeeSlab[] {
 }
 
 export function feeRange(s: School) {
-  const a = feeSlabs(s, "2027-28").map((x) => x.annual);
-  return { min: Math.min(...a), max: Math.max(...a) };
+  const a = feeSlabs(s, "2027-28").map((x) => x.annual).filter((n) => Number.isFinite(n) && n > 0);
+  const lo = s.feeMin || (a.length ? Math.min(...a) : s.fee || 0);
+  const hi = s.feeMax || (a.length ? Math.max(...a) : s.fee || 0);
+  return { min: lo, max: Math.max(lo, hi) };
 }
 
 const GALLERY_IDS = [

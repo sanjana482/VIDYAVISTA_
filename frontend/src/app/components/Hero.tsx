@@ -65,7 +65,7 @@ const stateList = [
 const schoolTypes: SchoolTypeLabel[] = [
   "Boarding Schools",
   "Day Schools",
-  "Day - Boarding",
+  "Play School",
 ];
 
 export default function Hero() {

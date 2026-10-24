@@ -7,7 +7,7 @@
 //   3. Refresh / close & reopen / come back to Home or /schools -> readPreference()
 //      returns the saved values, so everything is pre-selected.
 
-export type SchoolTypeLabel = "Day Schools" | "Boarding Schools" | "Day - Boarding";
+export type SchoolTypeLabel = "Day Schools" | "Boarding Schools" | "Play School";
 
 export type Preference = {
   type: SchoolTypeLabel;
@@ -23,7 +23,7 @@ const MAX_AGE = 60 * 60 * 24 * 365; // 1 year
 
 export const DEFAULT_PREF: Preference = { type: "Boarding Schools", location: "" };
 
-const VALID_TYPES: SchoolTypeLabel[] = ["Day Schools", "Boarding Schools", "Day - Boarding"];
+const VALID_TYPES: SchoolTypeLabel[] = ["Day Schools", "Boarding Schools", "Play School"];
 
 export const isBoardingType = (t: string) => t === "Boarding Schools";
 
@@ -63,22 +63,22 @@ export function clearPreference() {
 // ---- helpers used by Hero / listing so both pages speak the same language ----
 
 /** Hero labels ("Day Schools") and URL values -> the values stored in school data ("Day School"). */
-export function normalizeType(t: string): "Day School" | "Boarding School" | "Day + Boarding" | "" {
+export function normalizeType(t: string): "Day School" | "Boarding School" | "Play School" | "" {
   const v = t.trim().toLowerCase();
   if (v === "day schools" || v === "day school") return "Day School";
   if (v === "boarding schools" || v === "boarding school") return "Boarding School";
-  if (v === "day - boarding" || v === "day + boarding" || v === "day-boarding") return "Day + Boarding";
+  if (v === "Play School" || v === "Play School" || v === "day-boarding") return "Play School";
   return "";
 }
 
 /** School data value -> Hero label (used when listing filters are saved back to the cookie). */
 export function toHeroType(t: string): SchoolTypeLabel {
   if (t === "Boarding School") return "Boarding Schools";
-  if (t === "Day + Boarding") return "Day - Boarding";
+  if (t === "Play School") return "Play School";
   return "Day Schools";
 }
 
-/** Home / listing sections list Boarding first: 0 = boarding, 1 = day + boarding, 2 = day */
+/** Home / listing sections list Boarding first: 0 = boarding, 1 = Play School, 2 = day */
 export function typeRank(t: string): number {
   const v = t.toLowerCase();
   const boarding = v.includes("boarding");

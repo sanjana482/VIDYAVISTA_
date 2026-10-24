@@ -27,7 +27,7 @@ export default function LocationLanding({ kind, name, state, list, all, content 
   const parts = view.title.match(/^(.*?)\s*(20\d\d-\d\d)$/);
   const own = kind === "state" ? "state" : "city";
 
-  // Boarding first, then Day + Boarding, then Day
+  // Boarding first, then Play School, then Day
   const sorted = [...list].sort((a, b) => typeRank(a.type) - typeRank(b.type) || b.rating - a.rating);
   const groups = TYPE_ORDER.map((t) => ({ t, items: sorted.filter((s) => s.type === t) })).filter((g) => g.items.length);
 

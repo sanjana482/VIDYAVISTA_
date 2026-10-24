@@ -1,4 +1,6 @@
 // Sample listing data. Replace with your API / database response when the backend is ready.
+import { fetchAllSchools } from "../lib/schoolsApi";
+
 export type School = {
   id: number;
   name: string;
@@ -7,11 +9,13 @@ export type School = {
   state?: string;
   board: "CBSE" | "ICSE" | "IB" | "Cambridge" | "State Board";
   grades: string;
-  type: "Day School" | "Boarding School" | "Day + Boarding";
+  type: "Day School" | "Boarding School" | "Play School";
   gender: "Co-ed" | "Girls" | "Boys";
   rating: number;
   reviews: number;
   fee: number; // annual tuition in INR
+  feeMin?: number;
+  feeMax?: number;
   facilities: string[];
   photos: number;
   topRated?: boolean;
@@ -40,7 +44,7 @@ const img = (id: string) =>
   `https://images.unsplash.com/${id}?auto=format&fit=crop&w=900&q=80`;
 
 export const CITIES = ["Mumbai", "Delhi", "Bengaluru", "Pune", "Hyderabad", "Chennai"] as const;
-export const TYPES = ["Day School", "Boarding School", "Day + Boarding"] as const;
+export const TYPES = ["Day School", "Boarding School", "Play School"] as const;
 export const BOARDS = ["CBSE", "ICSE", "IB", "Cambridge", "State Board"] as const;
 export const GENDERS = ["Co-ed", "Girls", "Boys"] as const;
 
@@ -70,7 +74,7 @@ export const schools: School[] = [
   },
   {
     id: 2, name: "Cedar Grove Public School", area: "Dwarka", city: "Delhi",
-    board: "CBSE", grades: "Nursery – XII", type: "Day + Boarding", gender: "Co-ed",
+    board: "CBSE", grades: "Nursery – XII", type: "Play School", gender: "Co-ed",
     rating: 4.7, reviews: 96, fee: 210000, facilities: ["Science labs", "Library", "Hostel"],
     photos: 12, topRated: true, phone: "+910000000002", image: img("photo-1509062522246-3755977927d7"),
   },
@@ -88,7 +92,7 @@ export const schools: School[] = [
   },
   {
     id: 5, name: "Riverstone International School", area: "Koregaon Park", city: "Pune",
-    board: "IB", grades: "Nursery – XII", type: "Day + Boarding", gender: "Co-ed",
+    board: "IB", grades: "Nursery – XII", type: "Play School", gender: "Co-ed",
     rating: 4.6, reviews: 64, fee: 320000, facilities: ["Hostel", "Sports", "Library"],
     photos: 10, phone: "+910000000005", image: img("photo-1564981797816-1043664bf78d"),
   },

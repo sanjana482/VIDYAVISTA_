@@ -31,7 +31,7 @@ const categories = [
     color: "bg-[#E5EAF0]",
     iconBg: "bg-[#FFC2D4]",
     textColor: "text-[#39506B]",
-    type: "Day + Boarding",
+    type: "Play School",
   },
 ];
 

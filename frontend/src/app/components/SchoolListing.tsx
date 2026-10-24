@@ -152,7 +152,7 @@ export default function SchoolListing({ schools }: { schools: School[] }) {
         s.fee >= min &&
         s.fee <= max
     );
-    // "Recommended": Boarding schools first, then Day + Boarding, then Day (stable, API order kept inside each group)
+    // "Recommended": Boarding schools first, then Play School, then Day (stable, API order kept inside each group)
     if (sort === "recommended") list.sort((a, b) => typeRank(a.type) - typeRank(b.type));
     if (sort === "rating") list.sort((a, b) => b.rating - a.rating || b.reviews - a.reviews);
     if (sort === "fee-low") list.sort((a, b) => a.fee - b.fee);

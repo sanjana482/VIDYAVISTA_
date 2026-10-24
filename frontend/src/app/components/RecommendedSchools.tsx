@@ -32,7 +32,7 @@ const schools = [
     id: 103,
     name: "Riverstone International School",
     board: "CBSE",
-    type: "Day + Boarding",
+    type: "Play School",
     location: "Bengaluru, Karnataka",
     searches: "865",
     badge: "↗ Popular",

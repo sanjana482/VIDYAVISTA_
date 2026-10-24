@@ -1,3 +1,54 @@
+
+// import { readPreference } from "./preferences";
+
+// export const API_URL = (
+//   process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
+// ).replace(/\/+$/, "");
+
+// export type EnquiryInput = {
+//   schoolName: string;
+//   schoolId?: number;
+//   childName?: string;
+//   className?: string;
+//   session?: string;
+//   parentName: string;
+//   relation?: string;
+//   mobile: string;
+//   email?: string;
+//   city?: string;
+//   note?: string;
+// };
+
+// export async function postEnquiry(
+//   data: EnquiryInput
+// ): Promise<{ ok: boolean }> {
+//   const pref = readPreference();
+
+//   const res = await fetch(`${API_URL}/enquiries`, {
+//     method: "POST",
+//     headers: { "Content-Type": "application/json" },
+//     body: JSON.stringify({
+//       ...data,
+//       source:
+//         typeof window !== "undefined"
+//           ? window.location.pathname
+//           : "",
+//       preference: pref ?? undefined,
+//     }),
+//   });
+
+//   if (!res.ok) {
+//     throw new Error(`Enquiry failed (${res.status})`);
+//   }
+
+//   return { ok: true };
+// }
+
+
+
+
+
+
 // Loads schools from the Express/Mongo backend (the ones managed in /admin).
 // Server pages call these with ISR: a new school shows up on the site within ~60 seconds.
 import { API_URL } from "./api";
@@ -20,6 +71,8 @@ export const mapSchool = (d: ApiSchool): School => ({
   rating: d.rating ?? 0,
   reviews: d.reviews ?? 0,
   fee: d.fee ?? 0,
+  feeMin: d.feeMin || undefined,
+  feeMax: d.feeMax || undefined,
   facilities: d.facilities ?? [],
   photos: d.photos ?? 0,
   topRated: !!d.topRated,
@@ -37,13 +90,42 @@ export const mapSchool = (d: ApiSchool): School => ({
 
 const REVALIDATE = 60;
 
+// async function get(path: string) {
+//   try {
+//     return await fetch(`${API_URL}${path}`, { next: { revalidate: REVALIDATE } });
+//   } catch {
+//     throw new Error(`Cannot reach the API at ${API_URL}. Is the backend running? (set NEXT_PUBLIC_API_URL)`);
+//   }
+// }
+
+// this is the latest error changes after first push 
+
+
+
 async function get(path: string) {
-  try {
-    return await fetch(`${API_URL}${path}`, { next: { revalidate: REVALIDATE } });
-  } catch {
-    throw new Error(`Cannot reach the API at ${API_URL}. Is the backend running? (set NEXT_PUBLIC_API_URL)`);
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      const res = await fetch(`${API_URL}${path}`, { next: { revalidate: REVALIDATE } });
+      if (res.status < 500) return res;
+      lastErr = new Error(`status ${res.status}`);
+    } catch (e) {
+      lastErr = e;
+    }
+    // backend so raha ho toh jagne ka time do
+    await new Promise((r) => setTimeout(r, 3000 * (attempt + 1)));
   }
+  throw new Error(`Cannot reach the API at ${API_URL} (${lastErr instanceof Error ? lastErr.message : lastErr}). Is the backend running? (set NEXT_PUBLIC_API_URL)`);
 }
+
+
+
+
+
+
+
+
+
 
 /** every active school (the API returns max 50 per page, so we page through) */
 export async function fetchAllSchools(): Promise<School[]> {

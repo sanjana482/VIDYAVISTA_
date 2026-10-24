@@ -10,22 +10,22 @@ type BrowseTab = "region" | "board" | "popular";
 const regions = [
   {
     name: "North India",
-    types: ["Day Schools", "Boarding Schools", "Day + Boarding Schools"],
+    types: ["Day Schools", "Boarding Schools", "Play School Schools"],
     cities: ["Delhi NCR", "Gurugram", "Noida", "Dehradun", "Chandigarh", "Jaipur", "Lucknow", "Shimla"],
   },
   {
     name: "South India",
-    types: ["Day Schools", "Boarding Schools", "Day + Boarding Schools"],
+    types: ["Day Schools", "Boarding Schools", "Play School Schools"],
     cities: ["Bengaluru", "Chennai", "Hyderabad", "Kochi", "Coimbatore", "Mysuru", "Visakhapatnam"],
   },
   {
     name: "West India",
-    types: ["Day Schools", "Boarding Schools", "Day + Boarding Schools"],
+    types: ["Day Schools", "Boarding Schools", "Play School Schools"],
     cities: ["Mumbai", "Pune", "Thane", "Nashik", "Nagpur", "Ahmedabad", "Surat", "Vadodara"],
   },
   {
     name: "East India",
-    types: ["Day Schools", "Boarding Schools", "Day + Boarding Schools"],
+    types: ["Day Schools", "Boarding Schools", "Play School Schools"],
     cities: ["Kolkata", "Bhubaneswar", "Patna", "Ranchi", "Guwahati", "Siliguri", "Jamshedpur"],
   },
 ];
@@ -40,7 +40,7 @@ const boards = [
 const popular = [
   { name: "Best Schools in India", cities: ["Top Rated Schools", "Affordable Schools", "Best CBSE Schools"] },
   { name: "Schools by Budget", cities: ["Below ₹50,000", "₹50,000–₹1 Lakh", "₹1–₹3 Lakh", "Above ₹3 Lakh"] },
-  { name: "Schools by Type", cities: ["Day Schools", "Boarding Schools", "Day + Boarding Schools"] },
+  { name: "Schools by Type", cities: ["Day Schools", "Boarding Schools", "Play School Schools"] },
   { name: "Admission Searches", cities: ["Nursery Admissions", "Class 1 Admissions", "International Schools"] },
 ];
 
@@ -55,7 +55,7 @@ const BOARD_PARAM: Record<string, string> = {
 const TYPE_OPTIONS = [
   { label: "Day Schools", value: "Day School", icon: "🏠", hint: "Home every evening" },
   { label: "Boarding Schools", value: "Boarding School", icon: "🏫", hint: "Fully residential" },
-  { label: "Day + Boarding Schools", value: "Day + Boarding", icon: "🔄", hint: "Both options on one campus" },
+  { label: "Play School Schools", value: "Play School", icon: "🔄", hint: "Both options on one campus" },
 ];
 const TYPE_BY_LABEL: Record<string, string> = Object.fromEntries(TYPE_OPTIONS.map((t) => [t.label, t.value]));
 
