@@ -4,89 +4,41 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { typeRank } from "../lib/preferences";
+import type { School } from "../data/schools";
+import { BOARD_LABEL } from "../data/schools";
+import { schoolPath } from "../lib/seo";
+import { feeRange, lakh } from "../data/profile";
+import Icon, { Stars } from "./Icon";
 
-const ratedSchools = [
-  {
-    id: 1,
-    name: "Oakridge International School",
-    rating: 4.9,
-    reviews: 248,
-    board: "CBSE",
-    type: "Day",
-    location: "Bengaluru",
-    grades: "Nursery – Grade 12",
-    fees: "₹1.2L – ₹2.4L",
-    image:
-      "https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=800&q=85",
-  },
-  {
-    id: 2,
-    name: "Bright Future Academy",
-    rating: 4.8,
-    reviews: 186,
-    board: "ICSE",
-    type: "Play School",
-    location: "Pune",
-    grades: "KG – Grade 12",
-    fees: "₹85K – ₹1.6L",
-    image:
-      "https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=800&q=85",
-  },
-  {
-    id: 3,
-    name: "Greenfield Public School",
-    rating: 4.7,
-    reviews: 152,
-    board: "CBSE",
-    type: "Day",
-    location: "Mumbai",
-    grades: "Nursery – Grade 10",
-    fees: "₹55K – ₹1.1L",
-    image:
-      "https://images.unsplash.com/photo-1564981797816-1043664bf78d?auto=format&fit=crop&w=800&q=85",
-  },
-  {
-    id: 4,
-    name: "Riverdale Academy",
-    rating: 4.6,
-    reviews: 129,
-    board: "ICSE",
-    type: "Day",
-    location: "Hyderabad",
-    grades: "Nursery – Grade 12",
-    fees: "₹70K – ₹1.3L",
-    image:
-      "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=800&q=85",
-  },
-  {
-    id: 5,
-    name: "Green Valley School",
-    rating: 4.8,
-    reviews: 203,
-    board: "CBSE",
-    type: "Boarding",
-    location: "Dehradun",
-    grades: "Grade 1 – Grade 12",
-    fees: "₹1.5L – ₹2.5L",
-    image:
-      "https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?auto=format&fit=crop&w=800&q=85",
-  },
-  {
-    id: 6,
-    name: "Sunrise Public School",
-    rating: 4.7,
-    reviews: 174,
-    board: "State Board",
-    type: "Day",
-    location: "Jaipur",
-    grades: "Nursery – Grade 12",
-    fees: "₹60K – ₹1.2L",
-    image:
-      "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=800&q=85",
-  },
-];
+const BOARD_COLOR = ["bg-[#DDEAF2] text-[#0A5C91]", "bg-[#FAE5EC] text-[#C8104F]", "bg-[#E5EAF0] text-[#39506B]", "bg-[#FCE5ED] text-[#A34262]"];
+const feeText = (s: School) => {
+  const r = feeRange(s);
+  return r.min > 0 ? `${lakh(r.min)} – ${lakh(r.max)}` : "Ask school";
+};
 
-export default function HighestRatedSchools() {
+
+const toCard = (s: School) => ({
+  id: s.id,
+  href: schoolPath(s),
+  name: s.name,
+  rating: s.rating,
+  reviews: s.reviews,
+  board: BOARD_LABEL[s.board] ?? s.board,
+  type: s.type,
+  gender: s.gender,
+  location: `${s.area}, ${s.city}`,
+  grades: s.grades || "-",
+  fees: feeText(s),
+  image: s.image,
+});
+
+export default function HighestRatedSchools({ list }: { list: School[] }) {
+  // "highest rated" is calculated here from the parents' reviews: no manual tick needed
+  const ratedSchools = list
+    .filter((s) => s.reviews > 0 && s.rating > 0)
+    .sort((a, b) => b.rating - a.rating || b.reviews - a.reviews)
+    .slice(0, 8)
+    .map(toCard);
   const router = useRouter();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [savedIds, setSavedIds] = useState<number[]>([]);
@@ -107,6 +59,8 @@ export default function HighestRatedSchools() {
         : [...current, id]
     );
   }
+
+  if (ratedSchools.length === 0) return null;
 
   return (
     <section className="overflow-hidden bg-gradient-to-b from-[#FCF6F8] via-[#F8F0F3] to-[#F3F8FB] py-16 sm:py-20">
@@ -134,7 +88,7 @@ export default function HighestRatedSchools() {
               aria-label="Previous schools"
               className="flex h-11 w-11 items-center justify-center rounded-full border border-[#EAD3DB] bg-white text-2xl text-[#C8104F] shadow-sm transition hover:border-[#C8104F] hover:bg-[#FAE5EC]"
             >
-              ‹
+              <Icon name="chevronLeft" className="h-5 w-5" />
             </button>
 
             <button
@@ -143,7 +97,7 @@ export default function HighestRatedSchools() {
               aria-label="Next schools"
               className="flex h-11 w-11 items-center justify-center rounded-full border border-[#EAD3DB] bg-white text-2xl text-[#C8104F] shadow-sm transition hover:border-[#C8104F] hover:bg-[#FAE5EC]"
             >
-              ›
+              <Icon name="chevronRight" className="h-5 w-5" />
             </button>
           </div>
         </div>
@@ -170,7 +124,7 @@ export default function HighestRatedSchools() {
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0B2A47]/20 to-transparent" />
 
                 <span className="absolute left-3 top-3 rounded-lg border border-white/70 bg-[#FCDDE7]/95 px-3 py-1.5 text-xs font-extrabold text-[#C8104F]">
-                  ★ {school.rating.toFixed(1)} Rating
+                  <Icon name="star" filled className="mr-1 inline h-3.5 w-3.5 align-[-2px]" />{school.rating.toFixed(1)} Rating
                 </span>
 
                 <button
@@ -208,7 +162,7 @@ export default function HighestRatedSchools() {
                   </span>
 
                   <span className="rounded-md bg-[#E7EEF2] px-2.5 py-1.5 text-[11px] font-bold text-[#0E547C]">
-                    Co-ed
+                    {school.gender}
                   </span>
                 </div>
 
@@ -232,12 +186,7 @@ export default function HighestRatedSchools() {
 
                 {/* Rating and review count */}
                 <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
-                  <span
-                    aria-label={`${school.rating} out of 5 stars`}
-                    className="tracking-wide text-[#E99A24]"
-                  >
-                    ★★★★★
-                  </span>
+                  <Stars value={school.rating} className="h-4 w-4" />
 
                   <span className="font-extrabold text-[#0B2A47]">
                     {school.rating.toFixed(1)}/5
@@ -285,7 +234,7 @@ export default function HighestRatedSchools() {
 
                   <button
                     type="button"
-                    onClick={() => router.push(`/schools/${school.id}`)}
+                    onClick={() => router.push(school.href)}
                     className="rounded-lg px-3 py-2 text-xs font-extrabold text-[#C8104F] transition hover:bg-[#FAE5EC]"
                   >
                     View School →
@@ -310,11 +259,6 @@ export default function HighestRatedSchools() {
             Explore All Schools →
           </button>
 
-          <p className="mt-4 max-w-2xl text-xs leading-5 text-[#8A8290]">
-            *School names, ratings, review counts and fees are illustrative
-            demo data. Replace them with verified school information before
-            publishing.
-          </p>
         </div>
       </div>
     </section>

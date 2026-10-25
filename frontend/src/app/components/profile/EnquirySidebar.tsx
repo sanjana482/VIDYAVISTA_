@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { openEnquiry } from "./enquiry";
 import { postEnquiry } from "../../lib/api";
+import Icon from "../Icon";
 
 type Props = {
   schoolName: string;
@@ -60,7 +61,7 @@ export default function EnquirySidebar({ schoolName, feeRange, phone, phoneHref,
 
         {done ? (
           <div role="status" className="mt-4 rounded-2xl border border-[#9ED8F5] bg-[#EAF6FD] p-5 text-center">
-            <p className="text-3xl">✅</p>
+            <Icon name="checkCircle" className="mx-auto h-9 w-9 text-[#0795DC]" />
             <p className="mt-2 font-extrabold text-[#0A5C91]">Thank you, {name.split(" ")[0]}!</p>
             <p className="mt-1 text-sm text-[#4E5A68]">We&apos;ve received your request for {cls}. Our counsellor will contact you shortly.</p>
             <button type="button" onClick={() => { setDone(false); setName(""); setMobile(""); setCls(""); }} className="mt-3 text-sm font-bold text-[#0A7BBF] underline">
@@ -96,7 +97,7 @@ export default function EnquirySidebar({ schoolName, feeRange, phone, phoneHref,
         )}
 
         <a href={`tel:${phoneHref}`} className="mt-4 flex items-center justify-center gap-2 rounded-xl border border-[#9ED8F5] bg-[#EAF6FD] px-4 py-3.5 text-sm font-extrabold text-[#0A5C91] transition hover:bg-[#D7EEFA]">
-          📞 Or call the school: {phone.split(" / ")[0]}
+          <Icon name="phone" className="h-4 w-4" /> Or call the school: {phone.split(" / ")[0]}
         </a>
       </div>
     </aside>

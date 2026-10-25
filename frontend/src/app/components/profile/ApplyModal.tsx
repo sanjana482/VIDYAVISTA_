@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { rupee, type FeeSlab } from "../../data/profile";
 import { postEnquiry } from "../../lib/api";
+import { cityPath } from "@/app/lib/seo";
+import Icon from "../Icon";
 
 type Session = "2027-28" | "2026-27";
 
@@ -154,7 +156,7 @@ export default function ApplyModal({ schoolName, city, status, classes, slabs }:
             </h2>
             <p className="mt-1.5 text-sm text-[#5C6A7B]">Session {f.session} · {status}</p>
           </div>
-          <button type="button" onClick={close} aria-label="Close" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#E9F3FA] text-lg text-[#0A5C91] transition hover:bg-[#FDE8EF] hover:text-[#C8104F]">✕</button>
+          <button type="button" onClick={close} aria-label="Close" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#E9F3FA] text-lg text-[#0A5C91] transition hover:bg-[#FDE8EF] hover:text-[#C8104F]"><Icon name="x" className="h-5 w-5" /></button>
         </div>
 
         {!done && (
@@ -166,7 +168,7 @@ export default function ApplyModal({ schoolName, city, status, classes, slabs }:
                   <button type="button" disabled={state !== "done"} onClick={() => goto(i)} aria-current={state === "now" ? "step" : undefined} className="block w-full text-left disabled:cursor-default">
                     <span className={`block h-1 rounded-full transition-colors ${state === "done" ? "bg-[#0795DC]" : state === "now" ? "bg-[#EC0E58]" : "bg-[#E1E7EE]"}`} />
                     <span className={`mt-2.5 flex items-center gap-1.5 text-[13px] font-bold ${state === "now" ? "text-[#0B2A47]" : state === "done" ? "text-[#0A7BBF]" : "text-[#8896A6]"}`}>
-                      {state === "done" ? <span aria-hidden>✓</span> : null}{i + 1}. {s}
+                      {state === "done" ? <Icon name="check" className="h-3.5 w-3.5" /> : null}{i + 1}. {s}
                     </span>
                   </button>
                 </li>
@@ -179,14 +181,14 @@ export default function ApplyModal({ schoolName, city, status, classes, slabs }:
         <div className="flex-1 overflow-y-auto px-6 py-6 sm:px-8">
           {done ? (
             <div role="status" className="py-4 text-center">
-              <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-[#0795DC] to-[#EC0E58] text-4xl text-white shadow-xl shadow-[#0795DC]/30">✓</span>
+              <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-[#0795DC] to-[#EC0E58] text-4xl text-white shadow-xl shadow-[#0795DC]/30"><Icon name="check" className="h-10 w-10" /></span>
               <h3 className="mt-6 text-2xl font-extrabold text-[#0B2A47]">Thank you, {f.parent.split(" ")[0]}!</h3>
               <p className="mx-auto mt-3 max-w-md leading-7 text-[#5C6A7B]">
                 Your enquiry for <strong className="text-[#0B2A47]">{f.child}</strong> ({f.cls}, {f.session}) has been shared with {schoolName}. Expect a call on <strong className="text-[#0B2A47]">+91 {f.mobile}</strong>.
               </p>
               <div className="mt-7 flex flex-wrap justify-center gap-3">
                 <button type="button" data-autofocus onClick={close} className="rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-7 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#0A5C91]/25">Done</button>
-                <Link href={`/schools?city=${encodeURIComponent(city)}`} className="rounded-xl border border-[#D6DDE5] px-7 py-3.5 text-sm font-bold text-[#0B2A47] transition hover:border-[#0795DC] hover:text-[#0A7BBF]">Explore similar schools</Link>
+                <Link href={cityPath(city)} className="rounded-xl border border-[#D6DDE5] px-7 py-3.5 text-sm font-bold text-[#0B2A47] transition hover:border-[#0795DC] hover:text-[#0A7BBF]">Explore similar schools</Link>
               </div>
             </div>
           ) : step === 0 ? (

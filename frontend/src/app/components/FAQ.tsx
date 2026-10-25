@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { homeFaqs as faqs } from "../data/faqs";
+import Icon from "./Icon";
 
 
 export default function FAQ() {
@@ -29,7 +30,7 @@ export default function FAQ() {
           <div className="mt-7 rounded-2xl border border-[#D9E0E8] bg-white p-5 shadow-sm">
             <div className="flex items-center gap-3">
               <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#E5EBF1] text-xl">
-                💬
+                <Icon name="message" className="h-5 w-5 text-[#0A5C91]" />
               </span>
               <div>
                 <p className="font-bold text-[#0B2A47]">

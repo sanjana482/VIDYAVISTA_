@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useActiveLocation } from "../lib/useActiveLocation";
+import Icon from "./Icon";
 
 const types = [
-  { icon: "🏠", title: "Day School", text: "Students attend classes and return home every day. Best when you want your child close to family and a shorter school-hours routine." },
-  { icon: "🏫", title: "Boarding School", text: "A fully residential campus with study hours, sports and activities built into the day. Good for independence and a structured routine." },
-  { icon: "🔄", title: "Play School", text: "Offers both options on one campus, so families can choose day scholar or hostel stay depending on the child's comfort and age." },
+  { icon: "home", title: "Day School", text: "Students attend classes and return home every day. Best when you want your child close to family and a shorter school-hours routine." },
+  { icon: "school", title: "Boarding School", text: "A fully residential campus with study hours, sports and activities built into the day. Good for independence and a structured routine." },
+  { icon: "puzzle", title: "Play School", text: "Offers both options on one campus, so families can choose day scholar or hostel stay depending on the child's comfort and age." },
 ];
 
 const boards = [
@@ -59,7 +60,7 @@ export default function ParentGuide() {
         <div className="mt-5 grid gap-4 md:grid-cols-3">
           {types.map((t) => (
             <div key={t.title} className="rounded-2xl border border-[#E1E7EE] bg-[#F6FAFD] p-6">
-              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-2xl shadow-sm">{t.icon}</span>
+              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-2xl shadow-sm"><Icon name={t.icon} className="h-6 w-6 text-[#0A5C91]" /></span>
               <h3 className="mt-4 font-extrabold text-[#0B2A47]">{t.title}</h3>
               <p className="mt-2 text-sm leading-6 text-[#626F7D]">{t.text}</p>
             </div>
@@ -109,7 +110,7 @@ export default function ParentGuide() {
         <div className="mt-12"><H>What to check during a campus visit</H></div>
         <ul className="mt-5 grid gap-x-10 gap-y-3 sm:grid-cols-2">
           {checks.map((c) => (
-            <li key={c} className="flex gap-3 text-[#626F7D]"><span className="font-extrabold text-[#0795DC]">✓</span>{c}</li>
+            <li key={c} className="flex gap-3 text-[#626F7D]"><Icon name="check" className="mt-1 h-4 w-4 shrink-0 text-[#0795DC]" />{c}</li>
           ))}
         </ul>
       </div>

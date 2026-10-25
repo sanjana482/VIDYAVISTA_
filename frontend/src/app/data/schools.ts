@@ -7,7 +7,7 @@ export type School = {
   area: string;
   city: string; // any city: new ones come from the admin panel
   state?: string;
-  board: "CBSE" | "ICSE" | "IB" | "Cambridge" | "State Board";
+  board: "CBSE" | "State Board" | "ICSE" | "No Board" | "Cambridge" | "IB" | "NIOS";
   grades: string;
   type: "Day School" | "Boarding School" | "Play School";
   gender: "Co-ed" | "Girls" | "Boys";
@@ -30,12 +30,21 @@ export type School = {
   feeNote?: string;
   feeUpdated?: string;
   profile?: SchoolProfileOverrides;
+  slug?: string;
+  // ---- set from the Django admin ----
+  isFeatured?: boolean;
+  isRecommended?: boolean;
+  owner?: SchoolOwner | null;
+  social?: Partial<Record<"youtube" | "facebook" | "instagram" | "x" | "linkedin" | "other", string>>;
+  reviewList?: { name: string; role: string; rating: number; text: string; date: string }[];
 };
+
+export type SchoolOwner = { name: string; designation?: string; bio?: string; photo?: string; email?: string; phone?: string };
 
 export type FeeFreq = "One-time" | "Monthly" | "Annually";
 export type SchoolFeeSlab = { session: string; cls: string; stage?: string; rows: { label: string; freq: FeeFreq; amount: number }[] };
 export type SchoolProfileOverrides = {
-  established?: number; students?: number; ratio?: number; campus?: string;
+  established?: number; students?: number; teachers?: number; ratio?: number; campus?: string;
   address?: string; email?: string; website?: string;
   admissionStatus?: string; admissionSummary?: string; documents?: string;
 };
@@ -45,7 +54,12 @@ const img = (id: string) =>
 
 export const CITIES = ["Mumbai", "Delhi", "Bengaluru", "Pune", "Hyderabad", "Chennai"] as const;
 export const TYPES = ["Day School", "Boarding School", "Play School"] as const;
-export const BOARDS = ["CBSE", "ICSE", "IB", "Cambridge", "State Board"] as const;
+export const BOARDS = ["CBSE", "State Board", "ICSE", "No Board", "Cambridge", "IB", "NIOS"] as const;
+/** what parents see (the stored value stays short, e.g. "ICSE") */
+export const BOARD_LABEL: Record<string, string> = {
+  CBSE: "CBSE", "State Board": "State Board", ICSE: "ICSE / CISCE", "No Board": "No Board",
+  Cambridge: "Cambridge / IGCSE", IB: "IB Board", NIOS: "NIOS",
+};
 export const GENDERS = ["Co-ed", "Girls", "Boys"] as const;
 
 // City -> State (needed for the "Boarding School -> State" filter). Add new cities here.

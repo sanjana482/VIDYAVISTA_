@@ -1,19 +1,33 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import ListingDescription from "./ListingDescription";
-import { BOARDS, TYPES, citiesOf, stateFor, statesOf, type School } from "../data/schools";
+import { BOARDS, BOARD_LABEL, TYPES, citiesOf, stateFor, statesOf, type School } from "../data/schools";
 import { isBoardingType, normalizeType, readPreference, savePreference, toHeroType } from "../lib/preferences";
-import { fillPhotos, resolveContent } from "../lib/locationsApi";
+import { resolveContent, type LocationContent } from "../lib/locationsApi";
+import HeroVisual from "./HeroVisual";
+import { APPLIED_EVENT, headingFor, type AppliedInfo } from "./PlaceHeading";
 import { useActiveLocation, useLocationContent } from "../lib/useActiveLocation";
+import { useListingParams, type ListingInitial } from "../lib/useListingParams";
+import { listingHref } from "../lib/links";
 
-export default function SchoolsHero({ schools }: { schools: School[] }) {
+export default function SchoolsHero({
+  schools,
+  initial,
+  heading,
+  initialContent,
+}: {
+  schools: School[];
+  initial?: ListingInitial;
+  heading?: string;
+  initialContent?: LocationContent | null;
+}) {
   const CITIES = citiesOf(schools);
   const STATES = statesOf(schools);
   const router = useRouter();
-  const params = useSearchParams();
+  const params = useListingParams(initial);
   const [q, setQ] = useState("");
   const [type, setType] = useState("");
   const [board, setBoard] = useState("");
@@ -43,21 +57,48 @@ export default function SchoolsHero({ schools }: { schools: School[] }) {
   }, [urlKey]);
 
   // ---- what the visitor selected (state / city) decides the title, text and photos ----
-  const active = useActiveLocation();
-  const content = useLocationContent(active);
+    const initialLoc = initial?.city
+    ? { kind: "city" as const, name: initial.city }
+    : initial?.state
+    ? { kind: "state" as const, name: initial.state }
+    : undefined;
+  const active = useActiveLocation(initialLoc);
+  // what the listing below currently shows (type, place, board): keeps the title in step with the filters
+  const [applied, setApplied] = useState<AppliedInfo | null>(null);
+  useEffect(() => {
+    const on = (e: Event) => setApplied((e as CustomEvent<AppliedInfo>).detail);
+    window.addEventListener(APPLIED_EVENT, on);
+    return () => window.removeEventListener(APPLIED_EVENT, on);
+  }, []);
+  // the admin text of the page we landed on is shown only while that same place is selected
+  const sameAsInitial = initialContent !== undefined && (!active || active.name === initialLoc?.name);
+  const fetched = useLocationContent(sameAsInitial ? null : active);
+  const content = sameAsInitial ? initialContent : fetched;
   const placeSchools = active
     ? schools.filter((s) => (active.kind === "state" ? stateFor(s) === active.name : s.city === active.name))
     : schools;
   const view = resolveContent(active, content, placeSchools.length);
-  const photos = fillPhotos(view.photos);
-  const titleParts = view.title.match(/^(.*?)\s*(20\d\d-\d\d)$/);
-
+  const adminPhotos = [content?.cover, ...(content?.photos ?? [])].filter((x): x is string => !!x);
+  const titleText = heading
+    ? applied && applied.place
+      ? `Best ${headingFor(applied)} 2027-28`
+      : heading
+    : view.title;
+  const Title = heading ? "h2" : "h1"; // on /day-schools/pune the real <h1> is rendered by the server page
+  const titleParts = titleText.match(/^(.*?)\s*(20\d\d-\d\d)$/);
   const originalTitle = useRef("");
   useEffect(() => {
+    
     if (!originalTitle.current) originalTitle.current = document.title;
+        if (initial) return;
     document.title = active ? view.metaTitle : originalTitle.current;
   }, [active, view.metaTitle]);
 
+  const summary = (() => {
+    const rated = placeSchools.filter((x) => x.reviews > 0 && x.rating > 0);
+    const total = rated.reduce((n, x) => n + x.reviews, 0);
+    return { total, avg: total ? rated.reduce((n, x) => n + x.rating * x.reviews, 0) / total : 0 };
+  })();
   const boardCount = new Set(placeSchools.map((s) => s.board)).size;
   const stats: [number, string][] = [
     [placeSchools.length, active ? `${placeSchools.length === 1 ? "school" : "schools"} in ${active.name}` : "schools listed"],
@@ -67,16 +108,20 @@ export default function SchoolsHero({ schools }: { schools: School[] }) {
     [boardCount, "boards"],
   ];
 
-  function onSearch(e: React.FormEvent) {
+    function onSearch(e: React.FormEvent) {
     e.preventDefault();
-    const params = new URLSearchParams();
-    if (q.trim()) params.set("q", q.trim());
-    if (type) params.set("type", type);
-    if (board) params.set("board", board);
     const [kind, value] = loc.split(":");
-    if (value) params.set(kind === "state" ? "state" : "city", value);
+    const placeKey = kind === "state" ? "state" : "city";
     if (type) savePreference({ type: toHeroType(type), location: value ?? "" });
-    router.push(`/schools${params.toString() ? `?${params}` : ""}`, { scroll: false });
+    let href = listingHref({ type, board, ...(value ? { [placeKey]: value } : {}) });
+    if (q.trim()) {
+      const qs = new URLSearchParams({ q: q.trim() });
+      if (type) qs.set("type", type);
+      if (board) qs.set("board", board);
+      if (value) qs.set(placeKey, value);
+      href = `/schools?${qs}`;
+    }
+    router.push(href, { scroll: false });
     setTimeout(() => document.getElementById("results")?.scrollIntoView({ behavior: "smooth" }), 80);
   }
 
@@ -110,16 +155,16 @@ export default function SchoolsHero({ schools }: { schools: School[] }) {
               Find the right fit for your child
             </span>
 
-            <h1 className="mt-5 text-4xl font-extrabold tracking-tight text-[#0B2A47] sm:text-5xl">
+            <Title className="mt-5 text-4xl font-extrabold tracking-tight text-[#0B2A47] sm:text-5xl">
               {titleParts ? (
                 <>
                   {titleParts[1]}{" "}
                   <span className="bg-gradient-to-r from-[#0795DC] to-[#EC0E58] bg-clip-text text-transparent">{titleParts[2]}</span>
                 </>
               ) : (
-                view.title
+                titleText
               )}
-            </h1>
+            </Title>
 
             <div className="mt-5">
               <ListingDescription key={view.description} description={view.description} maxLength={180} />
@@ -137,17 +182,15 @@ export default function SchoolsHero({ schools }: { schools: School[] }) {
             </div>
           </div>
 
-          <div className="hidden grid-cols-2 gap-3 lg:grid">
-            <div className="row-span-2 overflow-hidden rounded-3xl border-4 border-white shadow-xl shadow-[#0A5C91]/15">
-              <img src={photos[0]} alt={active ? `Schools in ${active.name}` : "School campus"} className="h-full w-full object-cover" />
-            </div>
-            <div className="overflow-hidden rounded-3xl border-4 border-white shadow-xl shadow-[#0A5C91]/15">
-              <img src={photos[1]} alt={active ? `${active.name} school students` : "Students in class"} className="h-36 w-full object-cover" />
-            </div>
-            <div className="overflow-hidden rounded-3xl border-4 border-white shadow-xl shadow-[#EC0E58]/15">
-              <img src={photos[2]} alt={active ? `${active.name} school campus` : "Teacher and student"} className="h-36 w-full object-cover" />
-            </div>
-          </div>
+          <HeroVisual
+            place={active?.name ?? ""}
+            count={placeSchools.length}
+            boards={Array.from(new Set(placeSchools.map((x) => BOARD_LABEL[x.board] ?? x.board)))}
+            rating={Math.round(summary.avg * 10) / 10}
+            reviews={summary.total}
+            minFee={Math.min(...placeSchools.map((x) => x.fee).filter((f) => f > 0), Infinity) === Infinity ? 0 : Math.min(...placeSchools.map((x) => x.fee).filter((f) => f > 0))}
+            photos={adminPhotos.slice(0, 3)}
+          />
         </div>
 
         {/* Search bar */}
@@ -170,7 +213,7 @@ export default function SchoolsHero({ schools }: { schools: School[] }) {
             <label htmlFor="hb" className={label}>Board</label>
             <select id="hb" value={board} onChange={(e) => setBoard(e.target.value)} className={field}>
               <option value="">All boards</option>
-              {BOARDS.map((b) => <option key={b}>{b}</option>)}
+              {BOARDS.map((b) => <option key={b} value={b}>{BOARD_LABEL[b]}</option>)}
             </select>
           </div>
           <div>

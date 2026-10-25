@@ -12,6 +12,10 @@ import Footer from "./components/Footer";
 import FAQ from "./components/FAQ";
 import { jsonLd } from "./lib/seo";
 import { homeFaqs } from "./data/faqs";
+import { fetchAllSchoolsSafe } from "./lib/schoolsApi";
+
+// the homepage re-reads schools / ticks / locations from the admin every minute
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: { absolute: "VidyaVista | Find the Best Day & Boarding Schools in India" },
@@ -20,7 +24,11 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-export default function Home() {
+export default async function Home() {
+  const schools = await fetchAllSchoolsSafe();
+  const featured = schools.filter((s) => s.isFeatured);
+  const recommended = schools.filter((s) => s.isRecommended);
+
   return (
     <main className="min-h-screen">
       <script
@@ -41,9 +49,9 @@ export default function Home() {
       <Hero />
       <Categories />
       <PopularLocations />
-      <FeaturedSchools />
-      <HighestRatedSchools />
-      <RecommendedSchools />
+      <FeaturedSchools list={featured} />
+      <HighestRatedSchools list={schools} />
+      <RecommendedSchools list={recommended} />
       <SchoolGuidance />
       <FAQ />
       <Footer />

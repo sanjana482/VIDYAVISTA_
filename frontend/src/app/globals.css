@@ -36,3 +36,16 @@ body {
 }
 .vv-pop { animation: vv-pop 0.2s ease-out; }
 @media (prefers-reduced-motion: reduce) { .vv-pop { animation: none; } }
+
+/* ---------- hero visual: soft floating cards ---------- */
+@keyframes vv-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes vv-rise { from { opacity: 0; transform: translateY(22px) scale(0.96); } to { opacity: 1; transform: none; } }
+@keyframes vv-drift { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(8px, -14px) scale(1.08); } }
+.vv-rise { animation: vv-rise 0.75s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.vv-float-a { animation: vv-float 5.2s ease-in-out infinite; }
+.vv-float-b { animation: vv-float 6.4s ease-in-out -2s infinite; }
+.vv-float-c { animation: vv-float 5.8s ease-in-out -4s infinite; }
+.vv-drift { animation: vv-drift 9s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .vv-rise, .vv-float-a, .vv-float-b, .vv-float-c, .vv-drift { animation: none; }
+}

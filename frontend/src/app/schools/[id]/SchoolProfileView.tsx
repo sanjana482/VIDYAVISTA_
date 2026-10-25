@@ -13,8 +13,9 @@ import FaqList from "../../components/profile/FaqList";
 import ReadMore from "../../components/profile/ReadMore";
 import MobileEnquire from "../../components/profile/MobileEnquire";
 import ApplyModal from "../../components/profile/ApplyModal";
-import { Admission, Contact, Facilities } from "../../components/profile/StaticSections";
-import { stateFor } from "../../data/schools";
+import { Admission, Contact, Facilities, OwnerCard } from "../../components/profile/StaticSections";
+import Icon from "../../components/Icon";
+import { BOARD_LABEL, stateFor } from "../../data/schools";
 import { fetchAllSchools, fetchSchool } from "../../lib/schoolsApi";
 import {
   abs, idFromParam, jsonLd, schoolPath, schoolSectionPath, schoolSlug, cityPath, statePath,
@@ -23,8 +24,12 @@ import {
 import { classList, feeRange, feeSlabs, getProfile, lakh, rupee, similarSchools } from "../../data/profile";
 
 export const findSchool = async (param: string) => {
+  const all = await fetchAllSchools();
+  const bySlug = all.find((s) => s.slug === param);
+  if (bySlug) return bySlug;
+  // purane links (/schools/9 ya /schools/naam-9) -> mil jayega, aur page naye URL pe redirect kar dega
   const id = Number(idFromParam(param));
-  return Number.isFinite(id) && id > 0 ? fetchSchool(id) : undefined;
+  return Number.isFinite(id) && id > 0 ? all.find((s) => s.id === id) : undefined;
 };
 
 /** title / description / canonical for every tab page */
@@ -69,7 +74,7 @@ export async function schoolMetadata(param: string, section?: Section): Promise<
     ],
   };
   const [title, description] = META[section ?? "about"];
-  const url = schoolSectionPath(s, section);
+  const url = schoolPath(s); // one long page: every section URL points to the main profile as canonical
   return {
     title,
     description,
@@ -111,15 +116,15 @@ export default async function SchoolProfileView({ param, section }: { param: str
   const similar = similarSchools(s, await fetchAllSchools());
 
   const stats = [
-    { label: "Board", value: s.board },
+    { label: "Board", value: BOARD_LABEL[s.board] ?? s.board },
     { label: "School type", value: s.type },
     { label: "Classes", value: `${classes[0].cls} - ${lastCls}` },
-    { label: "Established", value: String(p.established) },
-    { label: "Student : Teacher", value: `${p.ratio} : 1` },
+    p.established ? { label: "Established", value: String(p.established) } : null,
+    p.ratio ? { label: "Student : Teacher", value: `${p.ratio} : 1` } : null,
     { label: "Annual fee", value: `${lakh(range.min).replace(".00", "")} - ${lakh(range.max)}` },
-    { label: "Students", value: p.students.toLocaleString("en-IN") },
-    { label: "Campus", value: p.campus },
-  ];
+    p.students ? { label: "Students", value: p.students.toLocaleString("en-IN") } : null,
+    p.campus ? { label: "Campus", value: p.campus } : null,
+  ].filter((x): x is { label: string; value: string } => !!x);
 
   const schoolSchema = {
     "@context": "https://schema.org",
@@ -130,7 +135,7 @@ export default async function SchoolProfileView({ param, section }: { param: str
     image: s.image,
     description: p.intro,
     telephone: s.phone,
-    foundingDate: String(p.established),
+    ...(p.established ? { foundingDate: String(p.established) } : {}),
     address: {
       "@type": "PostalAddress",
       streetAddress: s.area,
@@ -166,57 +171,59 @@ export default async function SchoolProfileView({ param, section }: { param: str
       acceptedAnswer: { "@type": "Answer", text: f.a },
     })),
   };
-  const schema: object[] = [breadcrumbSchema];
-  if (show === "about") schema.unshift(schoolSchema);
-  if (show === "faqs") schema.push(faqSchema);
+  const schema: object[] = [schoolSchema, breadcrumbSchema];
+  if (p.faqs.length) schema.push(faqSchema);
+
+  // which sections exist on this school's page (empty ones are not shown, and get no tab)
+  const sectionIds = [
+    "about", "fees", ...(p.facilities.length ? ["facilities"] : []), "admission", "contact",
+    ...(p.gallery.length ? ["photos"] : []), "reviews", ...(p.faqs.length ? ["faqs"] : []),
+  ];
 
   return (
     <main className="min-h-screen bg-white pb-20 lg:pb-0">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(schema) }} />
       <Navbar />
       <ProfileHero school={s} intro={p.intro} phoneHref={p.contact.phoneHref} stats={stats} />
-      <ProfileTabs basePath={basePath} active={show} />
+      <ProfileTabs basePath={basePath} active={show} sections={sectionIds} />
 
       <div className="mx-auto grid max-w-7xl gap-10 px-5 lg:grid-cols-[1fr_370px] lg:px-8">
         <div className="min-w-0">
-          {show === "about" && (
-            <Section id="about">
-              <h2 className="text-3xl font-extrabold tracking-tight text-[#0B2A47]">About {s.name}</h2>
-              <div className="mt-5"><ReadMore paragraphs={p.about} /></div>
+          <Section id="about">
+            <h2 className="text-3xl font-extrabold tracking-tight text-[#0B2A47]">About {s.name}</h2>
+            <div className="mt-5"><ReadMore paragraphs={p.about} /></div>
+            {p.highlights.length > 0 && (
               <ul className="mt-6 grid gap-3 sm:grid-cols-2">
                 {p.highlights.map((h) => (
                   <li key={h} className="flex gap-3 rounded-2xl border border-[#E1E7EE] bg-[#F6FAFD] px-4 py-4 text-[#4E5A68]">
-                    <span className="font-extrabold text-[#0795DC]">✓</span>{h}
+                    <Icon name="check" className="mt-0.5 h-5 w-5 shrink-0 text-[#0795DC]" />{h}
                   </li>
                 ))}
               </ul>
-            </Section>
-          )}
+            )}
+            {s.owner && <OwnerCard owner={s.owner} schoolName={s.name} />}
+          </Section>
 
-          {show === "fees" && (
-            <Section id="fees">
-              <FeeSection schoolName={s.name} slabs={slabs} updated={p.feeUpdated} source={p.feeSource} />
-            </Section>
-          )}
+          <Section id="fees">
+            <FeeSection schoolName={s.name} slabs={slabs} updated={p.feeUpdated} source={p.feeSource} />
+          </Section>
 
-          {show === "facilities" && <Section id="facilities"><Facilities p={p} /></Section>}
-          {show === "admission" && <Section id="admission"><Admission p={p} /></Section>}
-          {show === "contact" && <Section id="contact"><Contact p={p} name={s.name} /></Section>}
+          {p.facilities.length > 0 && <Section id="facilities"><Facilities p={p} /></Section>}
+          <Section id="admission"><Admission p={p} /></Section>
+          <Section id="contact"><Contact p={p} name={s.name} social={s.social} /></Section>
 
-          {show === "photos" && (
+          {p.gallery.length > 0 && (
             <Section id="photos">
               <h2 className="mb-6 text-3xl font-extrabold tracking-tight text-[#0B2A47]">School photos</h2>
               <PhotoGallery images={p.gallery} name={s.name} />
             </Section>
           )}
 
-          {show === "reviews" && (
-            <Section id="reviews">
-              <ReviewSection schoolName={s.name} rating={s.rating} count={s.reviews} />
-            </Section>
-          )}
+          <Section id="reviews">
+            <ReviewSection schoolId={s.id} schoolName={s.name} rating={s.rating} count={s.reviews} reviews={s.reviewList ?? []} />
+          </Section>
 
-          {show === "faqs" && (
+          {p.faqs.length > 0 && (
             <Section id="faqs">
               <h2 className="mb-6 text-3xl font-extrabold tracking-tight text-[#0B2A47]">FAQs about {s.name}</h2>
               <FaqList faqs={p.faqs} />
@@ -293,7 +300,7 @@ export default async function SchoolProfileView({ param, section }: { param: str
 
       {/* Mobile action bar */}
       <div className="fixed inset-x-0 bottom-0 z-50 flex gap-3 border-t border-[#E1E7EE] bg-white/95 p-3 shadow-[0_-8px_24px_rgba(11,42,71,0.08)] backdrop-blur lg:hidden">
-        <a href={`tel:${p.contact.phoneHref}`} className="flex-1 rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] py-3.5 text-center text-sm font-extrabold text-white">📞 Call Now</a>
+        <a href={`tel:${p.contact.phoneHref}`} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] py-3.5 text-center text-sm font-extrabold text-white"><Icon name="phone" className="h-4 w-4" /> Call Now</a>
         <MobileEnquire />
       </div>
     </main>

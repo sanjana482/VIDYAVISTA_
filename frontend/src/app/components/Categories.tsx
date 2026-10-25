@@ -3,13 +3,14 @@
 
 import { useRouter } from "next/navigation";
 import { normalizeType, readPreference, savePreference, toHeroType } from "../lib/preferences";
+import Icon from "./Icon";
 
 
 const categories = [
   {
     title: "Boarding Schools",
     description: "Discover schools with residential facilities.",
-    icon: "🏫",
+    icon: "school",
     color: "bg-[#FAE5EC]",
     iconBg: "bg-[#F0C7D5]",
     textColor: "text-[#C8104F]",
@@ -18,7 +19,7 @@ const categories = [
   {
     title: "Day Schools",
     description: "Explore schools for everyday learning and growth.",
-    icon: "☀️",
+    icon: "sun",
     color: "bg-[#DDEAF2]",
     iconBg: "bg-[#A6D8F5]",
     textColor: "text-[#0A5C91]",
@@ -27,7 +28,7 @@ const categories = [
   {
     title: "Play School",
     description: "Find schools offering both learning options.",
-    icon: "🌿",
+    icon: "sprout",
     color: "bg-[#E5EAF0]",
     iconBg: "bg-[#FFC2D4]",
     textColor: "text-[#39506B]",
@@ -98,7 +99,7 @@ export default function Categories() {
               <div
                 className={`relative flex h-16 w-16 items-center justify-center rounded-2xl ${category.iconBg} text-3xl shadow-sm transition-transform duration-300 group-hover:rotate-3 group-hover:scale-110`}
               >
-                {category.icon}
+                <Icon name={category.icon} className="h-8 w-8" />
               </div>
 
               <h3 className={`relative mt-6 text-xl font-extrabold ${category.textColor}`}>

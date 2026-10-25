@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Icon from "../Icon";
 
 export default function PhotoGallery({ images, name }: { images: string[]; name: string }) {
   const [idx, setIdx] = useState<number | null>(null);
@@ -45,10 +46,10 @@ export default function PhotoGallery({ images, name }: { images: string[]; name:
 
       {idx !== null && (
         <div role="dialog" aria-modal="true" aria-label="Photo viewer" className="fixed inset-0 z-[70] flex items-center justify-center bg-[#071b2e]/95 p-4" onClick={close}>
-          <button type="button" onClick={close} aria-label="Close" className="absolute right-5 top-5 rounded-full bg-white/15 px-4 py-2 text-lg text-white hover:bg-white/25">✕</button>
-          <button type="button" onClick={(e) => { e.stopPropagation(); step(-1); }} aria-label="Previous photo" className="absolute left-3 rounded-full bg-white/15 px-4 py-3 text-2xl text-white hover:bg-[#EC0E58] sm:left-8">‹</button>
+          <button type="button" onClick={close} aria-label="Close" className="absolute right-5 top-5 rounded-full bg-white/15 px-4 py-2 text-lg text-white hover:bg-white/25"><Icon name="x" className="h-5 w-5" /></button>
+          <button type="button" onClick={(e) => { e.stopPropagation(); step(-1); }} aria-label="Previous photo" className="absolute left-3 rounded-full bg-white/15 px-4 py-3 text-2xl text-white hover:bg-[#EC0E58] sm:left-8"><Icon name="chevronLeft" className="h-6 w-6" /></button>
           <img src={images[idx]} alt={`${name} photo ${idx + 1}`} onClick={(e) => e.stopPropagation()} className="max-h-[85vh] max-w-full rounded-2xl object-contain shadow-2xl" />
-          <button type="button" onClick={(e) => { e.stopPropagation(); step(1); }} aria-label="Next photo" className="absolute right-3 rounded-full bg-white/15 px-4 py-3 text-2xl text-white hover:bg-[#EC0E58] sm:right-8">›</button>
+          <button type="button" onClick={(e) => { e.stopPropagation(); step(1); }} aria-label="Next photo" className="absolute right-3 rounded-full bg-white/15 px-4 py-3 text-2xl text-white hover:bg-[#EC0E58] sm:right-8"><Icon name="chevronRight" className="h-6 w-6" /></button>
           <p className="absolute bottom-5 text-sm font-semibold text-white/80">{idx + 1} / {images.length}</p>
         </div>
       )}

@@ -1,16 +1,26 @@
 "use client";
 
-// Shown under the school list. Everything is connected to what the visitor selected:
-//   state  -> boarding / day / day+boarding in that state, and every city of the state
-//   city   -> the same for the city, its boards, other cities of the state, the state
-//   none   -> all states
+// Listing ke neeche: jo location select hai, usi ke hisaab se links.
 import Link from "next/link";
 import { stateFor, type School } from "../data/schools";
-
-import { TYPE_ORDER, listingHref, typeLabel } from "../lib/links";
+import { cityPath, statePath } from "../lib/seo";
+import { TYPE_ORDER, listingHref, typeLabel, typePath } from "../lib/links";
+import { pretty } from "../lib/places";
 import { useActiveLocation } from "../lib/useActiveLocation";
+import type { ActiveLocation } from "../lib/locationsApi";
 
-const chip = "rounded-full border border-[#D6DDE5] bg-white px-4 py-2 text-sm font-semibold text-[#0A5C91] transition hover:border-[#0795DC] hover:bg-[#E1F1FA]";
+const row =
+  "flex items-center justify-between gap-3 rounded-xl border border-[#E1E7EE] bg-white px-4 py-3 text-sm font-semibold text-[#0A5C91] transition hover:border-[#0795DC] hover:bg-[#E1F1FA]";
+const pill = "shrink-0 rounded-full bg-[#EEF3F8] px-2.5 py-0.5 text-xs font-bold text-[#5C6A7B]";
+const card = "rounded-2xl border border-[#E1E7EE] bg-[#F6FAFD] p-5";
+
+/** On the listing page a click only changes the filters (no new page). Right-click / new tab still opens the clean URL. */
+const inPlace = (detail: Record<string, string>) => (e: React.MouseEvent) => {
+  if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+  if (!document.getElementById("results")) return;
+  e.preventDefault();
+  window.dispatchEvent(new CustomEvent("vv-apply-filters", { detail }));
+};
 
 function count<T>(list: T[], key: (x: T) => string) {
   const m = new Map<string, number>();
@@ -18,28 +28,39 @@ function count<T>(list: T[], key: (x: T) => string) {
   return m;
 }
 
-export default function RelatedLinks({ schools }: { schools: School[] }) {
-  const active = useActiveLocation();
+export default function RelatedLinks({ schools, initial }: { schools: School[]; initial?: ActiveLocation }) {
+  const active = useActiveLocation(initial);
 
-  // which state does the selection belong to?
-  const state = active ? (active.kind === "state" ? active.name : stateFor(schools.find((s) => s.city === active.name) ?? { city: active.name })) : "";
+  const state = active
+    ? active.kind === "state"
+      ? active.name
+      : stateFor(schools.find((s) => s.city === active.name) ?? { city: active.name })
+    : "";
   const inState = state ? schools.filter((s) => stateFor(s) === state) : [];
   const place = active ? (active.kind === "state" ? inState : schools.filter((s) => s.city === active.name)) : [];
   const types = count(place, (s) => s.type);
   const boards = count(place, (s) => s.board);
   const cities = count(inState, (s) => s.city);
-  const otherCities = Array.from(cities.entries()).filter(([c]) => c !== active?.name).sort((a, b) => b[1] - a[1]);
+  const cityRows = [...cities.entries()]
+    .filter(([c]) => active?.kind === "state" || c !== active?.name)
+    .sort((a, b) => b[1] - a[1]);
 
-  // nothing selected -> browse all states
   if (!active) {
-    const states = Array.from(count(schools, (s) => stateFor(s) || "Other").entries()).filter(([n]) => n !== "Other").sort((a, b) => b[1] - a[1]);
+    const states = [...count(schools, (s) => stateFor(s) || "Other").entries()]
+      .filter(([n]) => n !== "Other")
+      .sort((a, b) => b[1] - a[1]);
     if (!states.length) return null;
     return (
       <section className="mx-auto max-w-7xl px-5 pb-10 lg:px-8">
         <h2 className="text-xl font-extrabold text-[#0B2A47]">Browse schools by state</h2>
-        <ul className="mt-4 flex flex-wrap gap-3">
+        <ul className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {states.map(([n, c]) => (
-            <li key={n}><Link href={listingHref({ state: n })} className={chip}>Schools in {n} <span className="text-[#8896A6]">({c})</span></Link></li>
+            <li key={n}>
+              <Link href={statePath(n)} className={row}>
+                <span>Schools in {pretty(n)}</span>
+                <span className={pill}>{c}</span>
+              </Link>
+            </li>
           ))}
         </ul>
       </section>
@@ -47,63 +68,71 @@ export default function RelatedLinks({ schools }: { schools: School[] }) {
   }
 
   const ownKey = active.kind === "state" ? "state" : "city";
-  return (
-    <section aria-label={`More schools in ${active.name}`} className="mx-auto max-w-7xl px-5 pb-10 lg:px-8">
-      <h2 className="text-xl font-extrabold text-[#0B2A47]">More ways to explore schools in {active.name}</h2>
+  const name = pretty(active.name);
 
-      <div className="mt-4 grid gap-5 md:grid-cols-2">
-        <div className="rounded-2xl border border-[#E1E7EE] bg-[#F6FAFD] p-5">
+  return (
+    <section aria-label={`More schools in ${name}`} className="mx-auto max-w-7xl px-5 pb-12 lg:px-8">
+      <h2 className="text-2xl font-extrabold text-[#0B2A47]">More ways to explore schools in {name}</h2>
+
+      <div className="mt-5 grid gap-5 lg:grid-cols-3">
+        <div className={card}>
           <h3 className="font-extrabold text-[#0B2A47]">By school type</h3>
-          <ul className="mt-3 flex flex-wrap gap-2">
+          <ul className="mt-4 grid gap-2">
             {TYPE_ORDER.filter((t) => types.get(t)).map((t) => (
               <li key={t}>
-                <Link href={listingHref({ type: t, [ownKey]: active.name })} scroll={false} className={chip}>
-                  {typeLabel(t)} in {active.name} <span className="text-[#8896A6]">({types.get(t)})</span>
+                <Link href={typePath(t, active.name)} onClick={inPlace({ type: t, [ownKey]: active.name })} className={row}>
+                  <span>{typeLabel(t)} in {name}</span>
+                  <span className={pill}>{types.get(t)}</span>
                 </Link>
               </li>
             ))}
           </ul>
         </div>
 
-        <div className="rounded-2xl border border-[#E1E7EE] bg-[#F6FAFD] p-5">
+        <div className={card}>
           <h3 className="font-extrabold text-[#0B2A47]">By board</h3>
-          <ul className="mt-3 flex flex-wrap gap-2">
-            {Array.from(boards.entries()).sort((a, b) => b[1] - a[1]).map(([b, n]) => (
+          <ul className="mt-4 grid gap-2">
+            {[...boards.entries()].sort((a, b) => b[1] - a[1]).map(([b, n]) => (
               <li key={b}>
-                <Link href={listingHref({ board: b, [ownKey]: active.name })} scroll={false} className={chip}>
-                  {b} schools in {active.name} <span className="text-[#8896A6]">({n})</span>
+                <Link href={listingHref({ board: b, [ownKey]: active.name })} scroll={false} onClick={inPlace({ board: b, [ownKey]: active.name })} className={row}>
+                  <span>{b} schools</span>
+                  <span className={pill}>{n}</span>
                 </Link>
               </li>
             ))}
           </ul>
         </div>
+
+        {cityRows.length > 0 && (
+          <div className={card}>
+            <h3 className="font-extrabold text-[#0B2A47]">
+              {active.kind === "state" ? `Cities in ${name}` : `Other cities in ${pretty(state || "this state")}`}
+            </h3>
+            <ul className="mt-4 grid gap-2">
+              {cityRows.map(([c, n]) => (
+                <li key={c}>
+                  <Link href={cityPath(c)} onClick={inPlace({ city: c })} className={row}>
+                    <span>Schools in {pretty(c)}</span>
+                    <span className={pill}>{n}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
-    
-      {(active.kind === "state" ? Array.from(cities.entries()).sort((a, b) => b[1] - a[1]) : otherCities).length > 0 && (
-        <div className="mt-5 rounded-2xl border border-[#E1E7EE] bg-[#F6FAFD] p-5">
-          <h3 className="font-extrabold text-[#0B2A47]">
-            {active.kind === "state" ? `Cities in ${active.name}` : `Other cities in ${state || "this state"}`}
-          </h3>
-          <ul className="mt-3 flex flex-wrap gap-2">
-            {(active.kind === "state" ? Array.from(cities.entries()).sort((a, b) => b[1] - a[1]) : otherCities).map(([c, n]) => (
-              <li key={c}>
-                <Link href={listingHref({ city: c })} className={chip}>
-                  Schools in {c} <span className="text-[#8896A6]">({n})</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-
-      <div className="mt-5 flex flex-wrap gap-3">
-        <Link href={listingHref({ [ownKey]: active.name })} className="rounded-full bg-[#0A5C91] px-5 py-2.5 text-sm font-extrabold text-white hover:bg-[#0795DC]">
-          All schools in {active.name} →
+      <div className="mt-6 flex flex-wrap gap-3">
+        <Link
+          href={active.kind === "state" ? statePath(active.name) : cityPath(active.name)}
+          className="rounded-full bg-[#0A5C91] px-6 py-3 text-sm font-extrabold text-white transition hover:bg-[#0795DC]"
+        >
+          All schools in {name} →
         </Link>
         {active.kind === "city" && state && (
-          <Link href={listingHref({ state })} className={chip}>Schools in {state}</Link>
+          <Link href={statePath(state)} className="rounded-full border border-[#D6DDE5] bg-white px-6 py-3 text-sm font-bold text-[#0A5C91] hover:border-[#0795DC]">
+            Schools in {pretty(state)}
+          </Link>
         )}
       </div>
     </section>

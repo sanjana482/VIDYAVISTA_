@@ -29,10 +29,12 @@ function fromBrowser(): ActiveLocation {
 
 const same = (a: ActiveLocation, b: ActiveLocation) => a?.kind === b?.kind && a?.name === b?.name;
 
-export function useActiveLocation(): ActiveLocation {
-  const [loc, setLoc] = useState<ActiveLocation>(null);
+export function useActiveLocation(initial?: ActiveLocation): ActiveLocation {
+  const [loc, setLoc] = useState<ActiveLocation>(initial ?? null);
+  const ikey = initial ? `${initial.kind}:${initial.name}` : "";
   useEffect(() => {
-    const sync = () => setLoc((prev) => { const next = fromBrowser(); return same(prev, next) ? prev : next; });
+    const read = () => initial ?? fromBrowser();
+    const sync = () => setLoc((prev) => { const next = read(); return same(prev, next) ? prev : next; });
     const onSet = (e: Event) => { const next = (e as CustomEvent<ActiveLocation>).detail ?? null; setLoc((prev) => (same(prev, next) ? prev : next)); };
     sync();
     window.addEventListener(PREF_EVENT, sync);
@@ -43,7 +45,8 @@ export function useActiveLocation(): ActiveLocation {
       window.removeEventListener("popstate", sync);
       window.removeEventListener(SET_EVENT, onSet);
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ikey]);
   return loc;
 }
 

@@ -4,6 +4,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import FooterLocationLinks, { type FooterContext } from "./FooterLocationLinks";
+import Icon from "./Icon";
 
 type BrowseTab = "region" | "board" | "popular";
 
@@ -53,9 +54,9 @@ const BOARD_PARAM: Record<string, string> = {
   "State Board Schools": "State Board",
 };
 const TYPE_OPTIONS = [
-  { label: "Day Schools", value: "Day School", icon: "🏠", hint: "Home every evening" },
-  { label: "Boarding Schools", value: "Boarding School", icon: "🏫", hint: "Fully residential" },
-  { label: "Play School Schools", value: "Play School", icon: "🔄", hint: "Both options on one campus" },
+  { label: "Day Schools", value: "Day School", icon: "home", hint: "Home every evening" },
+  { label: "Boarding Schools", value: "Boarding School", icon: "school", hint: "Fully residential" },
+  { label: "Play School Schools", value: "Play School", icon: "puzzle", hint: "Both options on one campus" },
 ];
 const TYPE_BY_LABEL: Record<string, string> = Object.fromEntries(TYPE_OPTIONS.map((t) => [t.label, t.value]));
 
@@ -117,7 +118,7 @@ function BoardCard({
                 href={schoolsHref({ board, type: t.value, ...place })}
                 className="flex items-center justify-between gap-3 rounded-lg bg-white/[0.07] px-3 py-2.5 text-sm text-[#DEE4EA] transition hover:bg-[#FF6B9A] hover:text-[#0B2A47]"
               >
-                <span><span aria-hidden>{t.icon}</span> {t.label}</span>
+                <span><Icon name={t.icon} className="mr-1 inline h-4 w-4" /> {t.label}</span>
                 <span aria-hidden>→</span>
               </Link>
             ))}
@@ -133,25 +134,25 @@ function BoardCard({
 
 const features = [
   {
-    icon: "⚖️",
+    icon: "scale",
     title: "Compare schools",
     description: "Shortlist and compare boards, fees and facilities side by side.",
     href: "/compare",
   },
   {
-    icon: "💬",
+    icon: "message",
     title: "Parent reviews",
     description: "Read family feedback before making your decision.",
     href: "/schools",
   },
   {
-    icon: "🧭",
+    icon: "compass",
     title: "Admission guidance",
     description: "Get help understanding documents, dates and campus visits.",
     href: "/admission-guide",
   },
   {
-    icon: "📞",
+    icon: "phone",
     title: "Free counselling",
     description: "Get guidance to create your personalised school shortlist.",
     href: "/counselling",
@@ -196,7 +197,7 @@ export default function Footer({ context }: { context?: FooterContext } = {}) {
               className="group flex gap-4 rounded-2xl border border-white/10 bg-white/[0.055] p-5 transition duration-300 hover:-translate-y-1 hover:border-[#FF6B9A]/60 hover:bg-white/[0.09]"
             >
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FF6B9A] to-[#EC0E58] text-xl shadow-lg">
-                {feature.icon}
+                <Icon name={feature.icon} className="h-6 w-6" />
               </span>
 
               <span>
@@ -288,8 +289,8 @@ export default function Footer({ context }: { context?: FooterContext } = {}) {
             </form>
 
             <div className="mt-4 space-y-2 text-sm text-[#CDD4DD]">
-              <p>✉ hello@vidyavista.example</p>
-              <p>☎ Contact details coming soon</p>
+              <p className="flex items-center gap-2"><Icon name="mail" className="h-4 w-4" /> hello@vidyavista.example</p>
+              <p className="flex items-center gap-2"><Icon name="phone" className="h-4 w-4" /> Contact details coming soon</p>
             </div>
           </div>
 

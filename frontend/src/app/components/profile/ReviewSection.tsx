@@ -1,18 +1,22 @@
 "use client";
 
 import { useState } from "react";
+import { API_URL } from "../../lib/api";
+import Icon, { Stars } from "../Icon";
 
-type Props = { schoolName: string; rating: number; count: number };
+type Review = { name: string; role: string; rating: number; text: string; date: string };
+type Props = { schoolId: number; schoolName: string; rating: number; count: number; reviews?: Review[] };
 
-export default function ReviewSection({ schoolName, rating, count }: Props) {
+export default function ReviewSection({ schoolId, schoolName, rating, count, reviews = [] }: Props) {
   const [formOpen, setFormOpen] = useState(false);
   const [stars, setStars] = useState(0);
   const [hover, setHover] = useState(0);
   const [f, setF] = useState({ name: "", role: "Parent", mobile: "", email: "", text: "", confirm: false });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [done, setDone] = useState(false);
+  const [sending, setSending] = useState(false);
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
     const err: Record<string, string> = {};
     if (!stars) err.stars = "Please choose a rating";
@@ -23,8 +27,25 @@ export default function ReviewSection({ schoolName, rating, count }: Props) {
     if (!f.confirm) err.confirm = "Please confirm this is your genuine experience";
     setErrors(err);
     if (Object.keys(err).length) return;
-    // TODO: POST { schoolName, stars, ...f } to your reviews API (with mobile OTP verification).
-    setDone(true);
+    setSending(true);
+    try {
+      const res = await fetch(`${API_URL}/reviews/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ schoolId, name: f.name.trim(), role: f.role, mobile: f.mobile, email: f.email, rating: stars, text: f.text }),
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        const first = Object.values(j as Record<string, string[] | string>)[0];
+        setErrors({ confirm: (Array.isArray(first) ? first[0] : first) || "Could not send your review. Please try again." });
+        setSending(false);
+        return;
+      }
+      setDone(true);
+    } catch {
+      setErrors({ confirm: "Cannot reach the server. Please try again." });
+    }
+    setSending(false);
   }
 
   const input = (bad?: string) =>
@@ -47,9 +68,7 @@ export default function ReviewSection({ schoolName, rating, count }: Props) {
         <div className="mt-5 flex flex-wrap items-center gap-5 rounded-2xl border border-[#E1E7EE] bg-[#F6FAFD] px-6 py-5">
           <p className="text-5xl font-extrabold text-[#0B2A47]">{rating}<span className="text-xl font-bold text-[#8896A6]"> / 5</span></p>
           <div>
-            <p className="text-xl tracking-wider text-[#E99A24]" aria-label={`${rating} out of 5 stars`}>
-              {"★".repeat(Math.round(rating))}<span className="text-[#D6DDE5]">{"★".repeat(5 - Math.round(rating))}</span>
-            </p>
+            <Stars value={rating} className="h-6 w-6" />
             <p className="mt-1 text-sm text-[#5C6A7B]">Based on {count} parent reviews of {schoolName}</p>
           </div>
         </div>
@@ -59,11 +78,25 @@ export default function ReviewSection({ schoolName, rating, count }: Props) {
         </div>
       )}
 
+      {reviews.length > 0 && (
+        <ul className="mt-6 space-y-4">
+          {reviews.map((r, i) => (
+            <li key={i} className="rounded-2xl border border-[#E1E7EE] bg-white p-5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="font-extrabold text-[#0B2A47]">{r.name} <span className="text-sm font-semibold text-[#707E8F]">· {r.role}</span></p>
+                <Stars value={r.rating} className="h-4 w-4" />
+              </div>
+              <p className="mt-2 leading-7 text-[#4E5A68]">{r.text}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+
       {(formOpen || count === 0) && (
         <div className="mt-5 rounded-3xl border border-[#E1E7EE] bg-white p-6 shadow-sm sm:p-8">
           {done ? (
             <div role="status" className="py-6 text-center">
-              <p className="text-4xl">🎉</p>
+              <Icon name="party" className="mx-auto h-10 w-10 text-[#EC0E58]" />
               <p className="mt-3 text-xl font-extrabold text-[#0A5C91]">Thank you for sharing your experience!</p>
               <p className="mt-2 text-sm text-[#5C6A7B]">Your review will appear after verification.</p>
             </div>
@@ -77,8 +110,8 @@ export default function ReviewSection({ schoolName, rating, count }: Props) {
                   <button
                     key={n} type="button" aria-label={`${n} star${n > 1 ? "s" : ""}`} aria-pressed={stars === n}
                     onMouseEnter={() => setHover(n)} onClick={() => setStars(n)}
-                    className={`text-4xl leading-none transition ${(hover || stars) >= n ? "text-[#E99A24]" : "text-[#D0D6DD]"}`}
-                  >★</button>
+                    className="transition hover:scale-110"
+                  ><Icon name="star" className={`h-9 w-9 ${(hover || stars) >= n ? "fill-[#E99A24] text-[#E99A24]" : "fill-[#E1E7EE] text-[#D0D6DD]"}`} /></button>
                 ))}
               </div>
               <Err k="stars" />
@@ -119,8 +152,8 @@ export default function ReviewSection({ schoolName, rating, count }: Props) {
               </label>
               <Err k="confirm" />
 
-              <button type="submit" className="mt-6 rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-7 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#0A5C91]/25 transition hover:-translate-y-0.5">
-                Submit review
+              <button type="submit" disabled={sending} className="mt-6 rounded-xl disabled:opacity-60 bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-7 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#0A5C91]/25 transition hover:-translate-y-0.5">
+                {sending ? "Sending…" : "Submit review"}
               </button>
             </form>
           )}

@@ -104,12 +104,26 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import LocationPicker from "./LocationPicker";
+import { openLocationPicker } from "../lib/places";
+import { normalizeType, readPreference } from "../lib/preferences";
+import { typePath } from "../lib/links";
+import Icon from "./Icon";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+
+  // "Schools": location already chosen before (cookie) -> open that listing, otherwise ask for the location
+  const goSchools = () => {
+    const pref = readPreference();
+    const type = pref ? normalizeType(pref.type) : "";
+    if (pref?.location && type) router.push(typePath(type, pref.location));
+    else openLocationPicker();
+  };
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
 
   const links = [
@@ -135,6 +149,7 @@ export default function Navbar() {
             <Link
               key={link.name}
               href={link.href}
+              onClick={link.name === "Schools" ? (e) => { e.preventDefault(); goSchools(); } : undefined}
               className={`border-b-2 pb-1 text-sm font-semibold transition hover:text-[#0A7BBF] ${isActive(link.href) ? "border-[#EC0E58] text-[#0B2A47]" : "border-transparent text-[#4E5A68]"}`}
             >
               {link.name}
@@ -164,7 +179,7 @@ export default function Navbar() {
           onClick={() => setMenuOpen(!menuOpen)}
           className="rounded-xl border border-[#D6DDE5] bg-white p-2.5 text-xl text-[#0A5C91] md:hidden"
         >
-          {menuOpen ? "✕" : "☰"}
+          <Icon name={menuOpen ? "x" : "menu"} className="h-6 w-6" />
         </button>
       </nav>
 
@@ -174,7 +189,7 @@ export default function Navbar() {
             <Link
               key={link.name}
               href={link.href}
-              onClick={() => setMenuOpen(false)}
+              onClick={(e) => { setMenuOpen(false); if (link.name === "Schools") { e.preventDefault(); goSchools(); } }}
               className="block rounded-lg px-3 py-2 font-semibold text-[#4E5A68] hover:bg-[#E5EDF2] hover:text-[#0A5C91]"
             >
               {link.name}
@@ -196,6 +211,7 @@ export default function Navbar() {
           </Link>
         </div>
       )}
+      <LocationPicker />
     </header>
   );
 }

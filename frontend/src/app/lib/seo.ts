@@ -8,7 +8,7 @@ export function schoolMetadata(id: string, section: Section): Metadata {
   }
 }
 
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.vidyavista.com").replace(/\/$/, "");
+export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://vidyavista.vercel.app/").replace(/\/$/, "");
 export const SITE_NAME = "VidyaVista";
 
 export const abs = (path: string) => `${SITE_URL}${path.startsWith("/") ? path : `/${path}`}`;
@@ -17,7 +17,7 @@ export const slugify = (s: string) =>
   s.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 
 /** SEO friendly path: /schools/maplewood-academy-whitefield-bengaluru-1  (id is always last) */
-export const schoolSlug = (s: School) => `${slugify(`${s.name} ${s.area} ${s.city}`)}-${s.id}`;
+export const schoolSlug = (s: School) => s.slug || `${slugify(`${s.name} ${s.area} ${s.city}`)}`;
 export const schoolPath = (s: School) => `/schools/${schoolSlug(s)}`;
 export const SECTIONS = ["fees", "facilities", "admission", "contact", "photos", "reviews", "faqs"] as const;
 export type Section = typeof SECTIONS[number];

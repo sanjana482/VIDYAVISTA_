@@ -4,83 +4,35 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { typeRank } from "../lib/preferences";
+import type { School } from "../data/schools";
+import { BOARD_LABEL } from "../data/schools";
+import { schoolPath } from "../lib/seo";
+import { feeRange, lakh } from "../data/profile";
+import Icon, { Stars } from "./Icon";
 
-const schools = [
-  {
-    id: 1,
-    name: "Maple Grove School",
-    board: "CBSE",
-    type: "Play School",
-    location: "Whitefield, Bengaluru",
-    grades: "Nursery – Grade 12",
-    fees: "₹1.2L – ₹1.8L",
-    image:
-      "https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=900&q=85",
-    color: "bg-[#DDEAF2] text-[#0A5C91]",
-  },
-  {
-    id: 2,
-    name: "The Willow Academy",
-    board: "ICSE",
-    type: "Day School",
-    location: "Sarjapur Road, Bengaluru",
-    grades: "KG – Grade 12",
-    fees: "₹1.5L – ₹2.2L",
-    image:
-      "https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=900&q=85",
-    color: "bg-[#FAE5EC] text-[#C8104F]",
-  },
-  {
-    id: 3,
-    name: "Oakridge Learning School",
-    board: "IB",
-    type: "Play School",
-    location: "Yelahanka, Bengaluru",
-    grades: "Nursery – Grade 10",
-    fees: "₹2.4L – ₹3.6L",
-    image:
-      "https://images.unsplash.com/photo-1564981797816-1043664bf78d?auto=format&fit=crop&w=900&q=85",
-    color: "bg-[#E5EAF0] text-[#39506B]",
-  },
-  {
-    id: 4,
-    name: "Green Valley School",
-    board: "CBSE",
-    type: "Full Boarding",
-    location: "Gurugram, Delhi NCR",
-    grades: "Nursery – Grade 10",
-    fees: "₹80K – ₹1.5L",
-    image:
-      "https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?auto=format&fit=crop&w=900&q=85",
-    color: "bg-[#FCE5ED] text-[#A34262]",
-  },
-  {
-    id: 5,
-    name: "Sunrise Public School",
-    board: "State Board",
-    type: "Day School",
-    location: "Sarjapur Road, Bengaluru",
-    grades: "KG – Grade 12",
-    fees: "₹70K – ₹1.2L",
-    image:
-      "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=900&q=85",
-    color: "bg-[#DDEAF2] text-[#0A5C91]",
-  },
-  {
-    id: 6,
-    name: "Riverstone International School",
-    board: "ICSE",
-    type: "Full Boarding",
-    location: "Yelahanka, Bengaluru",
-    grades: "Nursery – Grade 10",
-    fees: "₹1L – ₹2L",
-    image:
-      "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=900&q=85",
-    color: "bg-[#FAE5EC] text-[#C8104F]",
-  },
-];
+const BOARD_COLOR = ["bg-[#DDEAF2] text-[#0A5C91]", "bg-[#FAE5EC] text-[#C8104F]", "bg-[#E5EAF0] text-[#39506B]", "bg-[#FCE5ED] text-[#A34262]"];
+const feeText = (s: School) => {
+  const r = feeRange(s);
+  return r.min > 0 ? `${lakh(r.min)} – ${lakh(r.max)}` : "Ask school";
+};
 
-export default function FeaturedSchools() {
+
+const toCard = (s: School, i: number) => ({
+  id: s.id,
+  href: schoolPath(s),
+  name: s.name,
+  board: BOARD_LABEL[s.board] ?? s.board,
+  type: s.type,
+  gender: s.gender,
+  location: `${s.area}, ${s.city}`,
+  grades: s.grades || "-",
+  fees: feeText(s),
+  image: s.image,
+  color: BOARD_COLOR[i % BOARD_COLOR.length],
+});
+
+export default function FeaturedSchools({ list }: { list: School[] }) {
+  const schools = list.map(toCard);
   const router = useRouter();
   const [compareIds, setCompareIds] = useState<number[]>([]);
   const [savedIds, setSavedIds] = useState<number[]>([]);
@@ -102,6 +54,8 @@ export default function FeaturedSchools() {
         : [...current, id]
     );
   }
+
+  if (schools.length === 0) return null;
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-[#FAFCFD] via-[#F1F5F8] to-[#F0F4F7] py-16 sm:py-20">
@@ -128,7 +82,7 @@ export default function FeaturedSchools() {
           </div>
 
           <div className="w-fit rounded-xl border border-[#F3D9E2] bg-[#FFF0F5] px-4 py-3 text-xs font-bold text-[#C8104F]">
-            ✦ Featured partner schools
+            <Icon name="sparkles" className="mr-1.5 inline h-4 w-4" /> Featured partner schools
           </div>
         </div>
 
@@ -170,7 +124,7 @@ export default function FeaturedSchools() {
                 <div className="absolute inset-0 bg-gradient-to-t from-[#172B32]/30 to-transparent" />
 
                 <span className="absolute left-4 top-4 rounded-full border border-white/60 bg-[#FCDDE7]/95 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-[#8F0B3B] shadow-sm">
-                  ✦ Featured
+                  <Icon name="sparkles" className="mr-1 inline h-3.5 w-3.5" /> Featured
                 </span>
 
                 <button
@@ -209,7 +163,7 @@ export default function FeaturedSchools() {
                     {school.board}
                   </span>
                   <span className="rounded-lg bg-[#ECF1F5] px-2.5 py-1.5 text-[11px] font-semibold text-[#5C6A7B]">
-                    Co-ed · {school.type}
+                    {school.gender} · {school.type}
                   </span>
                 </div>
 
@@ -264,7 +218,7 @@ export default function FeaturedSchools() {
                   <button
                     type="button"
                     onClick={() =>
-                      router.push(`/schools/${school.id}`)
+                      router.push(school.href)
                     }
                     className="shrink-0 rounded-lg px-2 py-2 text-xs font-extrabold text-[#0A5C91] transition hover:bg-[#DDEAF2]"
                   >
@@ -288,13 +242,9 @@ export default function FeaturedSchools() {
             className="mt-4 inline-flex items-center gap-3 rounded-xl bg-gradient-to-r from-[#0B2A47] to-[#41556B] px-7 py-4 text-sm font-extrabold text-white shadow-lg shadow-[#0B2A47]/20 transition hover:-translate-y-0.5 hover:shadow-xl"
           >
             Explore More Schools
-            <span className="text-lg">→</span>
+            <Icon name="arrowUpRight" className="h-5 w-5" />
           </button>
 
-          <p className="mt-4 max-w-lg text-xs leading-5 text-[#8A938B]">
-            *Fees shown are sample estimates for the design preview. Confirm
-            actual fees, availability and school details with each school.
-          </p>
         </div>
       </div>
     </section>

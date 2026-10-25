@@ -30,7 +30,7 @@ const ROMAN: Record<string, number> = { I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6,
 
 function gradeIndex(raw: string): number {
   const t = raw.toLowerCase().replace(/\b(class|grade|std|standard)\b|\./g, "").replace(/\s+/g, "").trim();
-  if (["nursery", "nur", "prenursery", "playgroup", "pg"].includes(t)) return 0;
+  if (["nursery", "nur", "prenursery", "playgroup", "pg", "toddler"].includes(t)) return 0;
   if (["kg", "lkg", "ukg", "prekg", "jrkg", "srkg"].includes(t)) return 1;
   const roman = ROMAN[t.toUpperCase()];
   if (roman) return 1 + roman;
@@ -113,17 +113,12 @@ export function feeRange(s: School) {
   return { min: lo, max: Math.max(lo, hi) };
 }
 
-const GALLERY_IDS = [
-  "photo-1580582932707-520aed937b7b", "photo-1509062522246-3755977927d7",
-  "photo-1523050854058-8df90110c9f1", "photo-1562774053-701939374585",
-  "photo-1564981797816-1043664bf78d", "photo-1570168007204-dfb528c6958f",
-  "photo-1567157577867-8d16e90f1571", "photo-1572445271230-a78b5944a659",
-];
-const photo = (id: string) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=1000&q=80`;
+export const PLACEHOLDER_IMAGE = "/images/school-placeholder.svg";
 
 export type Profile = {
-  established: number; students: number; ratio: number; campus: string;
+  established?: number; students?: number; teachers?: number; ratio?: number; campus?: string;
   intro: string; about: string[]; highlights: string[];
+  /** icon = a key understood by components/Icon.tsx (no emoji) */
   facilities: { title: string; icon: string; items: string[] }[];
   notAvailable: string[];
   admission: { status: string; tone: "pink" | "blue"; summary: string; steps: { title: string; text: string }[]; documents: string };
@@ -137,7 +132,7 @@ export type Profile = {
 const slug = (n: string) => n.toLowerCase().replace(/[^a-z0-9]+/g, "");
 
 export function getProfile(s: School): Profile {
-  const isVspk = s.id === 9;
+  const isVspk = false; // old demo data for one school; real data now comes from the admin panel
   const range = feeRange(s);
   const boarding = s.type !== "Day School";
   const coedWord = s.gender === "Co-ed" ? "co-educational" : s.gender === "Girls" ? "girls'" : "boys'";
@@ -150,11 +145,12 @@ const facilitiesList: string[] = Array.isArray(s.facilities)
   const firstCls = classes[0]?.cls ?? "Nursery";
   const lastCls = classes.at(-1)?.cls ?? "Class 10";
   const o = s.profile ?? {};
-  const established = o.established ?? (isVspk ? 2003 : 1994 + s.id * 3);
-  const students = o.students ?? (isVspk ? 1590 : 820 + s.id * 175);
-  const ratio = o.ratio ?? (isVspk ? 14 : 12 + (s.id % 6));
-  const campus = o.campus || (isVspk ? "1.91 acres" : `${(1.4 + s.id * 0.45).toFixed(2)} acres`);
-  const sqm = Math.round(parseFloat(campus) * 4046.86 / 100) * 100;
+  // only what the admin entered: nothing is invented any more
+  const established = o.established || undefined;
+  const students = o.students || undefined;
+  const teachers = o.teachers || undefined;
+  const ratio = o.ratio || undefined;
+  const campus = o.campus || undefined;
   const place = `${s.area}, ${s.city}`;
   const isDelhi = s.city === "Delhi";
 
@@ -172,29 +168,9 @@ const facilitiesList: string[] = Array.isArray(s.facilities)
         `Parents choose ${s.name} for its ${s.board} curriculum, ${boarding ? "residential and day options" : "convenient day-school routine"}, and facilities such as ${(facilitiesList.slice(0, 3).join(", ") || "school facilities").toLowerCase()}.`,
       ];
 
-  const highlightsAuto = [
-    `${s.board} curriculum, ${firstCls} to ${lastCls}`,
-    `Student-teacher ratio of ${ratio}:1`,
-    "Smart, air-conditioned classrooms with Wi-Fi",
-    "Transport with GPS bus tracking",
-    "Sibling criteria considered in admission",
-    "Accessible campus: ramps, washrooms, elevators",
-    `Large campus of about ${sqm.toLocaleString("en-IN")} sq. m.`,
-    "Medium of instruction: English (Hindi taught)",
-  ];
-
-  const facilities = [
-    { title: "Classrooms & learning", icon: "📚", items: ["Smart classes", "Wi-Fi", "AC classrooms", "Library / reading room", "Computer lab", "Science lab", "Auditorium / media room"] },
-    { title: "Sports & fitness", icon: "🏅", items: ["Indoor sports", "Outdoor sports", "Playground", "Yoga", "Skating", "Gym", "Taekwondo", "Cricket academy"] },
-    { title: "Programmes & clubs", icon: "🔬", items: ["Atal Tinkering Lab", "Abacus and Vedic Maths", "Astronomy club", "Literary club", "Science club", "Performing arts club", "Music programme"] },
-    { title: "Activities", icon: "🎨", items: ["Art and craft", "Dance", "Music", "Debate", "Drama", "Gardening", "Picnics and excursions"] },
-    {
-      title: "Safety & services", icon: "🛡️",
-      items: ["CCTV", "GPS bus tracking app", "Student tracking app", "Medical room", "Transportation", "Meals", ...(boarding ? ["Hostel"] : []), "Alumni association"],
-    },
-    { title: "Accessibility", icon: "♿", items: ["Ramps", "Accessible washrooms", "Elevators"] },
-  ];
-  const notAvailable = ["Cafeteria / canteen", "day care", ...(boarding ? [] : ["hostel"]), "swimming pool", "robotics lab"];
+  // facilities = exactly the ones ticked in the admin (grouped under one heading)
+  const facilities = facilitiesList.length ? [{ title: "Facilities available", icon: "building", items: facilitiesList }] : [];
+  const notAvailable: string[] = [];
 
   const admissionAuto = isDelhi
     ? {
@@ -230,8 +206,8 @@ const facilitiesList: string[] = Array.isArray(s.facilities)
       }
     : {
         address: `${s.area}, ${s.city}`,
-        phone: s.phone.replace(/^\+91(\d{5})(\d{5})$/, "+91 $1 $2"), phoneHref: s.phone,
-        email: `admissions@${slug(s.name)}.example`, website: `www.${slug(s.name)}.example`, session: "April to March",
+        phone: s.phone, phoneHref: (s.phone || "").split(" / ")[0].replace(/\D/g, ""),
+        email: "", website: "", session: "April to March",
       };
 
   const faqsAuto = [
@@ -239,15 +215,12 @@ const facilitiesList: string[] = Array.isArray(s.facilities)
     { q: `Which board does ${s.name} follow?`, a: `${s.name} follows the ${s.board} board and teaches from ${firstCls} to ${lastCls}.` },
     { q: `Is ${s.name} a day school or a boarding school?`, a: `${s.name} is a ${s.type.toLowerCase()}. ${boarding ? "Hostel facilities are available on campus." : "Hostel facilities are not available."}` },
     { q: `How can I apply for admission to ${s.name} for 2027-28?`, a: `Send an enquiry using the form on this page or call the school. ${isDelhi ? "Nursery, KG and Class 1 admissions follow the Delhi DoE schedule." : "The admissions office will share the application process and key dates."}` },
-    { q: `What is the student-teacher ratio at ${s.name}?`, a: `The student-teacher ratio is about ${ratio}:1, with around ${students.toLocaleString("en-IN")} students on roll.` },
-    { q: `What facilities does ${s.name} offer?`, a: `Facilities include smart classrooms, library, computer and science labs, sports and activity spaces, CCTV and GPS-tracked transport. See the Facilities section for the full list.` },
-    { q: `Does ${s.name} provide school transport?`, a: `Yes, transport is available with GPS bus tracking. Routes and timings depend on your locality, so confirm with the school.` },
     { q: `What documents are needed for admission to ${s.name}?`, a: admissionAuto.documents.replace("Documents commonly asked: ", "Commonly asked documents include ") },
   ];
 
   // ---- anything the admin typed in /admin wins over the generated text ----
   const about = s.about?.trim() ? s.about.split(/\n\s*\n/).map((x) => x.trim()).filter(Boolean) : aboutAuto;
-  const highlights = s.highlights?.length ? s.highlights : highlightsAuto;
+  const highlights = s.highlights?.length ? s.highlights : [];
   const faqs = s.faqs?.length ? s.faqs : faqsAuto;
   const admission = {
     ...admissionAuto,
@@ -263,13 +236,11 @@ const facilitiesList: string[] = Array.isArray(s.facilities)
     website: o.website || contactAuto.website,
   };
 
-  const others = GALLERY_IDS.map(photo).filter((u) => u !== s.image);
-  const gallery = s.gallery?.length
-    ? Array.from(new Set([s.image, ...s.gallery]))
-    : [s.image, ...others].slice(0, Math.max(7, 1));
+  // only real photos (uploaded or linked in the admin)
+  const gallery = Array.from(new Set([s.image, ...(s.gallery ?? [])])).filter((u) => u && u !== PLACEHOLDER_IMAGE);
 
   return {
-    established, students, ratio, campus, intro, about, highlights, facilities, notAvailable,
+    established, students, teachers, ratio, campus, intro, about, highlights, facilities, notAvailable,
     admission, contact, faqs, gallery,
     feeUpdated: s.feeUpdated || "Nov 2025",
     feeSource: s.feeNote || `Source: Public listing, updated Nov 2025. Fees are indicative and may change each academic year. Figures for different sessions come from different public listings, so they may not be directly comparable. The total admission cost for 2027-28 is listed as roughly ${rupee(range.min * 1.08)} to ${rupee(range.max * 1.066)} including registration, tuition, admission, annual, development and other fees. Please confirm the latest fees with the school.`,

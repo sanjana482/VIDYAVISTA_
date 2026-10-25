@@ -56,7 +56,7 @@ import type { School } from "../data/schools";
 
 type ApiSchool = Partial<School> & { schoolId: number; name: string; area: string; city: string; state?: string };
 
-const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=900&q=80";
+const FALLBACK_IMAGE = "/images/school-placeholder.svg"; // shown only until a real cover photo is added in the admin
 
 export const mapSchool = (d: ApiSchool): School => ({
   id: d.schoolId,
@@ -66,9 +66,9 @@ export const mapSchool = (d: ApiSchool): School => ({
   state: d.state,
   board: d.board as School["board"],
   grades: d.grades ?? "",
-  type: d.type as School["type"],
+  type: (d.type === ("Day" as string) ? "Day School" : d.type) as School["type"], // the database stores "Day"
   gender: (d.gender ?? "Co-ed") as School["gender"],
-  rating: d.rating ?? 0,
+  rating: Number(d.rating) || 0,
   reviews: d.reviews ?? 0,
   fee: d.fee ?? 0,
   feeMin: d.feeMin || undefined,
@@ -86,6 +86,12 @@ export const mapSchool = (d: ApiSchool): School => ({
   feeNote: d.feeNote || undefined,
   feeUpdated: d.feeUpdated || undefined,
   profile: d.profile && Object.values(d.profile).some((v) => v !== undefined && v !== "" && v !== null) ? d.profile : undefined,
+  slug: d.slug,
+  isFeatured: !!d.isFeatured,
+  isRecommended: !!d.isRecommended,
+  owner: d.owner ?? null,
+  social: d.social && Object.keys(d.social).length ? d.social : undefined,
+  reviewList: d.reviewList?.length ? d.reviewList : undefined,
 });
 
 const REVALIDATE = 60;

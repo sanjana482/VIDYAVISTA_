@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { lakh, rupee, type FeeSlab } from "../../data/profile";
 import { openEnquiry } from "./enquiry";
+import Icon from "../Icon";
 
 type Props = {
   schoolName: string;
@@ -106,7 +107,7 @@ export default function FeeSection({ schoolName, slabs, updated, source }: Props
       </div>
 
       <p className="mt-4 text-sm text-[#4E5A68]">
-        📈 Fees step up as children move to higher classes: {last?.cls ?? "Higher classes"} costs about {pct}% more than {first?.cls ?? "Starting class"} ({session} listing).
+        <Icon name="trending" className="mr-1.5 inline h-4 w-4 text-[#0795DC]" /> Fees step up as children move to higher classes: {last?.cls ?? "Higher classes"} costs about {pct}% more than {first?.cls ?? "Starting class"} ({session} listing).
       </p>
 
       <div className="mt-5 overflow-hidden rounded-2xl border border-[#E1E7EE]">
@@ -212,7 +213,7 @@ export default function FeeSection({ schoolName, slabs, updated, source }: Props
       </div>
 
       <div className="mt-5 rounded-2xl border border-[#F7B6CB] bg-[#FDF0F5] px-5 py-4 text-[#4E3A44]">
-        💡 <strong className="font-extrabold text-[#C8104F]">Good to know:</strong> ask the school whether transport, uniform, books, meals and activities are included in these figures or charged separately, and request the official fee letter before you pay.
+        <Icon name="bulb" className="mr-1.5 inline h-4 w-4 text-[#EC0E58]" /> <strong className="font-extrabold text-[#C8104F]">Good to know:</strong> ask the school whether transport, uniform, books, meals and activities are included in these figures or charged separately, and request the official fee letter before you pay.
       </div>
       <p className="mt-4 text-sm leading-6 text-[#707E8F]">{source}</p>
     </div>

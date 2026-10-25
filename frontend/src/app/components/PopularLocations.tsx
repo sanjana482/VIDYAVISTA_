@@ -1,105 +1,123 @@
-
 "use client";
 
+// Homepage "Top States / Popular Cities" cards. These are STATIC on purpose (not read from the admin).
+//   - To add a place: add one line to `states` or `cities` below.
+//   - Photo: put a link (https://...) or a file in /public/images/places/ (e.g. "/images/places/nashik.jpg").
+//     If the photo is missing or does not load, a coloured card with the name is shown instead.
+//   - Click -> listing page opens with that state / city ticked (/boarding-schools/<state>, /day-schools/<city>).
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { savePreference } from "../lib/preferences";
+import { typePath } from "../lib/links";
+import Icon from "./Icon";
 
-const cities = [
-  {
-    name: "Mumbai",
-    image:
-      "https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=600&q=80",
-  },
-  {
-    name: "Bengaluru",
-    image:
-      "https://images.unsplash.com/photo-1596176530529-78163a4f7af2?auto=format&fit=crop&w=600&q=80",
-  },
-  {
-    name: "Pune",
-    image:
-      "https://images.unsplash.com/photo-1567157577867-8d16e90f1571?auto=format&fit=crop&w=600&q=80",
-  },
-  {
-    name: "Dehradun",
-    image:
-      "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=600&q=80",
-  },
-  {
-    name: "Hyderabad",
-    image:
-      "https://images.unsplash.com/photo-1572445271230-a78b5944a659?auto=format&fit=crop&w=600&q=80",
-  },
-  {
-    name: "Jaipur",
-    image:
-      "https://images.unsplash.com/photo-1599661046827-dacff0c0f09a?auto=format&fit=crop&w=600&q=80",
-  },
+type Place = { name: string; image?: string };
+const u = (id: string) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=600&q=80`;
+
+const states: Place[] = [
+  { name: "Maharashtra" },
+  { name: "Karnataka", image: u("photo-1596176530529-78163a4f7af2") },
+  { name: "Delhi", image: u("photo-1587474260584-136574528ed5") },
+  { name: "Tamil Nadu", image: u("photo-1606293926075-69a00dbfde81") },
+  { name: "Gujarat", image: u("photo-1514222134-b57cbb8ce073") },
+  { name: "Rajasthan", image: u("photo-1477587458883-47145ed94245") },
+  { name: "Uttar Pradesh" },
+  { name: "Madhya Pradesh" },
+  { name: "Telangana" },
+  { name: "West Bengal" },
+  { name: "Uttarakhand" },
+  { name: "Punjab" },
+  { name: "Haryana" },
+  { name: "Kerala" },
+  { name: "Himachal Pradesh" },
+  { name: "Goa" },
 ];
 
-const states = [
-  {
-    name: "Maharashtra",
-    image:
-      "https://images.unsplash.com/photo-1567157577867-8d16e90f1571?auto=format&fit=crop&w=600&q=80",
-  },
-  {
-    name: "Karnataka",
-    image:
-      "https://images.unsplash.com/photo-1596176530529-78163a4f7af2?auto=format&fit=crop&w=600&q=80",
-  },
-  {
-    name: "Delhi",
-    image:
-      "https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&w=600&q=80",
-  },
-  {
-    name: "Tamil Nadu",
-    image:
-      "https://images.unsplash.com/photo-1606293926075-69a00dbfde81?auto=format&fit=crop&w=600&q=80",
-  },
-  {
-    name: "Gujarat",
-    image:
-      "https://images.unsplash.com/photo-1514222134-b57cbb8ce073?auto=format&fit=crop&w=600&q=80",
-  },
-  {
-    name: "Rajasthan",
-    image:
-      "https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=600&q=80",
-  },
+const cities: Place[] = [
+  { name: "Mumbai", image: u("photo-1570168007204-dfb528c6958f") },
+  { name: "Bengaluru", image: u("photo-1596176530529-78163a4f7af2") },
+  { name: "Pune" },
+  { name: "Dehradun", image: u("photo-1544735716-392fe2489ffa") },
+  { name: "Hyderabad", image: u("photo-1572445271230-a78b5944a659") },
+  { name: "Jaipur", image: u("photo-1599661046827-dacff0c0f09a") },
+  { name: "New Delhi" },
+  { name: "Chennai" },
+  { name: "Kolkata" },
+  { name: "Ahmedabad" },
+  { name: "Lucknow" },
+  { name: "Indore" },
+  { name: "Nashik" },
+  { name: "Thane" },
+  { name: "Navi Mumbai" },
+  { name: "Nagpur" },
+  { name: "Noida" },
+  { name: "Gurugram" },
+  { name: "Chandigarh" },
+  { name: "Bhopal" },
 ];
 
-type LocationCardProps = {
-  name: string;
-  image: string;
-  onClick: () => void;
-};
+const TINTS = [
+  "from-[#0A5C91] to-[#0795DC]",
+  "from-[#C8104F] to-[#EC0E58]",
+  "from-[#39506B] to-[#6E8BAD]",
+  "from-[#0A7BBF] to-[#6ABEEE]",
+  "from-[#A34262] to-[#D97798]",
+];
 
-function LocationCard({ name, image, onClick }: LocationCardProps) {
+function LocationCard({ place, index, onClick }: { place: Place; index: number; onClick: () => void }) {
+  const [broken, setBroken] = useState(false);
+  const showImg = !!place.image && !broken;
   return (
     <button
       type="button"
       onClick={onClick}
-      className="group relative h-48 overflow-hidden rounded-3xl border-4 border-white bg-[#DDEAF2] text-left shadow-md shadow-[#12304A]/10 transition duration-300 hover:-translate-y-1 hover:shadow-xl sm:h-52"
+      className="group relative h-48 w-44 shrink-0 snap-start overflow-hidden rounded-3xl border-4 border-white bg-[#DDEAF2] text-left shadow-md shadow-[#12304A]/10 transition duration-300 hover:-translate-y-1 hover:shadow-xl sm:h-52 sm:w-52"
     >
-      <img
-        src={image}
-        alt={`${name} city`}
-        loading="lazy"
-        className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-110"
-      />
-
+      {showImg ? (
+        <img
+          src={place.image}
+          alt={`${place.name} schools`}
+          loading="lazy"
+          onError={() => setBroken(true)}
+          className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-110"
+        />
+      ) : (
+        <div className={`absolute inset-0 bg-gradient-to-br ${TINTS[index % TINTS.length]}`}>
+          <span className="absolute -right-3 -top-6 select-none text-[9rem] font-extrabold leading-none text-white/15">{place.name[0]}</span>
+        </div>
+      )}
       <div className="absolute inset-0 bg-gradient-to-t from-[#172B32]/90 via-[#172B32]/15 to-transparent" />
-
-      <span className="absolute bottom-4 left-4 right-14 text-lg font-extrabold text-white sm:text-xl">
-        {name}
-      </span>
-
-      <span className="absolute bottom-4 right-4 flex h-9 w-9 items-center justify-center rounded-full bg-[#F3F8FB] text-lg font-bold text-[#0A5C91] transition group-hover:bg-[#FF9DBB]">
-        ↗
+      <span className="absolute bottom-4 left-4 right-14 text-lg font-extrabold leading-tight text-white sm:text-xl">{place.name}</span>
+      <span className="absolute bottom-4 right-4 flex h-9 w-9 items-center justify-center rounded-full bg-[#F3F8FB] text-[#0A5C91] transition group-hover:bg-[#FF9DBB]">
+        <Icon name="arrowUpRight" className="h-5 w-5" />
       </span>
     </button>
+  );
+}
+
+/** one horizontal row with arrow buttons (swipe on phones) */
+function Row({ items, onPick }: { items: Place[]; onPick: (name: string) => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const scroll = (dir: 1 | -1) => ref.current?.scrollBy({ left: dir * 520, behavior: "smooth" });
+  const arrow =
+    "absolute top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-[#D6DDE5] bg-white text-[#0A5C91] shadow-lg transition hover:bg-[#0A5C91] hover:text-white md:flex";
+  return (
+    <div className="relative">
+      <button type="button" aria-label="Scroll left" onClick={() => scroll(-1)} className={`${arrow} -left-3`}>
+        <Icon name="chevronLeft" className="h-5 w-5" />
+      </button>
+      <div
+        ref={ref}
+        className="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-1 pb-4 pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {items.map((p, i) => (
+          <LocationCard key={p.name} place={p} index={i} onClick={() => onPick(p.name)} />
+        ))}
+      </div>
+      <button type="button" aria-label="Scroll right" onClick={() => scroll(1)} className={`${arrow} -right-3`}>
+        <Icon name="chevronRight" className="h-5 w-5" />
+      </button>
+    </div>
   );
 }
 
@@ -109,73 +127,40 @@ export default function PopularLocations() {
   return (
     <section className="overflow-hidden bg-gradient-to-b from-[#FAFCFD] via-[#F0F5F8] to-[#EEF5FA] py-16 sm:py-20">
       <div className="mx-auto max-w-7xl space-y-20 px-5 lg:px-8">
-        
         {/* Popular States */}
         <div>
           <div className="mb-8">
             <span className="inline-flex rounded-full bg-[#FAE5EC] px-4 py-2 text-xs font-extrabold uppercase tracking-wider text-[#C8104F]">
               Explore by state
             </span>
-
-            <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-[#12304A] sm:text-4xl">
-              Top States for Boarding Schools
-            </h2>
-
-            <p className="mt-3 text-base leading-7 text-[#5C6A7B]">
-              Explore boarding schools in popular education destinations across India.
-            </p>
+            <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-[#12304A] sm:text-4xl">Top States for Boarding Schools</h2>
+            <p className="mt-3 text-base leading-7 text-[#5C6A7B]">Explore boarding schools in popular education destinations across India.</p>
           </div>
-
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-            {states.map((state) => (
-              <LocationCard
-                key={state.name}
-                name={state.name}
-                image={state.image}
-                onClick={() => {
-                  savePreference({ type: "Boarding Schools", location: state.name });
-                  router.push(
-                    `/schools?type=${encodeURIComponent("Boarding Schools")}&state=${encodeURIComponent(state.name)}`
-                  );
-                }}
-              />
-            ))}
-          </div>
+          <Row
+            items={states}
+            onPick={(name) => {
+              savePreference({ type: "Boarding Schools", location: name });
+              router.push(typePath("Boarding School", name));
+            }}
+          />
         </div>
+
         {/* Popular Cities */}
         <div>
-          <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-            <div>
-              <span className="inline-flex rounded-full bg-[#DDEAF2] px-4 py-2 text-xs font-extrabold uppercase tracking-wider text-[#0A5C91]">
-                Explore by city
-              </span>
-
-              <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-[#12304A] sm:text-4xl">
-                Popular Cities for Day Schools
-              </h2>
-
-              <p className="mt-3 text-base leading-7 text-[#5C6A7B]">
-                Discover day schools across India's leading education destinations.
-              </p>
-            </div>
-
+          <div className="mb-8">
+            <span className="inline-flex rounded-full bg-[#DDEAF2] px-4 py-2 text-xs font-extrabold uppercase tracking-wider text-[#0A5C91]">
+              Explore by city
+            </span>
+            <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-[#12304A] sm:text-4xl">Popular Cities for Day Schools</h2>
+            <p className="mt-3 text-base leading-7 text-[#5C6A7B]">Discover day schools across India&apos;s leading education destinations.</p>
           </div>
-
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-            {cities.map((city) => (
-              <LocationCard
-                key={city.name}
-                name={city.name}
-                image={city.image}
-                onClick={() => {
-                  savePreference({ type: "Day Schools", location: city.name });
-                  router.push(
-                    `/schools?type=${encodeURIComponent("Day Schools")}&city=${encodeURIComponent(city.name)}`
-                  );
-                }}
-              />
-            ))}
-          </div>
+          <Row
+            items={cities}
+            onPick={(name) => {
+              savePreference({ type: "Day Schools", location: name });
+              router.push(typePath("Day School", name));
+            }}
+          />
         </div>
       </div>
     </section>

@@ -15,6 +15,8 @@ export type LocationContent = {
   metaTitle: string;
   description: string;
   photos: string[];
+  highlights?: string[];
+  cover?: string;
   faqs: { q: string; a: string }[];
 };
 
@@ -22,11 +24,7 @@ export type IndexCity = { name: string; slug: string; count: number; types: Reco
 export type IndexState = { state: string; slug: string; count: number; types: Record<string, number>; boards: Record<string, number>; cities: IndexCity[] };
 
 const unsplash = (id: string) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=900&q=80`;
-export const DEFAULT_PHOTOS = [
-  unsplash("photo-1580582932707-520aed937b7b"),
-  unsplash("photo-1509062522246-3755977927d7"),
-  unsplash("photo-1523050854058-8df90110c9f1"),
-];
+export const DEFAULT_PHOTOS = ["/images/location-1.jpg", "/images/location-2.jpg", "/images/location-3.jpg"];
 
 export const DEFAULT_DESCRIPTION =
   "Choosing a school is easier when you can compare boards, annual fees, facilities and parent feedback in one place. VidyaVista lists CBSE, ICSE, IB, Cambridge and State Board schools across major Indian cities, with day, boarding and day-cum-boarding options.";
@@ -77,5 +75,22 @@ export async function fetchLocationIndex(): Promise<IndexState[]> {
     return (await res.json()).data as IndexState[];
   } catch {
     return [];
+  }
+}
+
+
+export type HomePlace = { name: string; image: string };
+
+/** states + cities ticked "show on homepage" in the admin (only those that have a photo) */
+export async function fetchHomeLocations(): Promise<{ states: HomePlace[]; cities: HomePlace[] }> {
+  try {
+    const res = await fetch(`${API_URL}/locations/?page_size=100`, { next: { revalidate: 60 } });
+    if (!res.ok) return { states: [], cities: [] };
+    const json = await res.json();
+    const rows = (json.results ?? json.data ?? []) as { kind: LocationKind; name: string; cover?: string; show_on_home?: boolean }[];
+    const pick = (k: LocationKind) => rows.filter((r) => r.kind === k && r.show_on_home && r.cover).map((r) => ({ name: r.name, image: r.cover as string }));
+    return { states: pick("state"), cities: pick("city") };
+  } catch {
+    return { states: [], cities: [] };
   }
 }

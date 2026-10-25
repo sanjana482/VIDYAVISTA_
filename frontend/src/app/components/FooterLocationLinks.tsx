@@ -2,7 +2,6 @@
 
 // Footer block that follows the visitor: links for the selected state / city, or for the school profile being viewed.
 import Link from "next/link";
-
 import { TYPE_ORDER, listingHref, typeLabel } from "../lib/links";
 import { useActiveLocation, useLocationIndex } from "../lib/useActiveLocation";
 

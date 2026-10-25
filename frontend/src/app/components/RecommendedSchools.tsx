@@ -4,44 +4,32 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { typeRank } from "../lib/preferences";
+import type { School } from "../data/schools";
+import { BOARD_LABEL } from "../data/schools";
+import { schoolPath } from "../lib/seo";
+import { feeRange, lakh } from "../data/profile";
+import Icon, { Stars } from "./Icon";
 
-const schools = [
-  {
-    id: 101,
-    name: "Oakwood Public School",
-    board: "CBSE",
-    type: "Day School",
-    location: "Mumbai, Maharashtra",
-    searches: "1,240",
-    badge: "↗ Most searched",
-    image:
-      "https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=1000&q=85",
-  },
-  {
-    id: 102,
-    name: "Greenfield Academy",
-    board: "ICSE",
-    type: "Day School",
-    location: "Pune, Maharashtra",
-    searches: "980",
-    badge: "↗ Popular",
-    image:
-      "https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=1000&q=85",
-  },
-  {
-    id: 103,
-    name: "Riverstone International School",
-    board: "CBSE",
-    type: "Play School",
-    location: "Bengaluru, Karnataka",
-    searches: "865",
-    badge: "↗ Popular",
-    image:
-      "https://images.unsplash.com/photo-1564981797816-1043664bf78d?auto=format&fit=crop&w=1000&q=85",
-  },
-];
+const BOARD_COLOR = ["bg-[#DDEAF2] text-[#0A5C91]", "bg-[#FAE5EC] text-[#C8104F]", "bg-[#E5EAF0] text-[#39506B]", "bg-[#FCE5ED] text-[#A34262]"];
+const feeText = (s: School) => {
+  const r = feeRange(s);
+  return r.min > 0 ? `${lakh(r.min)} – ${lakh(r.max)}` : "Ask school";
+};
 
-export default function RecommendedSchools() {
+
+const toCard = (s: School) => ({
+  id: s.id,
+  href: schoolPath(s),
+  name: s.name,
+  board: BOARD_LABEL[s.board] ?? s.board,
+  type: s.type,
+  location: [s.city, s.state].filter(Boolean).join(", "),
+  fees: feeText(s),
+  image: s.image,
+});
+
+export default function RecommendedSchools({ list }: { list: School[] }) {
+  const schools = list.map(toCard);
   const router = useRouter();
   const [selectedSchools, setSelectedSchools] = useState<number[]>([]);
 
@@ -61,6 +49,8 @@ export default function RecommendedSchools() {
     }
   }
 
+  if (schools.length === 0) return null;
+
   return (
     <section className="bg-white py-16 sm:py-20">
       <div className="mx-auto max-w-7xl px-5 lg:px-8">
@@ -76,12 +66,12 @@ export default function RecommendedSchools() {
             </h2>
 
             <p className="mt-3 text-sm text-[#626F7D] sm:text-base">
-              Schools parents are searching for most often.
+              Schools our team recommends for parents.
             </p>
           </div>
 
           <span className="pb-1 text-sm font-semibold text-[#C8104F]">
-            Popular searches
+            Picked by our team
           </span>
         </div>
 
@@ -107,7 +97,7 @@ export default function RecommendedSchools() {
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0B2A47]/30 via-transparent to-transparent" />
 
                   <span className="absolute left-4 top-4 rounded-full bg-[#0B2A47] px-3.5 py-2 text-xs font-bold text-white shadow-lg">
-                    {school.badge}
+                    <Icon name="sparkles" className="mr-1 inline h-3.5 w-3.5" /> Recommended
                   </span>
                 </div>
 
@@ -128,19 +118,17 @@ export default function RecommendedSchools() {
                   </h3>
 
                   <p className="mt-2 flex items-center gap-2 text-sm text-[#707E8F]">
-                    <span className="text-[#D97798]">📍</span>
+                    <Icon name="mapPin" className="h-4 w-4 shrink-0 text-[#D97798]" />
                     {school.location}
                   </p>
 
                   <div className="my-5 border-t border-[#DFE3E8]" />
 
                   <p className="flex items-center gap-2 text-sm text-[#626F7D]">
-                    <span className="text-[#C8104F]">⌕</span>
+                    <Icon name="trending" className="h-4 w-4 text-[#C8104F]" />
                     <span>
-                      <strong className="font-extrabold text-[#0B2A47]">
-                        {school.searches}
-                      </strong>{" "}
-                      searches this month
+                      Annual fee{" "}
+                      <strong className="font-extrabold text-[#0B2A47]">{school.fees}</strong>
                     </span>
                   </p>
 
@@ -158,7 +146,7 @@ export default function RecommendedSchools() {
 
                     <button
                       type="button"
-                      onClick={() => router.push(`/schools/${school.id}`)}
+                      onClick={() => router.push(school.href)}
                       className="rounded-lg px-2 py-2 text-sm font-extrabold text-[#344251] transition hover:bg-[#F8EAEF] hover:text-[#C8104F]"
                     >
                       View school →
@@ -170,11 +158,6 @@ export default function RecommendedSchools() {
           })}
         </div>
 
-        {/* Demo data note */}
-        <p className="mt-5 text-xs leading-5 text-[#8A8290]">
-          Search counts are sample UI data. Replace them with real aggregated
-          school-search activity before publishing.
-        </p>
 
         {/* Bottom action */}
         <div className="mt-12 flex flex-col items-center text-center">
