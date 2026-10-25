@@ -77,7 +77,7 @@ export default function LocationLanding({ kind, name, state, list, all, content 
             <nav aria-label="Breadcrumb" className="text-sm text-[#5C6A7B]">
               <Link href="/" className="hover:text-[#0A7BBF]">Home</Link><span className="mx-2">›</span>
               <Link href="/schools" className="hover:text-[#0A7BBF]">Schools</Link><span className="mx-2">›</span>
-              {kind === "city" && state && (<><Link href={statePath(state)} className="hover:text-[#0A7BBF]">{state}</Link><span className="mx-2">›</span></>)}
+              {kind === "city" && state && (<><Link href={listingHref({ state })} className="hover:text-[#0A7BBF]">{state}</Link><span className="mx-2">›</span></>)}
               <span className="text-[#0B2A47]">{name}</span>
             </nav>
             <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-[#0B2A47] sm:text-5xl">
@@ -138,19 +138,19 @@ export default function LocationLanding({ kind, name, state, list, all, content 
             <h2 className="text-lg font-extrabold text-[#0B2A47]">Cities in {name}</h2>
             <ul className="mt-3 flex flex-wrap gap-3">
              {Array.from(cityCounts.entries()).sort((a, b) => b[1] - a[1]).map(([c, n]) => (
-                <li key={c}><Link href={cityPath(c)} className={chip}>Schools in {c} ({n})</Link></li>
+                <li key={c}><Link href={listingHref({ city: c })} className={chip}>Schools in {c} ({n})</Link></li>
               ))}
             </ul>
           </div>
         )}
         {kind === "city" && (
           <div className="mt-2 space-y-8">
-            {state && <div><Link href={statePath(state)} className={chip}>All schools in {state}</Link></div>}
+            {state && <div><Link href={listingHref({ state })} className={chip}>All schools in {state}</Link></div>}
             {otherCities.length > 0 && (
               <div>
                 <h2 className="text-lg font-extrabold text-[#0B2A47]">Other cities in {state}</h2>
                 <ul className="mt-3 flex flex-wrap gap-3">
-                  {otherCities.map(([c, n]) => <li key={c}><Link href={cityPath(c)} className={chip}>Schools in {c} ({n})</Link></li>)}
+                  {otherCities.map(([c, n]) => <li key={c}><Link href={listingHref({ city: c })} className={chip}>Schools in {c} ({n})</Link></li>)}
                 </ul>
               </div>
             )}
@@ -160,7 +160,7 @@ export default function LocationLanding({ kind, name, state, list, all, content 
           <div className="mt-8">
             <h2 className="text-lg font-extrabold text-[#0B2A47]">Other states</h2>
             <ul className="mt-3 flex flex-wrap gap-3">
-              {otherStates.map((s) => <li key={s}><Link href={statePath(s)} className={chip}>Schools in {s}</Link></li>)}
+              {otherStates.map((s) => <li key={s}><Link href={listingHref({ state: s })} className={chip}>Schools in {s}</Link></li>)}
             </ul>
           </div>
         )}
