@@ -10,3 +10,6 @@ python-dotenv>=1.0,<2.0
 redis>=5,<6
 celery>=5.4,<6
 django-jazzmin
+Pillow>=10.0
+cloudinary>=1.40
+django-cloudinary-storage>=0.3.0

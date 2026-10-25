@@ -70,6 +70,8 @@ JAZZMIN_SETTINGS = {
         "schools": "fas fa-school",
         "schools.school": "fas fa-building",
         "schools.enquiry": "fas fa-envelope",
+        "schools.owner": "fas fa-user-tie",
+        "schools.review": "fas fa-star",
         "schools.locationpage": "fas fa-map-marker-alt",
         "auth.user": "fas fa-users",
         "auth.group": "fas fa-user-shield",
@@ -103,3 +105,22 @@ LOGGING = {
         },
     },
 }
+
+
+# ---------------------------------------------------------------------------
+# Uploaded files (cover image, gallery, owner photo ...)
+# Render ki disk temporary hoti hai: redeploy par uploaded files ud jati hain.
+# Isliye Cloudinary (free) use karo: Render me env var CLOUDINARY_URL daalo
+# (cloudinary://API_KEY:API_SECRET@CLOUD_NAME). Bina uske local /media folder use hota hai (sirf testing ke liye).
+# ---------------------------------------------------------------------------
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+if os.getenv('CLOUDINARY_URL'):
+    INSTALLED_APPS += ['cloudinary_storage', 'cloudinary']
+    STORAGES = {
+        'default': {'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage'},
+        'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+    }
+REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = {'reviews': '10/hour'}
+DATA_UPLOAD_MAX_MEMORY_SIZE = 12 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 12 * 1024 * 1024
