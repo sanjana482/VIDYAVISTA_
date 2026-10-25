@@ -11,7 +11,8 @@ import Link from "next/link";
 import { citiesOf, type School } from "../data/schools";
 import { fetchAllSchools } from "../lib/schoolsApi";
 import { listingFaqs } from "../data/faqs";
-import { abs, cityPath, jsonLd, schoolPath } from "../lib/seo";
+import { abs, jsonLd, schoolPath } from "../lib/seo";
+import { listingHref } from "../lib/links";
 
 export const metadata: Metadata = {
   title: "Best Schools in India 2027-28",
@@ -84,7 +85,7 @@ export default async function Schools() {
         <ul className="mt-4 flex flex-wrap gap-3">
           {CITIES.map((c) => (
             <li key={c}>
-              <Link href={cityPath(c)} className="rounded-full border border-[#D6DDE5] bg-white px-4 py-2 text-sm font-semibold text-[#0A5C91] hover:border-[#0795DC]">
+              <Link href={listingHref({ city: c })} className="rounded-full border border-[#D6DDE5] bg-white px-4 py-2 text-sm font-semibold text-[#0A5C91] hover:border-[#0795DC]">
                 Schools in {c}
               </Link>
             </li>

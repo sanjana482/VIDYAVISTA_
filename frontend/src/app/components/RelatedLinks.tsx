@@ -6,7 +6,7 @@
 //   none   -> all states
 import Link from "next/link";
 import { stateFor, type School } from "../data/schools";
-import { cityPath, statePath } from "../lib/seo";
+
 import { TYPE_ORDER, listingHref, typeLabel } from "../lib/links";
 import { useActiveLocation } from "../lib/useActiveLocation";
 
@@ -39,7 +39,7 @@ export default function RelatedLinks({ schools }: { schools: School[] }) {
         <h2 className="text-xl font-extrabold text-[#0B2A47]">Browse schools by state</h2>
         <ul className="mt-4 flex flex-wrap gap-3">
           {states.map(([n, c]) => (
-            <li key={n}><Link href={statePath(n)} className={chip}>Schools in {n} <span className="text-[#8896A6]">({c})</span></Link></li>
+            <li key={n}><Link href={listingHref({ state: n })} className={chip}>Schools in {n} <span className="text-[#8896A6]">({c})</span></Link></li>
           ))}
         </ul>
       </section>
@@ -88,7 +88,7 @@ export default function RelatedLinks({ schools }: { schools: School[] }) {
           <ul className="mt-3 flex flex-wrap gap-2">
             {(active.kind === "state" ? Array.from(cities.entries()).sort((a, b) => b[1] - a[1]) : otherCities).map(([c, n]) => (
               <li key={c}>
-                <Link href={cityPath(c)} className={chip}>
+                <Link href={listingHref({ city: c })} className={chip}>
                   Schools in {c} <span className="text-[#8896A6]">({n})</span>
                 </Link>
               </li>
@@ -99,11 +99,11 @@ export default function RelatedLinks({ schools }: { schools: School[] }) {
 
 
       <div className="mt-5 flex flex-wrap gap-3">
-        <Link href={active.kind === "state" ? statePath(active.name) : cityPath(active.name)} className="rounded-full bg-[#0A5C91] px-5 py-2.5 text-sm font-extrabold text-white hover:bg-[#0795DC]">
+        <Link href={listingHref({ [ownKey]: active.name })} className="rounded-full bg-[#0A5C91] px-5 py-2.5 text-sm font-extrabold text-white hover:bg-[#0795DC]">
           All schools in {active.name} →
         </Link>
         {active.kind === "city" && state && (
-          <Link href={statePath(state)} className={chip}>Schools in {state}</Link>
+          <Link href={listingHref({ state })} className={chip}>Schools in {state}</Link>
         )}
       </div>
     </section>

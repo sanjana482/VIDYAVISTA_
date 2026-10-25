@@ -2,7 +2,7 @@
 
 // Footer block that follows the visitor: links for the selected state / city, or for the school profile being viewed.
 import Link from "next/link";
-import { cityPath, statePath } from "../lib/seo";
+
 import { TYPE_ORDER, listingHref, typeLabel } from "../lib/links";
 import { useActiveLocation, useLocationIndex } from "../lib/useActiveLocation";
 
@@ -67,8 +67,8 @@ export default function FooterLocationLinks({ context }: { context?: FooterConte
     if (others.length) {
       cards.push({
         title: city ? `More cities in ${state}` : `All cities in ${state}`,
-        href: statePath(state),
-        chips: others.map((c) => ({ label: `Schools in ${c.name}`, href: cityPath(c.name) })),
+        href: listingHref({ state }),
+        chips: others.map((c) => ({ label: `Schools in ${c.name}`, href: listingHref({ city: c.name }) })),
       });
     }
   }
@@ -96,8 +96,8 @@ export default function FooterLocationLinks({ context }: { context?: FooterConte
           <div className="rounded-2xl border border-white/10 bg-white/[0.055] p-5">
             <h4 className="font-extrabold text-white">Quick links</h4>
             <div className="mt-4 flex flex-wrap gap-2">
-              {city && <Link href={cityPath(city)} className={chipCls}>All schools in {city}</Link>}
-              {state && <Link href={statePath(state)} className={chipCls}>All schools in {state}</Link>}
+              {city && <Link href={listingHref({ city })} className={chipCls}>All schools in {city}</Link>}
+              {state && <Link href={listingHref({ state })} className={chipCls}>All schools in {state}</Link>}
               <Link href="/schools" className={chipCls}>All schools in India</Link>
             </div>
           </div>
