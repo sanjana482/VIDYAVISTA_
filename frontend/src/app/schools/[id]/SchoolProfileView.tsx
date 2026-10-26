@@ -190,7 +190,7 @@ export default async function SchoolProfileView({ param, section }: { param: str
       <div className="mx-auto grid max-w-7xl gap-10 px-5 lg:grid-cols-[1fr_370px] lg:px-8">
         <div className="min-w-0">
           <Section id="about">
-            <h2 className="text-3xl font-extrabold tracking-tight text-[#0B2A47]">About {s.name}</h2>
+            <h2 className="text-2xl font-extrabold tracking-tight text-[#0B2A47] sm:text-3xl">About {s.name}</h2>
             <div className="mt-5"><ReadMore paragraphs={p.about} /></div>
             {p.highlights.length > 0 && (
               <ul className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -214,7 +214,7 @@ export default async function SchoolProfileView({ param, section }: { param: str
 
           {p.gallery.length > 0 && (
             <Section id="photos">
-              <h2 className="mb-6 text-3xl font-extrabold tracking-tight text-[#0B2A47]">School photos</h2>
+              <h2 className="mb-6 text-2xl font-extrabold tracking-tight text-[#0B2A47] sm:text-3xl">School photos</h2>
               <PhotoGallery images={p.gallery} name={s.name} />
             </Section>
           )}
@@ -225,7 +225,7 @@ export default async function SchoolProfileView({ param, section }: { param: str
 
           {p.faqs.length > 0 && (
             <Section id="faqs">
-              <h2 className="mb-6 text-3xl font-extrabold tracking-tight text-[#0B2A47]">FAQs about {s.name}</h2>
+              <h2 className="mb-6 text-2xl font-extrabold tracking-tight text-[#0B2A47] sm:text-3xl">FAQs about {s.name}</h2>
               <FaqList faqs={p.faqs} />
             </Section>
           )}
@@ -245,7 +245,7 @@ export default async function SchoolProfileView({ param, section }: { param: str
       {/* Similar schools */}
       <section className="mt-6 bg-gradient-to-b from-[#F3F9FD] to-white py-14">
         <div className="mx-auto max-w-7xl px-5 lg:px-8">
-          <h2 className="text-3xl font-extrabold tracking-tight text-[#0B2A47]">
+          <h2 className="text-2xl font-extrabold tracking-tight text-[#0B2A47] sm:text-3xl">
             {similar.sameCity ? `Similar schools near ${s.area.split(",").slice(-1)[0].trim()}, ${s.city}` : "Similar schools you may like"}
           </h2>
           <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -270,7 +270,7 @@ export default async function SchoolProfileView({ param, section }: { param: str
 
       {/* CTA banner */}
       <section className="mx-auto max-w-6xl px-5 pb-16 lg:px-8">
-        <div className="flex flex-col items-start justify-between gap-5 rounded-3xl bg-gradient-to-r from-[#0A5C91] via-[#0795DC] to-[#EC0E58] px-8 py-10 text-white shadow-2xl shadow-[#0795DC]/25 sm:flex-row sm:items-center">
+        <div className="flex flex-col items-start justify-between gap-5 rounded-3xl bg-gradient-to-r from-[#0A5C91] via-[#0795DC] to-[#EC0E58] px-6 py-8 sm:px-8 sm:py-10 text-white shadow-2xl shadow-[#0795DC]/25 sm:flex-row sm:items-center">
           <div>
             <h2 className="text-2xl font-extrabold sm:text-3xl">Need help choosing the right school?</h2>
             <p className="mt-2 max-w-xl text-white/90">Talk to a free counsellor, compare fees and shortlist schools that match your child&apos;s needs.</p>

@@ -1,60 +1,62 @@
 "use client";
 
-// Homepage "Top States / Popular Cities" cards. These are STATIC on purpose (not read from the admin).
-//   - To add a place: add one line to `states` or `cities` below.
-//   - Photo: put a link (https://...) or a file in /public/images/places/ (e.g. "/images/places/nashik.jpg").
-//     If the photo is missing or does not load, a coloured card with the name is shown instead.
+// Homepage "Top States / Popular Cities" cards. STATIC on purpose (not read from the admin).
+//   - Add a place: one line in `states` or `cities` below.
+//   - Photo: save your own picture in  public/images/places/  named after the place in small letters
+//     with dashes, e.g.  mumbai.jpg   new-delhi.jpg   uttar-pradesh.jpg   (see README.txt in that folder).
+//     Photo missing -> a coloured card with the name is shown, nothing breaks.
 //   - Click -> listing page opens with that state / city ticked (/boarding-schools/<state>, /day-schools/<city>).
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { savePreference } from "../lib/preferences";
 import { typePath } from "../lib/links";
+import { slugify } from "../lib/seo";
 import Icon from "./Icon";
 
-type Place = { name: string; image?: string };
-const u = (id: string) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=600&q=80`;
+type Place = { name: string; image: string };
+const place = (name: string): Place => ({ name, image: `/images/places/${slugify(name)}.jpg` });
 
 const states: Place[] = [
-  { name: "Maharashtra" },
-  { name: "Karnataka", image: u("photo-1596176530529-78163a4f7af2") },
-  { name: "Delhi", image: u("photo-1587474260584-136574528ed5") },
-  { name: "Tamil Nadu", image: u("photo-1606293926075-69a00dbfde81") },
-  { name: "Gujarat", image: u("photo-1514222134-b57cbb8ce073") },
-  { name: "Rajasthan", image: u("photo-1477587458883-47145ed94245") },
-  { name: "Uttar Pradesh" },
-  { name: "Madhya Pradesh" },
-  { name: "Telangana" },
-  { name: "West Bengal" },
-  { name: "Uttarakhand" },
-  { name: "Punjab" },
-  { name: "Haryana" },
-  { name: "Kerala" },
-  { name: "Himachal Pradesh" },
-  { name: "Goa" },
-];
+  "Maharashtra",
+  "Karnataka",
+  "Delhi",
+  "Tamil Nadu",
+  "Gujarat",
+  "Rajasthan",
+  "Uttar Pradesh",
+  "Madhya Pradesh",
+  "Telangana",
+  "West Bengal",
+  "Uttarakhand",
+  "Punjab",
+  "Haryana",
+  "Kerala",
+  "Himachal Pradesh",
+  "Goa",
+].map(place);
 
 const cities: Place[] = [
-  { name: "Mumbai", image: u("photo-1570168007204-dfb528c6958f") },
-  { name: "Bengaluru", image: u("photo-1596176530529-78163a4f7af2") },
-  { name: "Pune" },
-  { name: "Dehradun", image: u("photo-1544735716-392fe2489ffa") },
-  { name: "Hyderabad", image: u("photo-1572445271230-a78b5944a659") },
-  { name: "Jaipur", image: u("photo-1599661046827-dacff0c0f09a") },
-  { name: "New Delhi" },
-  { name: "Chennai" },
-  { name: "Kolkata" },
-  { name: "Ahmedabad" },
-  { name: "Lucknow" },
-  { name: "Indore" },
-  { name: "Nashik" },
-  { name: "Thane" },
-  { name: "Navi Mumbai" },
-  { name: "Nagpur" },
-  { name: "Noida" },
-  { name: "Gurugram" },
-  { name: "Chandigarh" },
-  { name: "Bhopal" },
-];
+  "Mumbai",
+  "Bengaluru",
+  "Pune",
+  "Dehradun",
+  "Hyderabad",
+  "Jaipur",
+  "New Delhi",
+  "Chennai",
+  "Kolkata",
+  "Ahmedabad",
+  "Lucknow",
+  "Indore",
+  "Nashik",
+  "Thane",
+  "Navi Mumbai",
+  "Nagpur",
+  "Noida",
+  "Gurugram",
+  "Chandigarh",
+  "Bhopal",
+].map(place);
 
 const TINTS = [
   "from-[#0A5C91] to-[#0795DC]",
@@ -66,7 +68,7 @@ const TINTS = [
 
 function LocationCard({ place, index, onClick }: { place: Place; index: number; onClick: () => void }) {
   const [broken, setBroken] = useState(false);
-  const showImg = !!place.image && !broken;
+  const showImg = !broken;
   return (
     <button
       type="button"

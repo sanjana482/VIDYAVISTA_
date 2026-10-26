@@ -20,6 +20,7 @@ const schoolTypes: SchoolTypeLabel[] = [
 ];
 
 export default function Hero() {
+  const [heroBroken, setHeroBroken] = useState(false);
   const router = useRouter();
   // First visit => Boarding Schools is the default.
   const [schoolType, setSchoolType] = useState<SchoolTypeLabel>(DEFAULT_PREF.type);
@@ -190,21 +191,22 @@ export default function Hero() {
         </div>
 
         {/* Right side image */}
-        <div className="relative mx-auto w-full max-w-xl lg:ml-auto">
-          <div className="absolute -right-3 -top-3 h-32 w-32 rounded-[2rem] bg-[#FF9DBB] sm:-right-5" />
-          <div className="absolute -bottom-5 -left-4 h-36 w-36 rounded-[2rem] bg-[#6ABEEE]" />
+        <div className="vv-rise relative mx-auto w-full max-w-xl lg:ml-auto">
+          <div className="vv-drift absolute -right-3 -top-3 h-32 w-32 rounded-[2rem] bg-[#FF9DBB] sm:-right-5" />
+          <div className="vv-drift absolute -bottom-5 -left-4 h-36 w-36 rounded-[2rem] bg-[#6ABEEE]" style={{ animationDelay: "-4s" }} />
 
           <div className="absolute -left-3 top-1/3 z-10 h-20 w-3 rounded-full bg-[#F0467F] sm:-left-5" />
 
           <div className="relative overflow-hidden rounded-[2rem] border-[6px] border-white shadow-2xl shadow-[#12304A]/15">
             <img
-              src="https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=1200&q=85"
+              src={heroBroken ? "/images/school-placeholder.svg" : "/images/hero/hero.jpg"}
+              onError={() => setHeroBroken(true)}
               alt="School campus and learning environment"
-              className="h-[350px] w-full object-cover sm:h-[470px]"
+              className="h-[300px] w-full object-cover transition-transform duration-[6000ms] ease-out hover:scale-105 sm:h-[470px]"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#12304A]/80 via-[#12304A]/5 to-transparent" />
 
-            <div className="absolute left-5 top-5 rounded-xl border border-white/60 bg-white/90 px-4 py-3 shadow-lg backdrop-blur">
+            <div className="vv-float-a absolute left-4 top-4 rounded-xl border border-white/60 bg-white/90 px-4 py-3 shadow-lg backdrop-blur sm:left-5 sm:top-5">
               <p className="text-xs font-bold uppercase tracking-wider text-[#0A7BBF]">
                 Discover
               </p>
@@ -223,7 +225,7 @@ export default function Hero() {
             </div>
           </div>
 
-          <div className="absolute -bottom-5 right-3 z-10 rounded-2xl border border-[#D7DEE7] bg-[#F3F8FB] p-4 shadow-xl sm:right-6">
+          <div className="vv-float-b absolute -bottom-5 right-3 z-10 rounded-2xl border border-[#D7DEE7] bg-[#F3F8FB] p-4 shadow-xl sm:right-6">
             <div className="flex items-center gap-3">
               <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#FAE5EC] text-xl">
                 <Icon name="graduation" className="h-6 w-6 text-[#C8104F]" />

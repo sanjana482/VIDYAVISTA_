@@ -13,6 +13,7 @@ import FAQ from "./components/FAQ";
 import { jsonLd } from "./lib/seo";
 import { homeFaqs } from "./data/faqs";
 import { fetchAllSchoolsSafe } from "./lib/schoolsApi";
+import Reveal from "./components/Reveal";
 
 // the homepage re-reads schools / ticks / locations from the admin every minute
 export const revalidate = 60;
@@ -47,13 +48,13 @@ export default async function Home() {
       />
       <Navbar />
       <Hero />
-      <Categories />
-      <PopularLocations />
-      <FeaturedSchools list={featured} />
-      <HighestRatedSchools list={schools} />
-      <RecommendedSchools list={recommended} />
-      <SchoolGuidance />
-      <FAQ />
+      <Reveal><Categories /></Reveal>
+      <Reveal><PopularLocations /></Reveal>
+      <Reveal><FeaturedSchools list={featured} /></Reveal>
+      <Reveal><HighestRatedSchools list={schools} /></Reveal>
+      <Reveal><RecommendedSchools list={recommended} /></Reveal>
+      <Reveal><SchoolGuidance /></Reveal>
+      <Reveal><FAQ /></Reveal>
       <Footer />
     </main>
   );

@@ -13,6 +13,7 @@ import SchoolsHero from "./SchoolsHero";
 import LocationReviews, { reviewSummary } from "./LocationReviews";
 import FaqList from "./profile/FaqList";
 import Icon from "./Icon";
+import ClampedText from "./ClampedText";
 import { BOARD_LABEL, formatFee, stateFor, type School } from "../data/schools";
 import { fetchAllSchools } from "../lib/schoolsApi";
 import { fetchLocationContent } from "../lib/locationsApi";
@@ -148,7 +149,7 @@ export default async function TypePlacePage({ typeKey, slug }: { typeKey: TypeKe
       {list.length > 0 && (
         <section className="mx-auto max-w-7xl px-5 pt-10 lg:px-8">
           <h2 className="text-2xl font-extrabold text-[#0B2A47] sm:text-3xl">About {heading}</h2>
-          <p className="mt-4 max-w-4xl whitespace-pre-line leading-8 text-[#4E5A68]">{description}</p>
+          <div className="mt-4 max-w-4xl"><ClampedText text={description} lines={5} className="leading-8 text-[#4E5A68]" /></div>
         </section>
       )}
 

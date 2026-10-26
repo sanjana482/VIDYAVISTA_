@@ -79,7 +79,7 @@ function FilterGroup({ title, children }: { title: string; children: React.React
 /** one-choice option (radio style). Click the selected one again to clear it. */
 function Radio({ label, checked, onPick, count }: { label: string; checked: boolean; onPick: () => void; count?: number }) {
   return (
-    <label className="flex cursor-pointer items-center gap-3 rounded-lg px-1 py-2 text-sm text-[#4E5A68] transition hover:bg-[#F1F8FC]">
+    <label className="flex cursor-pointer items-center gap-3 rounded-lg px-1 py-2.5 text-sm text-[#4E5A68] transition hover:bg-[#F1F8FC] lg:py-2">
       <input type="radio" checked={checked} onClick={onPick} onChange={() => {}} className="h-4 w-4 accent-[#0795DC]" />
       <span className="flex-1">{label}</span>
       {typeof count === "number" && <span className="text-xs text-[#8896A6]">{count}</span>}
@@ -288,6 +288,16 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
   // schools whose class range includes the chosen class
   const offersClass = (sc: School, cls: string) => classList(sc).some((c) => c.cls === cls);
 
+  const activeCount = [applied.state, applied.city, applied.type, applied.board, applied.gender, applied.cls].filter((a) => a.length).length + (applied.min || applied.max ? 1 : 0);
+
+  // no page scroll behind the open filter panel (phones)
+  useEffect(() => {
+    if (!showFilters) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [showFilters]);
+
   const results = useMemo(() => {
     const q = applied.q.toLowerCase();
     const min = applied.min ? Number(applied.min) : 0;
@@ -368,18 +378,27 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
           <button
             type="button"
             onClick={() => setShowFilters(!showFilters)}
-            className="mb-4 flex w-full items-center justify-between rounded-xl border border-[#D6DDE5] bg-white px-4 py-3 text-sm font-extrabold text-[#0A5C91] lg:hidden"
+            className="sticky top-[84px] z-30 mb-4 flex w-full items-center justify-between rounded-xl border border-[#D6DDE5] bg-white px-4 py-3.5 text-sm font-extrabold text-[#0A5C91] shadow-sm lg:hidden"
           >
-            <span className="flex items-center gap-2"><Icon name="filters" className="h-4 w-4" /> Filters</span> <Icon name={showFilters ? "x" : "menu"} className="h-4 w-4" />
+            <span className="flex items-center gap-2"><Icon name="filters" className="h-4 w-4" /> Filters{activeCount > 0 && <span className="rounded-full bg-[#EC0E58] px-2 py-0.5 text-[11px] text-white">{activeCount}</span>}</span> <span className="text-xs font-semibold text-[#707E8F]">{results.length} schools</span>
           </button>
 
-          <div className={`${showFilters ? "block" : "hidden"} lg:sticky lg:top-24 lg:block`}>
-            <div className="flex max-h-[calc(100vh-7.5rem)] flex-col rounded-2xl border border-[#E1E7EE] bg-white shadow-lg shadow-[#0B2A47]/5">
-              <div className="flex items-center justify-between border-b border-[#E1E7EE] px-5 py-4">
+          {/* phone: the filters slide in as a full-height panel; desktop: sticky sidebar */}
+          <div
+            className={`${showFilters ? "fixed inset-0 z-[60] flex bg-[#0B2A47]/55" : "hidden"} lg:sticky lg:top-24 lg:block`}
+            onClick={(e) => { if (e.target === e.currentTarget) setShowFilters(false); }}
+          >
+            <div className="flex h-full w-[90%] max-w-sm flex-col bg-white shadow-2xl lg:h-auto lg:max-h-[calc(100vh-7.5rem)] lg:w-auto lg:max-w-none lg:rounded-2xl lg:border lg:border-[#E1E7EE] lg:shadow-lg lg:shadow-[#0B2A47]/5">
+              <div className="flex items-center justify-between gap-3 border-b border-[#E1E7EE] px-5 py-4">
                 <h2 className="flex items-center gap-2 text-lg font-extrabold text-[#0B2A47]"><Icon name="filters" className="h-5 w-5" /> Filters</h2>
-                <button type="button" onClick={clearAll} className="text-sm font-semibold text-[#EC0E58] underline underline-offset-4 hover:text-[#C8104F]">
-                  Clear all
-                </button>
+                <div className="flex items-center gap-3">
+                  <button type="button" onClick={clearAll} className="text-sm font-semibold text-[#EC0E58] underline underline-offset-4 hover:text-[#C8104F]">
+                    Clear all
+                  </button>
+                  <button type="button" aria-label="Close filters" onClick={() => setShowFilters(false)} className="flex h-9 w-9 items-center justify-center rounded-full bg-[#EEF3F8] text-[#0B2A47] lg:hidden">
+                    <Icon name="x" className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
 
               <div className="flex-1 overflow-y-auto px-5 py-5">
@@ -477,7 +496,7 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
                       </span>
                     )}
                     <span className="absolute bottom-3 right-3 rounded-lg bg-[#0B2A47]/85 px-2.5 py-1.5 text-xs font-bold text-white">
-                      ▣ {s.photos} photos
+                      <Icon name="camera" className="mr-1 inline h-3.5 w-3.5 align-[-2px]" /> {s.photos} photos
                     </span>
                   </div>
 
@@ -494,13 +513,6 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
                       <span className="text-[#5C6A7B]">{s.grades}</span>
                     </div>
                     <p className="mt-3 text-sm text-[#5C6A7B]">{s.type} · {s.gender}</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {(Array.isArray(s.facilities) ? s.facilities : []).map((f) => (
-                        <span key={f} className="rounded-full border border-[#D6DDE5] bg-[#F6FAFD] px-3 py-1.5 text-xs text-[#4E5A68]">
-                          <Icon name="check" className="mr-1 inline h-3.5 w-3.5 text-[#0795DC]" /> {f}
-                        </span>
-                      ))}
-                    </div>
                   </div>
 
                   {/* Price + actions */}
@@ -536,13 +548,13 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
                     Add to compare
                   </label>
                   <span className="hidden text-xs text-[#707E8F] sm:flex sm:items-center sm:gap-1"><Icon name="school" className="h-4 w-4" /> Campus visits available</span>
-                  <div className="flex gap-3">
-                    <Link href={schoolPath(s)} className="rounded-xl border border-[#D6DDE5] px-5 py-3 text-sm font-bold text-[#0B2A47] transition hover:border-[#0795DC] hover:text-[#0A7BBF]">
-                      View School
+                  <div className="flex w-full gap-3 sm:w-auto">
+                    <Link href={schoolPath(s)} className="flex-1 rounded-xl border border-[#D6DDE5] px-5 py-3 text-sm font-bold text-[#0B2A47] transition hover:border-[#0795DC] hover:text-[#0A7BBF]">
+                      <span className="block text-center">View School</span>
                     </Link>
                     <Link
                       href={`/counselling?school=${encodeURIComponent(s.name)}`}
-                      className="rounded-xl bg-[#EC0E58] px-5 py-3 text-sm font-extrabold text-white shadow-md shadow-[#EC0E58]/25 transition hover:-translate-y-0.5 hover:bg-[#C8104F]"
+                      className="flex-1 rounded-xl bg-[#EC0E58] px-5 py-3 text-center text-sm font-extrabold text-white shadow-md shadow-[#EC0E58]/25 transition hover:-translate-y-0.5 hover:bg-[#C8104F]"
                     >
                       Enquire ↗
                     </Link>

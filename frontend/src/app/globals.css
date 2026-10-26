@@ -49,3 +49,17 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .vv-rise, .vv-float-a, .vv-float-b, .vv-float-c, .vv-drift { animation: none; }
 }
+
+/* ---------- scroll reveal ---------- */
+.vv-reveal { transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.vv-reveal[data-reveal="hidden"] { opacity: 0; transform: translateY(28px); }
+.vv-reveal[data-reveal="shown"] { opacity: 1; transform: none; }
+
+/* ---------- phones ---------- */
+html, body { max-width: 100%; overflow-x: clip; }
+img { max-width: 100%; }
+@media (max-width: 767px) {
+  /* 16px inputs: iPhone Safari does not zoom the page when a field is tapped */
+  input, select, textarea { font-size: 16px !important; }
+}
+@media (prefers-reduced-motion: reduce) { .vv-reveal { transition: none; } }

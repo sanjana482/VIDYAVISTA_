@@ -1,5 +1,6 @@
 // Server-rendered landing page for one state or one city (/schools-in/<city>, /schools-in/state/<state>).
 // Title, description, photos and FAQs come from /admin/locations; defaults are generated when nothing is saved.
+import ClampedText from "./ClampedText";
 import Link from "next/link";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
@@ -83,7 +84,7 @@ export default function LocationLanding({ kind, name, state, list, all, content 
             <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-[#0B2A47] sm:text-5xl">
               {parts ? (<>{parts[1]} <span className="text-[#0795DC]">{parts[2]}</span></>) : view.title}
             </h1>
-            <p className="mt-4 max-w-3xl whitespace-pre-line leading-7 text-[#4E5A68]">{view.description}</p>
+            <div className="mt-4 max-w-3xl"><ClampedText text={view.description} lines={5} className="leading-7 text-[#4E5A68]" /></div>
             <div className="mt-6 flex flex-wrap gap-3 text-sm text-[#4E5A68]">
               <span className="rounded-full border border-[#D6DDE5] bg-white px-4 py-2 shadow-sm"><strong className="text-[#0A5C91]">{list.length}</strong> {list.length === 1 ? "school" : "schools"}</span>
               {boards.map((b) => <span key={b} className="rounded-full border border-[#D6DDE5] bg-white px-4 py-2 shadow-sm">{b}</span>)}
