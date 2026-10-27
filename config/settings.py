@@ -58,6 +58,10 @@ JAZZMIN_SETTINGS = {
     "site_brand": "VidyaVista",
     "welcome_sign": "Welcome to VidyaVista Dashboard",
     "copyright": "VidyaVista",
+    "site_logo": "schools/img/logo.png",
+    "login_logo": "schools/img/logo.png",
+    "site_logo_classes": "img-fluid",
+    "site_icon": "schools/img/logo.png",
     "show_ui_builder": False,
     "navigation_expanded": True,
 
@@ -121,6 +125,7 @@ if os.getenv('CLOUDINARY_URL'):
         'default': {'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage'},
         'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
     }
-REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = {'reviews': '10/hour'}
+REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = {'reviews': '10/hour', 'admin_login': '10/min'}
+REST_FRAMEWORK['EXCEPTION_HANDLER'] = 'schools.admin_api.api_exception_handler'   # errors as {"message": ...} for the React admin
 DATA_UPLOAD_MAX_MEMORY_SIZE = 12 * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = 12 * 1024 * 1024

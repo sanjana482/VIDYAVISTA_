@@ -1,6 +1,14 @@
+import csv
+
 from django import forms
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.core.exceptions import PermissionDenied
+from django.http import HttpResponse
+from django.template.response import TemplateResponse
+from django.urls import path
 from django.utils.html import format_html
+
+from . import importer
 
 from .models import (
     FACILITY_CHOICES, Enquiry, FeeComponent, LocationFAQ, LocationHighlight, LocationPage, Owner, Review, School,
@@ -90,6 +98,7 @@ class OwnerAdmin(admin.ModelAdmin):
 @admin.register(School)
 class SchoolAdmin(admin.ModelAdmin):
     form = SchoolForm
+    change_list_template = 'admin/schools/school/change_list.html'
     list_display = ('school_id', 'name', 'city', 'state', 'board', 'type', 'owner', 'rating', 'reviews',
                     'isFeatured', 'isRecommended', 'isActive')
     list_filter = ('state', 'city', 'board', 'type', 'isFeatured', 'isRecommended', 'isActive')
@@ -111,9 +120,49 @@ class SchoolAdmin(admin.ModelAdmin):
         ('6. School details', {'fields': (('established', 'students', 'teachers'), 'campus', 'facilities', 'extra_facilities')}),
         ('7. Social media links', {'fields': ('youtube_url', 'facebook_url', 'instagram_url', 'x_url', 'linkedin_url', 'other_url')}),
         ('8. Fees (yearly)', {'fields': (('feeMin', 'feeMax'), 'feeUpdated', 'feeNote')}),
+        ('9. More details (CSV import se aaye)', {'fields': (
+            ('boarding_type', 'hostel', 'verified'), ('locality', 'pincode'), ('lat', 'lng'), 'extra_boards',
+            ('medium', 'academic_session'), ('student_teacher_ratio', 'school_timing'), 'affiliation_no',
+            ('languages', 'food_options'), ('latest_fee_session', 'current_admission_session'),
+            'page_last_updated', 'logo_url', 'facility_groups'), 'classes': ('collapse',)}),
         ('Ratings (auto, parents ke reviews se)', {'fields': (('rating', 'reviews'),), 'classes': ('collapse',)}),
         ('Old data (purana JSON, ab use mat karo)', {'fields': ('highlights', 'faqs', 'gallery'), 'classes': ('collapse',)}),
     )
+
+    # ---------------------------------------------------------- "Import CSV" button on the schools list
+    def get_urls(self):
+        extra = [
+            path('import-csv/', self.admin_site.admin_view(self.import_csv_view), name='schools_school_import_csv'),
+            path('import-template/', self.admin_site.admin_view(self.import_template_view), name='schools_school_import_template'),
+        ]
+        return extra + super().get_urls()
+
+    def import_csv_view(self, request):
+        if not self.has_add_permission(request):
+            raise PermissionDenied
+        result = None
+        if request.method == 'POST':
+            f = request.FILES.get('csv_file')
+            if not f:
+                messages.error(request, 'Pehle CSV file choose karo.')
+            else:
+                try:
+                    text = f.read().decode('utf-8-sig')
+                except UnicodeDecodeError:
+                    messages.error(request, 'File UTF-8 CSV honi chahiye (Excel: Save As > CSV UTF-8).')
+                else:
+                    result = importer.import_csv_text(text)
+                    if result['created']:
+                        messages.success(request, f"{result['created']} school add ho gaye.")
+        ctx = dict(self.admin_site.each_context(request), title='Import schools from CSV', opts=self.model._meta, result=result)
+        return TemplateResponse(request, 'admin/schools/school/import_csv.html', ctx)
+
+    def import_template_view(self, request):
+        resp = HttpResponse(content_type='text/csv; charset=utf-8')
+        resp['Content-Disposition'] = 'attachment; filename="vidyavista-schools-template.csv"'
+        resp.write('\ufeff')
+        csv.writer(resp).writerow(importer.TEMPLATE_COLUMNS)
+        return resp
 
     @admin.display(description='Preview')
     def cover_preview(self, obj):

@@ -1,0 +1,41 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div class="card card-primary card-outline">
+  <div class="card-body">
+    <h4>Schools ko CSV file se import karo</h4>
+    <p class="text-muted">
+      1) Template download karo, 2) har row me ek school bharo, 3) file yahan upload karo.
+      Sirf <b>name</b> aur <b>city</b> zaroori hain, baaki sab columns optional hain.
+      Same name + city wale school dobara add nahi hote (skip ho jate hain).
+    </p>
+    <p><a href="{% url 'admin:schools_school_import_template' %}" class="btn btn-outline-secondary btn-sm">⬇ Download CSV template</a></p>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="form-group">
+        <input type="file" name="csv_file" accept=".csv,text/csv" class="form-control-file" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Import</button>
+      <a href="{% url 'admin:schools_school_changelist' %}" class="btn btn-link">Back to schools</a>
+    </form>
+  </div>
+</div>
+
+{% if result %}
+<div class="card">
+  <div class="card-body">
+    <h5>Import finished</h5>
+    <p>
+      <span class="badge badge-success p-2">{{ result.created }} added</span>
+      <span class="badge badge-secondary p-2">{{ result.skipped|length }} duplicates skipped</span>
+      <span class="badge badge-danger p-2">{{ result.errors|length }} failed</span>
+    </p>
+    {% if result.skipped or result.errors %}
+    <ul>
+      {% for x in result.skipped %}<li>Row {{ x.row }}: {{ x.message }}</li>{% endfor %}
+      {% for x in result.errors %}<li class="text-danger">Row {{ x.row }}: {{ x.message }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,94 +1,44 @@
 ﻿"""
-Import schools from a CSV file into the current Django project's School model.
+Import schools from a CSV file (same format as the admin panel "Import" page).
 
-Expected CSV columns are shown in vidyavista_schools_sample.csv.
-- facilities: separate values with | (example: Library|Sports|Transport)
-- image_file: leave blank unless you intentionally handle file uploads separately
-- Existing rows with the same name + city are skipped (no duplicates).
-Run this from the backend folder with the project's virtual environment active:
-    python import_schools_csv.py vidyavista_schools_sample.csv
+Run from the backend folder with the virtual environment active:
+    python import_schools_csv.py my_schools.csv
+
+- Only `name` and `city` columns are compulsory.
+- `source_site` / `source_url` columns are ignored (never saved).
+- A school with the same name + city is skipped (no duplicates).
 """
-import csv
+import os
 import sys
-import django
 from pathlib import Path
 
-# This script should be run from the backend folder.
+import django
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import os
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django.setup()
 
-from schools.models import School
+from schools.importer import import_csv_text  # noqa: E402
+from schools.models import School  # noqa: E402
 
-def as_bool(value):
-    return str(value).strip().lower() in {"1", "true", "yes", "y"}
 
 def main():
     if len(sys.argv) < 2:
         print("Usage: python import_schools_csv.py <csv-file>")
         raise SystemExit(1)
-
-    csv_path = Path(sys.argv[1]).resolve()
-    if not csv_path.is_file():
-        print(f"CSV file not found: {csv_path}")
+    path = Path(sys.argv[1]).resolve()
+    if not path.is_file():
+        print(f"CSV file not found: {path}")
         raise SystemExit(1)
 
-    created_count = 0
-    skipped_count = 0
-
-    with csv_path.open("r", encoding="utf-8-sig", newline="") as file:
-        reader = csv.DictReader(file)
-        required = {
-            "name", "area", "city", "state", "board", "grades", "type",
-            "gender", "fee", "rating", "reviews", "photos", "facilities",
-            "phone", "image", "top_rated", "is_active"
-        }
-        missing = required - set(reader.fieldnames or [])
-        if missing:
-            print("Missing CSV columns:", ", ".join(sorted(missing)))
-            raise SystemExit(1)
-
-        for line_number, row in enumerate(reader, start=2):
-            try:
-                name = row["name"].strip()
-                city = row["city"].strip()
-                if not name or not city:
-                    raise ValueError("name and city are required")
-
-                defaults = {
-                    "area": row["area"].strip(),
-                    "state": row["state"].strip(),
-                    "board": row["board"].strip(),
-                    "grades": row["grades"].strip(),
-                    "type": row["type"].strip(),
-                    "gender": row["gender"].strip(),
-                    "fee": int(row["fee"]),
-                    "rating": float(row["rating"]),
-                    "reviews": int(row["reviews"]),
-                    "photos": int(row["photos"]),
-                    "facilities": [x.strip() for x in row["facilities"].split("|") if x.strip()],
-                    "phone": row["phone"].strip(),
-                    "image": row["image"].strip(),
-                    "topRated": as_bool(row["top_rated"]),
-                    "isActive": as_bool(row["is_active"]),
-                }
-
-                _, created = School.objects.get_or_create(
-                    name=name,
-                    city=city,
-                    defaults=defaults,
-                )
-                if created:
-                    created_count += 1
-                else:
-                    skipped_count += 1
-            except Exception as exc:
-                print(f"Row {line_number} failed: {exc}")
-
-    print(f"Import complete. Added: {created_count}; skipped existing: {skipped_count}")
+    result = import_csv_text(path.read_text(encoding="utf-8-sig"), max_rows=100000)
+    for item in result["errors"]:
+        print(f"Row {item['row']} failed: {item['message']}")
+    for item in result["skipped"]:
+        print(f"Row {item['row']} skipped: {item['message']}")
+    print(f"Import complete. Added: {result['created']}; skipped: {len(result['skipped'])}; failed: {len(result['errors'])}")
     print(f"Total schools in database: {School.objects.count()}")
+
 
 if __name__ == "__main__":
     main()
-

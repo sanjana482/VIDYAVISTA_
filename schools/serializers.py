@@ -1,3 +1,5 @@
+import re
+
 from rest_framework import serializers
 
 from .models import Enquiry, LocationPage, Review, School
@@ -73,6 +75,8 @@ class SchoolSerializer(serializers.ModelSerializer):
         if obj.established: prof['established'] = obj.established
         if obj.students: prof['students'] = obj.students
         if obj.students and obj.teachers: prof['ratio'] = max(1, round(obj.students / obj.teachers))
+        elif obj.student_teacher_ratio and re.match(r'\s*\d+', obj.student_teacher_ratio):
+            prof['ratio'] = int(re.match(r'\s*(\d+)', obj.student_teacher_ratio).group(1))
         if obj.teachers: prof['teachers'] = obj.teachers
         if obj.campus: prof['campus'] = obj.campus
         if obj.address: prof['address'] = obj.address
