@@ -115,15 +115,15 @@ export default function ProfileHero({ school: s, intro, phoneHref, stats }: Prop
             </p>
 
             <div className="mt-5 flex flex-wrap gap-3">
-              <a href={`tel:${phoneHref}`} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-6 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#0A5C91]/25 transition hover:-translate-y-0.5">
+              <a href={`tel:${phoneHref}`} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-6 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#0A5C91]/25 transition hover:-translate-y-0.5 vv-btn">
                 <Icon name="phone" className="h-4 w-4" /> Call Now
               </a>
-              <button type="button" onClick={() => openEnquiry()} className="rounded-xl bg-[#EC0E58] px-6 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#EC0E58]/25 transition hover:-translate-y-0.5 hover:bg-[#C8104F]">
+              <button type="button" onClick={() => openEnquiry()} className="rounded-xl bg-[#EC0E58] px-6 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#EC0E58]/25 transition hover:-translate-y-0.5 hover:bg-[#C8104F] vv-btn">
                 Enquire for 2027-28
               </button>
               <button type="button" onClick={() => router.push(`/compare?ids=${s.id}`)} className={ghost}>+ Add to compare</button>
               <button type="button" onClick={toggleSave} aria-pressed={saved} className={`${ghost} ${saved ? "!border-[#EC0E58] !text-[#EC0E58]" : ""}`}>
-                <Icon name="heart" filled={saved} className="mr-1 inline h-4 w-4" />{saved ? "Saved" : "Save"}
+                <Icon name="heart" filled={saved} className={`mr-1 inline h-4 w-4 ${saved ? "vv-heart" : ""}`} />{saved ? "Saved" : "Save"}
               </button>
               <button type="button" onClick={share} className={ghost}><Icon name="share" className="mr-1 inline h-4 w-4" />Share</button>
             </div>

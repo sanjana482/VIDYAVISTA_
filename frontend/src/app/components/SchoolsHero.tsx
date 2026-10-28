@@ -79,7 +79,33 @@ export default function SchoolsHero({
     : schools;
   const view = resolveContent(active, content, placeSchools.length);
   const adminPhotos = [content?.cover, ...(content?.photos ?? [])].filter((x): x is string => !!x);
-  const titleText = heading
+  // a school type and/or board was picked (e.g. from "Find schools by board"): title + text speak about exactly that
+  const picked = !heading && applied && (applied.type || applied.board) ? applied : null;
+  const pickedCount = picked
+    ? schools.filter(
+        (s) =>
+          (!picked.type || s.type === picked.type) &&
+          (!picked.board || s.board === picked.board) &&
+          (!picked.place || s.city === picked.place || stateFor(s) === picked.place)
+      ).length
+    : 0;
+  const pickedTitle = picked ? `Best ${headingFor(picked)} 2027-28` : "";
+  const pickedDescription = (() => {
+    if (!picked) return "";
+    const noun = `${picked.board ? `${BOARD_LABEL[picked.board] ?? picked.board} ` : ""}${picked.type ? `${picked.type.toLowerCase()}s` : "schools"}`;
+    const where = picked.place ? `in ${picked.place}` : "across India";
+    const lead = pickedCount > 0 ? `Explore ${pickedCount} ${noun} ${where}` : `Explore ${noun} ${where}`;
+    const what =
+      picked.type === "Boarding School"
+        ? "residential facilities, annual fees and parent reviews"
+        : picked.type === "Play School"
+        ? "age groups, annual fees and parent reviews"
+        : "classes offered, annual fees and parent reviews";
+    return `${lead}. Compare ${what}, then enquire directly for 2027-28 admission on VidyaVista.`;
+  })();
+  const titleText = picked
+    ? pickedTitle
+    : heading
     ? applied && applied.place
       ? `Best ${headingFor(applied)} 2027-28`
       : heading
@@ -91,8 +117,8 @@ export default function SchoolsHero({
     
     if (!originalTitle.current) originalTitle.current = document.title;
         if (initial) return;
-    document.title = active ? view.metaTitle : originalTitle.current;
-  }, [active, view.metaTitle]);
+    document.title = picked ? `${pickedTitle} | VidyaVista` : active ? view.metaTitle : originalTitle.current;
+  }, [active, view.metaTitle, picked, pickedTitle]);
 
   const summary = (() => {
     const rated = placeSchools.filter((x) => x.reviews > 0 && x.rating > 0);
@@ -167,7 +193,7 @@ export default function SchoolsHero({
             </Title>
 
             <div className="mt-5">
-              <ListingDescription key={view.description} description={view.description} maxLength={180} />
+              <ListingDescription key={picked ? pickedDescription : view.description} description={picked ? pickedDescription : view.description} maxLength={180} />
             </div>
 
             <div className="mt-6 flex flex-wrap gap-3 text-sm text-[#4E5A68]">

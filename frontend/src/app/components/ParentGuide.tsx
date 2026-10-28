@@ -96,7 +96,7 @@ export default function ParentGuide() {
         <ol className="mt-5 space-y-3">
           {steps.map(([b, t], i) => (
             <li key={b} className="flex items-center gap-4 rounded-2xl border border-[#E1E7EE] px-5 py-4">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#0A5C91] to-[#0795DC] text-sm font-extrabold text-white">{i + 1}</span>
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#0A5C91] to-[#0795DC] text-sm font-extrabold text-white vv-btn">{i + 1}</span>
               <p className="text-[#626F7D]"><strong className="font-extrabold text-[#0B2A47]">{b}</strong> {t}</p>
             </li>
           ))}

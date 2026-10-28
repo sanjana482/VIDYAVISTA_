@@ -67,7 +67,7 @@ export function normalizeType(t: string): "Day School" | "Boarding School" | "Pl
   const v = t.trim().toLowerCase();
   if (v === "day schools" || v === "day school") return "Day School";
   if (v === "boarding schools" || v === "boarding school") return "Boarding School";
-  if (v === "Play School" || v === "Play School" || v === "day-boarding") return "Play School";
+  if (v === "play school" || v === "play schools" || v === "day-boarding") return "Play School";
   return "";
 }
 

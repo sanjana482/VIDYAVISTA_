@@ -152,7 +152,7 @@ export default function ReviewSection({ schoolId, schoolName, rating, count, rev
               </label>
               <Err k="confirm" />
 
-              <button type="submit" disabled={sending} className="mt-6 rounded-xl disabled:opacity-60 bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-7 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#0A5C91]/25 transition hover:-translate-y-0.5">
+              <button type="submit" disabled={sending} className="mt-6 rounded-xl disabled:opacity-60 bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-7 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#0A5C91]/25 transition hover:-translate-y-0.5 vv-btn">
                 {sending ? "Sending…" : "Submit review"}
               </button>
             </form>

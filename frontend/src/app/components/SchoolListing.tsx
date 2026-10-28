@@ -22,6 +22,7 @@ import { APPLIED_EVENT } from "./PlaceHeading";
 import { announceLocation } from "../lib/useActiveLocation";
 import { typeRank } from "../lib/preferences";
 import Icon from "./Icon";
+import CornerRibbon from "./CornerRibbon";
 
 
 const PAGE_SIZE = 5;
@@ -392,8 +393,8 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
               <div className="flex items-center justify-between gap-3 border-b border-[#E1E7EE] px-5 py-4">
                 <h2 className="flex items-center gap-2 text-lg font-extrabold text-[#0B2A47]"><Icon name="filters" className="h-5 w-5" /> Filters</h2>
                 <div className="flex items-center gap-3">
-                  <button type="button" onClick={clearAll} className="text-sm font-semibold text-[#EC0E58] underline underline-offset-4 hover:text-[#C8104F]">
-                    Clear all
+                  <button type="button" onClick={clearAll} className="vv-wiggle-host inline-flex items-center gap-1.5 text-sm font-semibold text-[#EC0E58] hover:text-[#C8104F]">
+                    <Icon name="trash" className="vv-wiggle h-4 w-4" /> Clear all
                   </button>
                   <button type="button" aria-label="Close filters" onClick={() => setShowFilters(false)} className="flex h-9 w-9 items-center justify-center rounded-full bg-[#EEF3F8] text-[#0B2A47] lg:hidden">
                     <Icon name="x" className="h-5 w-5" />
@@ -440,7 +441,7 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
                 <button
                   type="button"
                   onClick={apply}
-                  className="w-full rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#0A5C91]/25 transition hover:-translate-y-0.5"
+                  className="w-full rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#0A5C91]/25 transition hover:-translate-y-0.5 vv-btn"
                 >
                   Apply filters
                 </button>
@@ -478,20 +479,21 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
               <div className="rounded-2xl border border-dashed border-[#C9D3DE] bg-[#F6FAFD] p-10 text-center">
                 <p className="text-lg font-extrabold text-[#0B2A47]">No schools match these filters</p>
                 <p className="mt-2 text-sm text-[#707E8F]">Try removing a filter or widening your fee range.</p>
-                <button onClick={clearAll} className="mt-5 rounded-xl bg-[#0A5C91] px-6 py-3 text-sm font-bold text-white hover:bg-[#0795DC]">
+                <button onClick={clearAll} className="mt-5 rounded-xl bg-[#0A5C91] px-6 py-3 text-sm font-bold text-white hover:bg-[#0795DC] vv-btn">
                   Clear all filters
                 </button>
               </div>
             )}
 
             {visible.map((s) => (
-              <article key={s.id} className="rounded-3xl border border-[#E1E7EE] bg-white p-5 shadow-sm transition hover:border-[#9ED8F5] hover:shadow-xl hover:shadow-[#0795DC]/10">
+              <article key={s.id} className="vv-ribbon-host rounded-3xl border border-[#E1E7EE] bg-white p-5 shadow-sm transition hover:border-[#9ED8F5] hover:shadow-xl hover:shadow-[#0795DC]/10">
                 <div className="grid gap-5 md:grid-cols-[260px_1fr] xl:grid-cols-[280px_1fr_230px]">
                   {/* Photo */}
                   <div className="relative h-52 overflow-hidden rounded-2xl bg-[#E6F4FC] md:h-auto md:min-h-[210px]">
                     <img src={s.image} alt={`${s.name} campus`} loading="lazy" className="h-full w-full object-cover" />
+                    {s.isFeatured && <CornerRibbon label="Featured" radius="1rem" />}
                     {s.topRated && (
-                      <span className="absolute left-3 top-3 rounded-lg bg-[#0795DC] px-3 py-1.5 text-xs font-extrabold text-white shadow">
+                      <span className={`absolute left-3 ${s.isFeatured ? "bottom-3" : "top-3"} rounded-lg bg-[#0795DC] px-3 py-1.5 text-xs font-extrabold text-white shadow`}>
                         <span className="inline-flex items-center gap-1"><Icon name="star" filled className="h-3.5 w-3.5" /> Top rated</span>
                       </span>
                     )}
@@ -554,7 +556,7 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
                     </Link>
                     <Link
                       href={`/counselling?school=${encodeURIComponent(s.name)}`}
-                      className="flex-1 rounded-xl bg-[#EC0E58] px-5 py-3 text-center text-sm font-extrabold text-white shadow-md shadow-[#EC0E58]/25 transition hover:-translate-y-0.5 hover:bg-[#C8104F]"
+                      className="flex-1 rounded-xl bg-[#EC0E58] px-5 py-3 text-center text-sm font-extrabold text-white shadow-md shadow-[#EC0E58]/25 transition hover:-translate-y-0.5 hover:bg-[#C8104F] vv-btn"
                     >
                       Enquire ↗
                     </Link>

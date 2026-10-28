@@ -4,34 +4,69 @@ import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 import { post } from "../../_lib/api";
 import { parseCsv, toCsv } from "../../_lib/csv";
-import { BOARDS, GENDERS, TYPES } from "../../_lib/constants";
+import { inr } from "../../_lib/constants";
 import { Card, PageHeader, Spinner, btn, cx, useToast } from "../../_components/ui";
 
-const COLUMNS = ["name", "area", "city", "state", "board", "grades", "type", "gender", "fee", "rating", "reviews", "photos", "phone", "image", "facilities", "topRated", "isActive"] as const;
-type Col = (typeof COLUMNS)[number];
-const REQUIRED: Col[] = ["name", "area", "city", "state", "board", "grades", "type", "fee"];
-
-// header spellings people commonly use -> our field names
-const ALIAS: Record<string, Col> = {
-  "school name": "name", school: "name", locality: "area", "area / locality": "area", town: "city", "school type": "type",
-  "annual fee": "fee", "annual fees": "fee", fees: "fee", "fee (inr)": "fee", mobile: "phone", "phone number": "phone",
-  photo: "image", "image url": "image", facility: "facilities", "top rated": "topRated", live: "isActive", active: "isActive", classes: "grades",
-};
-const norm = (h: string) => h.trim().toLowerCase().replace(/_/g, " ");
-const toField = (h: string): Col | null => {
-  const n = norm(h);
-  const direct = COLUMNS.find((c) => c.toLowerCase() === n.replace(/\s/g, ""));
-  return direct || ALIAS[n] || null;
-};
-const ci = (list: readonly string[], v: string) => list.find((x) => x.toLowerCase() === v.trim().toLowerCase());
-
-type Row = { line: number; data: Record<string, unknown>; errors: string[] };
-type Result = { created: number; skipped: { row: number; message: string }[]; errors: { row: number; message: string }[] };
-
-const SAMPLE = [
-  [...COLUMNS] as string[],
-  ["Maplewood Academy", "Whitefield", "Bengaluru", "Karnataka", "CBSE", "Nursery – XII", "Day School", "Co-ed", "145000", "4.5", "120", "8", "+919800000001", "https://example.com/photo.jpg", "Transport|Sports|Library", "yes", "yes"],
+/* ------------------------------------------------------------------
+   Sheet format
+   One school per row. Only `name` and `city` are compulsory.
+   Class-wise fees use columns like "Class 5 - annual", "LKG - one-time".
+   Columns called source_site / source_url are dropped here and never sent,
+   saved or shown.
+------------------------------------------------------------------- */
+const BASE_COLUMNS = [
+  "name", "type", "boarding_type", "city", "state", "area", "locality", "pincode", "boards", "classes", "gender",
+  "medium", "academic_session", "student_teacher_ratio", "campus_size", "founded", "fee_min", "fee_max",
+  "latest_fee_session", "current_admission_session", "address", "lat", "lng", "phone", "email", "website", "social",
+  "logo", "images", "facilities", "facility_groups", "hostel", "languages", "food_options", "verified",
+  "page_last_updated", "affiliation_no", "school_timing", "student_count", "teacher_count", "rating", "reviews",
+  "description", "about",
 ];
+const FEE_CLASSES = ["LKG", "UKG", ...Array.from({ length: 12 }, (_, i) => `Class ${i + 1}`)];
+const FEE_KINDS = ["monthly", "annual", "one-time", "first year"];
+const FEE_COLUMNS = FEE_CLASSES.flatMap((c) => FEE_KINDS.map((k) => `${c} - ${k}`));
+const TEMPLATE_COLUMNS = [...BASE_COLUMNS, ...FEE_COLUMNS];
+
+const OPTIONAL_EXTRA = ["is_active", "top_rated"];
+const KNOWN = new Set([...TEMPLATE_COLUMNS, ...OPTIONAL_EXTRA].map((c) => c.toLowerCase()));
+const FEE_RE = /^(toddler|nursery|lkg|ukg|(?:class\s*)?\d{1,2})\s*[-–:]\s*(monthly|annual|annually|one[\s-]?time|first[\s-]?year)$/i;
+const HIDDEN_RE = /^source[\s_]?(site|url)$/i; // never imported, never shown
+const ALIASES: Record<string, string> = {
+  "school name": "name", school: "name", town: "city", board: "boards", "school type": "type", grades: "classes",
+  mobile: "phone", "phone number": "phone", image: "images", photo: "images", photos: "images", established: "founded",
+};
+
+const clean = (h: string) => h.replace(/^\uFEFF/, "").trim();
+const canon = (h: string) => {
+  const n = clean(h).toLowerCase().replace(/_/g, " ").replace(/\s+/g, " ");
+  if (FEE_RE.test(n)) return n;
+  return (ALIASES[n] ?? n).replace(/ /g, "_");
+};
+const isKnown = (h: string) => {
+  const c = canon(h);
+  return KNOWN.has(c) || FEE_RE.test(c);
+};
+
+const SAMPLE_ROW: Record<string, string> = {
+  name: "Maplewood Residential School", type: "Boarding School", boarding_type: "Full Boarding", city: "Dehradun",
+  state: "Uttarakhand", area: "Rajpur Road", locality: "Rajpur", pincode: "248009", boards: "CBSE, Cambridge",
+  classes: "5 - 12", gender: "Co-ed", medium: "English", academic_session: "April to March",
+  student_teacher_ratio: "15:1", campus_size: "20 acres", founded: "1998", fee_min: "450000", fee_max: "520000",
+  latest_fee_session: "2026-2027", address: "Rajpur Road, Dehradun, Uttarakhand - 248009", phone: "+91-9800000001",
+  email: "admissions@maplewood.example", website: "https://www.maplewood.example",
+  images: "https://example.com/cover.jpg, https://example.com/photo-2.jpg",
+  facilities: "Transportation, Boys Hostel, Girls Hostel, Library, Playground", hostel: "True",
+  about: "Write a few lines about the school here.", "Class 5 - annual": "450000", "Class 5 - one-time": "60000",
+};
+
+type Row = { line: number; data: Record<string, string>; errors: string[] };
+type Item = { row: number; message: string };
+type Result = { created: number; skipped: Item[]; errors: Item[] };
+
+const CHUNK = 50;
+const MAX_ROWS = 500;
+
+const pick = (data: Record<string, string>, key: string) => Object.entries(data).find(([h]) => canon(h) === key)?.[1] ?? "";
 
 export default function ImportSchools() {
   const toast = useToast();
@@ -40,14 +75,18 @@ export default function ImportSchools() {
   const [rows, setRows] = useState<Row[]>([]);
   const [unknown, setUnknown] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(0);
   const [result, setResult] = useState<Result | null>(null);
 
   const valid = useMemo(() => rows.filter((r) => r.errors.length === 0), [rows]);
 
   function template() {
-    const url = URL.createObjectURL(new Blob(["\uFEFF" + toCsv(SAMPLE)], { type: "text/csv" }));
+    const csv = toCsv([TEMPLATE_COLUMNS, TEMPLATE_COLUMNS.map((c) => SAMPLE_ROW[c] ?? "")]);
+    const url = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type: "text/csv" }));
     const a = document.createElement("a");
-    a.href = url; a.download = "vidyavista-schools-template.csv"; a.click();
+    a.href = url;
+    a.download = "vidyavista-schools-template.csv";
+    a.click();
     URL.revokeObjectURL(url);
   }
 
@@ -56,26 +95,25 @@ export default function ImportSchools() {
     setResult(null);
     setFileName(file.name);
     const table = parseCsv(await file.text());
-    if (table.length < 2) { setRows([]); toast.error("The file needs a header row and at least one school"); return; }
+    if (table.length < 2) {
+      setRows([]);
+      setUnknown([]);
+      toast.error("The file needs a header row and at least one school");
+      return;
+    }
 
-    const map = table[0].map(toField);
-    setUnknown(table[0].filter((_, i) => !map[i] && table[0][i].trim()));
-    const missingCols = REQUIRED.filter((c) => !map.includes(c));
+    const headers = table[0].map(clean);
+    const keep = headers.map((h) => !!h && !HIDDEN_RE.test(h)); // source_* columns are dropped here
+    setUnknown(headers.filter((h, i) => keep[i] && !isKnown(h)));
 
     const parsed: Row[] = table.slice(1).map((cells, i) => {
-      const data: Record<string, unknown> = {};
-      map.forEach((field, idx) => { if (field && cells[idx] !== undefined) data[field] = cells[idx].trim(); });
-      const errors: string[] = missingCols.map((c) => `Column "${c}" is missing`);
-      if (!missingCols.length) {
-        REQUIRED.forEach((c) => { if (!String(data[c] ?? "").trim()) errors.push(`${c} is empty`); });
-        const board = ci(BOARDS, String(data.board || "")); if (data.board && !board) errors.push(`board must be one of ${BOARDS.join(", ")}`); else if (board) data.board = board;
-        const type = ci(TYPES, String(data.type || "")); if (data.type && !type) errors.push(`type must be one of ${TYPES.join(", ")}`); else if (type) data.type = type;
-        if (data.gender) { const g = ci(GENDERS, String(data.gender)); if (!g) errors.push(`gender must be one of ${GENDERS.join(", ")}`); else data.gender = g; }
-        if (data.fee !== undefined && (isNaN(Number(String(data.fee).replace(/[,₹\s]/g, ""))) || Number(String(data.fee).replace(/[,₹\s]/g, "")) < 0)) errors.push("fee must be a number");
-        else if (data.fee) data.fee = Number(String(data.fee).replace(/[,₹\s]/g, ""));
-        if (data.rating && (isNaN(Number(data.rating)) || Number(data.rating) > 5)) errors.push("rating must be 0-5");
-        ["topRated", "isActive"].forEach((k) => { if (data[k] !== undefined && data[k] !== "") data[k] = /^(1|true|yes|y)$/i.test(String(data[k])); else delete data[k]; });
-      }
+      const data: Record<string, string> = {};
+      headers.forEach((h, idx) => {
+        if (keep[idx] && cells[idx] !== undefined && cells[idx].trim() !== "") data[h] = cells[idx].trim();
+      });
+      const errors: string[] = [];
+      if (!pick(data, "name")) errors.push("name is empty");
+      if (!pick(data, "city")) errors.push("city is empty");
       return { line: i + 2, data, errors };
     });
     setRows(parsed);
@@ -83,34 +121,60 @@ export default function ImportSchools() {
 
   async function run() {
     setBusy(true);
+    setDone(0);
+    const total: Result = { created: 0, skipped: [], errors: [] };
     try {
-      const r = await post<Result>("/schools/import", { rows: valid.map((v) => v.data) });
-      setResult(r);
+      for (let i = 0; i < valid.length; i += CHUNK) {
+        const part = valid.slice(i, i + CHUNK);
+        const r = await post<Result>("/schools/import", { rows: part.map((p) => p.data) });
+        const lineOf = (n: number) => part[n - 2]?.line ?? n; // server row -> row number in your file
+        total.created += r.created;
+        total.skipped.push(...r.skipped.map((x) => ({ ...x, row: lineOf(x.row) })));
+        total.errors.push(...r.errors.map((x) => ({ ...x, row: lineOf(x.row) })));
+        setDone(Math.min(i + CHUNK, valid.length));
+      }
       setRows([]);
-      toast.success(`${r.created} school${r.created === 1 ? "" : "s"} imported`);
+      setFileName("");
+      toast.success(`${total.created} school${total.created === 1 ? "" : "s"} imported`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Import failed");
-    } finally { setBusy(false); }
+    } finally {
+      setResult(total);
+      setBusy(false);
+    }
   }
+
+  const feeText = (r: Row) => {
+    const num = (k: string) => Number(pick(r.data, k).replace(/[,₹\s]/g, "")) || 0;
+    const a = num("fee_min");
+    const b = num("fee_max");
+    if (!a && !b) return "—";
+    return a && b && a !== b ? `${inr(a)} – ${inr(b)}` : inr(a || b);
+  };
 
   return (
     <>
       <Link href="/admin/schools" className="mb-3 inline-block text-sm font-bold text-[#0A5C91] hover:underline">← Back to schools</Link>
-      <PageHeader title="Bulk import" subtitle="Add many schools at once from an Excel / Google Sheet saved as CSV." />
+      <PageHeader title="Bulk import" subtitle="Add many schools at once from a CSV sheet. Photos, fees, facilities and contact details come along." />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="p-6 lg:col-span-2">
           <ol className="space-y-5">
             <li className="flex gap-4">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0795DC] font-extrabold text-white">1</span>
-              <div><p className="font-bold">Download the template</p><p className="mb-3 text-sm text-[#5C6A7B]">Fill one school per row. Separate facilities with <code className="rounded bg-[#F6FAFD] px-1">|</code> e.g. Transport|Sports|Library.</p><button onClick={template} className={btn.ghost}>⬇ Download CSV template</button></div>
+              <div>
+                <p className="font-bold">Download the template</p>
+                <p className="mb-3 text-sm text-[#5C6A7B]">One school per row. Only <b>name</b> and <b>city</b> are compulsory, every other column is optional. A sheet that already uses these column names works as it is.</p>
+                <button onClick={template} className={btn.ghost}>⬇ Download CSV template</button>
+              </div>
             </li>
             <li className="flex gap-4">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0795DC] font-extrabold text-white">2</span>
               <div className="flex-1">
-                <p className="font-bold">Upload your file</p><p className="mb-3 text-sm text-[#5C6A7B]">In Excel: File → Save As → CSV (UTF-8). Up to 500 rows.</p>
-                <input ref={fileRef} type="file" accept=".csv,text/csv" hidden onChange={(e) => onFile(e.target.files?.[0])} />
-                <button onClick={() => fileRef.current?.click()} className="flex w-full flex-col items-center rounded-2xl border-2 border-dashed border-[#B9D7EA] bg-[#F6FAFD] px-4 py-8 text-center transition hover:border-[#0795DC] hover:bg-[#E1F1FA]">
+                <p className="font-bold">Upload your file</p>
+                <p className="mb-3 text-sm text-[#5C6A7B]">In Excel: File → Save As → CSV UTF-8. Up to {MAX_ROWS} schools at a time.</p>
+                <input ref={fileRef} type="file" accept=".csv,text/csv" hidden onChange={(e) => { onFile(e.target.files?.[0]); e.target.value = ""; }} />
+                <button onClick={() => fileRef.current?.click()} disabled={busy} className="flex w-full flex-col items-center rounded-2xl border-2 border-dashed border-[#B9D7EA] bg-[#F6FAFD] px-4 py-8 text-center transition hover:border-[#0795DC] hover:bg-[#E1F1FA] disabled:opacity-60">
                   <span className="text-3xl">📄</span>
                   <span className="mt-2 font-bold text-[#0A5C91]">{fileName || "Click to choose a CSV file"}</span>
                 </button>
@@ -118,14 +182,15 @@ export default function ImportSchools() {
             </li>
           </ol>
         </Card>
+
         <Card className="p-6">
-          <h2 className="font-extrabold">Allowed values</h2>
+          <h2 className="font-extrabold">How the sheet is read</h2>
           <dl className="mt-3 space-y-3 text-sm">
-            <div><dt className="font-bold text-[#0A5C91]">board</dt><dd className="text-[#5C6A7B]">{BOARDS.join(", ")}</dd></div>
-            <div><dt className="font-bold text-[#0A5C91]">type</dt><dd className="text-[#5C6A7B]">{TYPES.join(", ")}</dd></div>
-            <div><dt className="font-bold text-[#0A5C91]">gender</dt><dd className="text-[#5C6A7B]">{GENDERS.join(", ")} (default Co-ed)</dd></div>
-            <div><dt className="font-bold text-[#0A5C91]">required</dt><dd className="text-[#5C6A7B]">{REQUIRED.join(", ")}</dd></div>
-            <div><dt className="font-bold text-[#0A5C91]">topRated / isActive</dt><dd className="text-[#5C6A7B]">yes / no</dd></div>
+            <div><dt className="font-bold text-[#0A5C91]">boards</dt><dd className="text-[#5C6A7B]">CBSE, ICSE, IB, Cambridge, State Board, NIOS. For two boards write <code className="rounded bg-[#F6FAFD] px-1">CBSE, Cambridge</code>.</dd></div>
+            <div><dt className="font-bold text-[#0A5C91]">classes</dt><dd className="text-[#5C6A7B]">Like <code className="rounded bg-[#F6FAFD] px-1">5 - 12</code> or <code className="rounded bg-[#F6FAFD] px-1">Nursery - 12</code>.</dd></div>
+            <div><dt className="font-bold text-[#0A5C91]">images / facilities</dt><dd className="text-[#5C6A7B]">Separate with commas. The first image becomes the cover, the rest go to the gallery.</dd></div>
+            <div><dt className="font-bold text-[#0A5C91]">Class-wise fees</dt><dd className="text-[#5C6A7B]">Columns like <code className="rounded bg-[#F6FAFD] px-1">Class 5 - annual</code> and <code className="rounded bg-[#F6FAFD] px-1">Class 5 - one-time</code>. “first year” is a total, so it is skipped.</dd></div>
+            <div><dt className="font-bold text-[#0A5C91]">Duplicates</dt><dd className="text-[#5C6A7B]">A school with the same name and city is skipped, so uploading a file twice is safe.</dd></div>
           </dl>
         </Card>
       </div>
@@ -135,21 +200,29 @@ export default function ImportSchools() {
       {rows.length > 0 && (
         <Card className="mt-6">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E1E7EE] p-4">
-            <p className="text-sm"><b className="text-emerald-700">{valid.length} ready</b> · <b className={rows.length - valid.length ? "text-[#C8104F]" : "text-[#8896A6]"}>{rows.length - valid.length} with errors</b> (errors are skipped)</p>
-            <button className={btn.primary} disabled={busy || valid.length === 0 || rows.length > 500} onClick={run}>
-              {busy && <Spinner className="h-4 w-4 border-white/40 border-t-white" />} Import {valid.length} school{valid.length === 1 ? "" : "s"}
+            <p className="text-sm"><b className="text-emerald-700">{valid.length} ready</b> · <b className={rows.length - valid.length ? "text-[#C8104F]" : "text-[#8896A6]"}>{rows.length - valid.length} with errors</b> (rows with errors are skipped)</p>
+            <button className={btn.primary} disabled={busy || valid.length === 0 || rows.length > MAX_ROWS} onClick={run}>
+              {busy && <Spinner className="h-4 w-4 border-white/40 border-t-white" />}
+              {busy ? `Importing ${done}/${valid.length}…` : `Import ${valid.length} school${valid.length === 1 ? "" : "s"}`}
             </button>
           </div>
-          {rows.length > 500 && <p className="p-4 text-sm font-semibold text-[#C8104F]">Please split the file: maximum 500 rows at a time.</p>}
+          {busy && <div className="h-1.5 bg-[#E1F1FA]"><div className="h-full bg-[#0795DC] transition-all" style={{ width: `${(done / Math.max(1, valid.length)) * 100}%` }} /></div>}
+          {rows.length > MAX_ROWS && <p className="p-4 text-sm font-semibold text-[#C8104F]">Please split the file: maximum {MAX_ROWS} rows at a time.</p>}
           <div className="max-h-[28rem] overflow-auto">
-            <table className="w-full min-w-[760px] text-left text-sm">
-              <thead className="sticky top-0 bg-white text-xs uppercase tracking-wide text-[#8896A6]"><tr><th className="px-4 py-2.5">Row</th><th className="px-2 py-2.5">School</th><th className="px-2 py-2.5">City</th><th className="px-2 py-2.5">Board</th><th className="px-2 py-2.5">Fee</th><th className="px-4 py-2.5">Status</th></tr></thead>
+            <table className="w-full min-w-[860px] text-left text-sm">
+              <thead className="sticky top-0 bg-white text-xs uppercase tracking-wide text-[#8896A6]">
+                <tr><th className="px-4 py-2.5">Row</th><th className="px-2 py-2.5">School</th><th className="px-2 py-2.5">City / State</th><th className="px-2 py-2.5">Board</th><th className="px-2 py-2.5">Type</th><th className="px-2 py-2.5">Classes</th><th className="px-2 py-2.5">Yearly fee</th><th className="px-4 py-2.5">Status</th></tr>
+              </thead>
               <tbody className="divide-y divide-[#E1E7EE]">
                 {rows.map((r) => (
                   <tr key={r.line} className={cx(r.errors.length > 0 && "bg-[#FDE8EF]/50")}>
                     <td className="px-4 py-2.5 text-[#8896A6]">{r.line}</td>
-                    <td className="px-2 py-2.5 font-semibold">{String(r.data.name || "—")}<span className="block text-xs font-normal text-[#5C6A7B]">{String(r.data.area || "")}</span></td>
-                    <td className="px-2 py-2.5">{String(r.data.city || "—")}</td><td className="px-2 py-2.5">{String(r.data.board || "—")}</td><td className="px-2 py-2.5">{String(r.data.fee || "—")}</td>
+                    <td className="px-2 py-2.5 font-semibold">{pick(r.data, "name") || "—"}<span className="block text-xs font-normal text-[#5C6A7B]">{pick(r.data, "locality") || pick(r.data, "area")}</span></td>
+                    <td className="px-2 py-2.5">{pick(r.data, "city") || "—"}<span className="block text-xs text-[#5C6A7B]">{pick(r.data, "state")}</span></td>
+                    <td className="px-2 py-2.5">{pick(r.data, "boards") || "—"}</td>
+                    <td className="px-2 py-2.5">{pick(r.data, "type") || "—"}<span className="block text-xs text-[#5C6A7B]">{pick(r.data, "boarding_type")}</span></td>
+                    <td className="px-2 py-2.5">{pick(r.data, "classes") || "—"}</td>
+                    <td className="px-2 py-2.5">{feeText(r)}</td>
                     <td className="px-4 py-2.5">{r.errors.length ? <span className="text-xs font-semibold text-[#C8104F]">{r.errors.join("; ")}</span> : <span className="text-xs font-bold text-emerald-700">✓ OK</span>}</td>
                   </tr>
                 ))}
@@ -169,7 +242,7 @@ export default function ImportSchools() {
           </div>
           {[...result.skipped, ...result.errors].length > 0 && (
             <ul className="mt-4 max-h-48 space-y-1 overflow-auto text-sm text-[#5C6A7B]">
-              {[...result.skipped.map((x) => ({ ...x, k: "skipped" })), ...result.errors.map((x) => ({ ...x, k: "error" }))].map((x, i) => <li key={i}>Row {x.row}: {x.message}</li>)}
+              {[...result.skipped, ...result.errors].map((x, i) => <li key={i}>Row {x.row}: {x.message}</li>)}
             </ul>
           )}
           <Link href="/admin/schools" className={btn.primary + " mt-5"}>View schools →</Link>

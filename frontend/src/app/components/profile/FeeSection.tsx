@@ -194,7 +194,7 @@ export default function FeeSection({ schoolName, slabs, updated, source }: Props
                       ? "One-time charges may apply only to new admissions. Please confirm the final fee letter with the school."
                       : "This split is illustrative and not the school’s official fee letter. One-time charges may apply only to new admissions. Please confirm the exact components with the school."}
                   </p>
-                  <button type="button" onClick={() => openEnquiry(x.cls)} className="mt-4 rounded-xl bg-[#EC0E58] px-5 py-3 text-sm font-extrabold text-white shadow-md shadow-[#EC0E58]/25 transition hover:bg-[#C8104F]">
+                  <button type="button" onClick={() => openEnquiry(x.cls)} className="mt-4 rounded-xl bg-[#EC0E58] px-5 py-3 text-sm font-extrabold text-white shadow-md shadow-[#EC0E58]/25 transition hover:bg-[#C8104F] vv-btn">
                     Enquire for {x.cls}
                   </button>
                 </div>

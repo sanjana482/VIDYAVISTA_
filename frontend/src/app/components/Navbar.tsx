@@ -49,7 +49,7 @@
 //           </Link>
 //           <Link
 //             href="/counselling"
-//             className="rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-[#0A5C91]/20 transition hover:-translate-y-0.5 hover:shadow-xl"
+//             className="rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-[#0A5C91]/20 transition hover:-translate-y-0.5 hover:shadow-xl vv-btn"
 //           >
 //             Get Counselling
 //           </Link>
@@ -88,7 +88,7 @@
 //           <Link
 //             href="/counselling"
 //             onClick={() => setMenuOpen(false)}
-//             className="block rounded-xl bg-[#0A5C91] px-5 py-3 text-center font-bold text-white"
+//             className="block rounded-xl bg-[#0A5C91] px-5 py-3 text-center font-bold text-white vv-btn"
 //           >
 //             Get Counselling
 //           </Link>
@@ -166,7 +166,7 @@ export default function Navbar() {
           </Link>
           <Link
             href="/counselling"
-            className="rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-[#0A5C91]/20 transition hover:-translate-y-0.5 hover:shadow-xl"
+            className="rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-[#0A5C91]/20 transition hover:-translate-y-0.5 hover:shadow-xl vv-btn"
           >
             Get Counselling
           </Link>
@@ -205,7 +205,7 @@ export default function Navbar() {
           <Link
             href="/counselling"
             onClick={() => setMenuOpen(false)}
-            className="block rounded-xl bg-[#0A5C91] px-5 py-3 text-center font-bold text-white"
+            className="block rounded-xl bg-[#0A5C91] px-5 py-3 text-center font-bold text-white vv-btn"
           >
             Get Counselling
           </Link>

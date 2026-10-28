@@ -187,7 +187,7 @@ export default function ApplyModal({ schoolName, city, status, classes, slabs }:
                 Your enquiry for <strong className="text-[#0B2A47]">{f.child}</strong> ({f.cls}, {f.session}) has been shared with {schoolName}. Expect a call on <strong className="text-[#0B2A47]">+91 {f.mobile}</strong>.
               </p>
               <div className="mt-7 flex flex-wrap justify-center gap-3">
-                <button type="button" data-autofocus onClick={close} className="rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-7 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#0A5C91]/25">Done</button>
+                <button type="button" data-autofocus onClick={close} className="rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-7 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#0A5C91]/25 vv-btn">Done</button>
                 <Link href={cityPath(city)} className="rounded-xl border border-[#D6DDE5] px-7 py-3.5 text-sm font-bold text-[#0B2A47] transition hover:border-[#0795DC] hover:text-[#0A7BBF]">Explore similar schools</Link>
               </div>
             </div>
@@ -314,9 +314,9 @@ export default function ApplyModal({ schoolName, city, status, classes, slabs }:
               <button type="button" onClick={back} className="rounded-xl border border-[#D6DDE5] px-6 py-3.5 text-sm font-bold text-[#0B2A47] transition hover:border-[#0795DC] hover:text-[#0A7BBF]">Back</button>
             ) : <span />}
             {step < 2 ? (
-              <button type="button" onClick={next} className="rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-9 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#0A5C91]/25 transition hover:-translate-y-0.5">Continue</button>
+              <button type="button" onClick={next} className="rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-9 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#0A5C91]/25 transition hover:-translate-y-0.5 vv-btn">Continue</button>
             ) : (
-              <button type="button" onClick={submit} disabled={sending} className="rounded-xl bg-[#EC0E58] px-8 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#EC0E58]/30 transition hover:-translate-y-0.5 hover:bg-[#C8104F] disabled:cursor-wait disabled:opacity-70">
+              <button type="button" onClick={submit} disabled={sending} className="rounded-xl bg-[#EC0E58] px-8 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#EC0E58]/30 transition hover:-translate-y-0.5 hover:bg-[#C8104F] disabled:cursor-wait disabled:opacity-70 vv-btn">
                 {sending ? "Sending…" : "Submit enquiry"}
               </button>
             )}

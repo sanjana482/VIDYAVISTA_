@@ -6,7 +6,7 @@
 //     with dashes, e.g.  mumbai.jpg   new-delhi.jpg   uttar-pradesh.jpg   (see README.txt in that folder).
 //     Photo missing -> a coloured card with the name is shown, nothing breaks.
 //   - Click -> listing page opens with that state / city ticked (/boarding-schools/<state>, /day-schools/<city>).
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { savePreference } from "../lib/preferences";
 import { typePath } from "../lib/links";
@@ -70,39 +70,81 @@ function LocationCard({ place, index, onClick }: { place: Place; index: number; 
   const [broken, setBroken] = useState(false);
   const showImg = !broken;
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="group relative h-48 w-44 shrink-0 snap-start overflow-hidden rounded-3xl border-4 border-white bg-[#DDEAF2] text-left shadow-md shadow-[#12304A]/10 transition duration-300 hover:-translate-y-1 hover:shadow-xl sm:h-52 sm:w-52"
+    // outer: scales with the scroll position (--p = how close to the middle, --d = left/right offset)
+    <div
+      data-card
+      className="w-44 shrink-0 snap-center transition-transform duration-150 ease-out will-change-transform sm:w-52"
+      style={{ transform: "scale(calc(0.9 + 0.1 * var(--p, 1)))", opacity: "calc(0.7 + 0.3 * var(--p, 1))" } as React.CSSProperties}
     >
-      {showImg ? (
-        <img
-          src={place.image}
-          alt={`${place.name} schools`}
-          loading="lazy"
-          onError={() => setBroken(true)}
-          className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-110"
-        />
-      ) : (
-        <div className={`absolute inset-0 bg-gradient-to-br ${TINTS[index % TINTS.length]}`}>
-          <span className="absolute -right-3 -top-6 select-none text-[9rem] font-extrabold leading-none text-white/15">{place.name[0]}</span>
+      <div className="vv-border rounded-2xl shadow-md shadow-[#12304A]/10 transition duration-300 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-[#0A5C91]/25">
+      <button
+        type="button"
+        onClick={onClick}
+        className="group relative block h-52 w-full overflow-hidden rounded-[14px] bg-[#DDEAF2] text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#EC0E58] sm:h-60"
+      >
+        {showImg ? (
+          <img
+            src={place.image}
+            alt={`${place.name} schools`}
+            loading="lazy"
+            onError={() => setBroken(true)}
+            // photo slides slightly against the scroll (parallax) and zooms on hover
+            style={{ transform: "translateX(calc(var(--d, 0) * -16px)) scale(1.18)" }}
+            className="absolute inset-0 h-full w-full object-cover transition-[filter] duration-500 group-hover:brightness-110"
+          />
+        ) : (
+          <div className={`absolute inset-0 bg-gradient-to-br ${TINTS[index % TINTS.length]}`}>
+            <span className="absolute -right-3 -top-6 select-none text-[9rem] font-extrabold leading-none text-white/15">{place.name[0]}</span>
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0B1E2D]/90 via-[#0B1E2D]/20 to-transparent transition-opacity duration-300 group-hover:from-[#0A3A5C]/95" />
+
+        {/* name slides up on hover and reveals "View schools" */}
+        <div className="absolute inset-x-4 bottom-4 flex items-end justify-between gap-2 transition-transform duration-300 group-hover:-translate-y-1">
+          <div className="min-w-0">
+            <span className="block text-lg font-extrabold leading-tight text-white sm:text-xl">{place.name}</span>
+            <span className="mt-0.5 block translate-y-1 text-xs font-semibold text-white/80 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+              View schools
+            </span>
+          </div>
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/95 text-[#0A5C91] transition duration-300 group-hover:rotate-45 group-hover:bg-[#EC0E58] group-hover:text-white">
+            <Icon name="arrowUpRight" className="h-5 w-5" />
+          </span>
         </div>
-      )}
-      <div className="absolute inset-0 bg-gradient-to-t from-[#172B32]/90 via-[#172B32]/15 to-transparent" />
-      <span className="absolute bottom-4 left-4 right-14 text-lg font-extrabold leading-tight text-white sm:text-xl">{place.name}</span>
-      <span className="absolute bottom-4 right-4 flex h-9 w-9 items-center justify-center rounded-full bg-[#F3F8FB] text-[#0A5C91] transition group-hover:bg-[#FF9DBB]">
-        <Icon name="arrowUpRight" className="h-5 w-5" />
-      </span>
-    </button>
+      </button>
+      </div>
+    </div>
   );
 }
 
-/** one horizontal row with arrow buttons (swipe on phones) */
+/** one horizontal row: arrows + swipe; cards near the middle grow, the others shrink a little */
 function Row({ items, onPick }: { items: Place[]; onPick: (name: string) => void }) {
   const ref = useRef<HTMLDivElement>(null);
-  const scroll = (dir: 1 | -1) => ref.current?.scrollBy({ left: dir * 520, behavior: "smooth" });
+
+  useEffect(() => {
+    const c = ref.current;
+    if (!c || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let raf = 0;
+    const update = () => {
+      const mid = c.scrollLeft + c.clientWidth / 2;
+      const half = c.clientWidth / 2;
+      c.querySelectorAll<HTMLElement>("[data-card]").forEach((el) => {
+        const d = (el.offsetLeft + el.offsetWidth / 2 - mid) / half; // -1 (left edge) .. 1 (right edge)
+        const p = Math.max(0, 1 - Math.min(1, Math.abs(d)));
+        el.style.setProperty("--p", p.toFixed(3));
+        el.style.setProperty("--d", Math.max(-1.5, Math.min(1.5, d)).toFixed(3));
+      });
+    };
+    const onScroll = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(update); };
+    update();
+    c.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => { cancelAnimationFrame(raf); c.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); };
+  }, []);
+
+  const scroll = (dir: 1 | -1) => ref.current?.scrollBy({ left: dir * 480, behavior: "smooth" });
   const arrow =
-    "absolute top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-[#D6DDE5] bg-white text-[#0A5C91] shadow-lg transition hover:bg-[#0A5C91] hover:text-white md:flex";
+    "absolute top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-[#D6DDE5] bg-white text-[#0A5C91] shadow-lg transition hover:scale-110 hover:bg-[#0A5C91] hover:text-white md:flex";
   return (
     <div className="relative">
       <button type="button" aria-label="Scroll left" onClick={() => scroll(-1)} className={`${arrow} -left-3`}>
@@ -110,7 +152,7 @@ function Row({ items, onPick }: { items: Place[]; onPick: (name: string) => void
       </button>
       <div
         ref={ref}
-        className="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-1 pb-4 pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="relative flex snap-x snap-proximity gap-4 overflow-x-auto scroll-smooth px-2 py-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {items.map((p, i) => (
           <LocationCard key={p.name} place={p} index={i} onClick={() => onPick(p.name)} />

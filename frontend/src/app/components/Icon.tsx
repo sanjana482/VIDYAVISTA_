@@ -5,7 +5,7 @@ import {
   ChevronRight, Compass, FileText, FlaskConical, Globe, GraduationCap, Heart, Home, Lightbulb, Link2, Mail,
   Menu, MessageCircle, MapPin, Palette, PartyPopper, Phone, Puzzle, Scale, School, Search, Share2, ShieldCheck,
   SlidersHorizontal, Sparkles, Sprout, Star, Sun, Trophy, TrendingUp, Users, X, Youtube, Facebook, Instagram,
-  Linkedin, Twitter, UserRound, CalendarDays, Trees,
+  Linkedin, Twitter, UserRound, CalendarDays, Trees, Trash2,
   type LucideProps,
 } from "lucide-react";
 
@@ -18,7 +18,7 @@ const ICONS = {
   share: Share2, shield: ShieldCheck, filters: SlidersHorizontal, sparkles: Sparkles, sprout: Sprout, star: Star,
   sun: Sun, trophy: Trophy, trending: TrendingUp, users: Users, x: X, youtube: Youtube, facebook: Facebook,
   instagram: Instagram, linkedin: Linkedin, twitter: Twitter, x_social: Twitter, user: UserRound, calendar: CalendarDays,
-  trees: Trees,
+  trees: Trees, trash: Trash2,
 } as const;
 
 export type IconName = keyof typeof ICONS;

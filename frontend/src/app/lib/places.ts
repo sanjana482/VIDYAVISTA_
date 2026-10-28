@@ -16,8 +16,8 @@ export const CITY_LIST = [
 export const OPEN_PICKER_EVENT = "vv-open-picker";
 
 /** Navbar / Hero se location panel kholne ke liye */
-export const openLocationPicker = (type?: string) => {
-  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent(OPEN_PICKER_EVENT, { detail: { type } }));
+export const openLocationPicker = (type?: string, q?: string) => {
+  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent(OPEN_PICKER_EVENT, { detail: { type, q } }));
 };
 
 /** "nashik" -> "Nashik" (sirf dikhane ke liye) */

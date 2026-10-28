@@ -1,5 +1,5 @@
-// Small client for the Express backend. Set NEXT_PUBLIC_API_URL in .env.local
-// (e.g. http://localhost:5000/api).
+// Small client for the Django backend. Set NEXT_PUBLIC_API_URL in .env.local
+// (e.g. http://127.0.0.1:8000/api).
 import { readPreference } from "./preferences";
 
 export const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api").replace(/\/$/, "");

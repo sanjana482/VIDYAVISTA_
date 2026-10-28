@@ -44,7 +44,7 @@ export function Admission({ p }: { p: Profile }) {
         {a.steps.map((s, i) => (
           <li key={s.title} className="relative flex gap-5 pb-7 last:pb-0">
             {i < a.steps.length - 1 && <span className="absolute left-5 top-11 h-[calc(100%-2.75rem)] w-0.5 -translate-x-1/2 bg-gradient-to-b from-[#0795DC] to-[#F7B6CB]" aria-hidden />}
-            <span className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#0A5C91] to-[#0795DC] text-sm font-extrabold text-white shadow-md shadow-[#0795DC]/30">{i + 1}</span>
+            <span className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#0A5C91] to-[#0795DC] text-sm font-extrabold text-white shadow-md shadow-[#0795DC]/30 vv-btn">{i + 1}</span>
             <div>
               <h3 className="font-extrabold text-[#0B2A47]">{s.title}</h3>
               <p className="mt-1 leading-7 text-[#5C6A7B]">{s.text}</p>
@@ -57,7 +57,7 @@ export function Admission({ p }: { p: Profile }) {
         <h3 className="flex items-center gap-2 font-extrabold text-[#0B2A47]"><Icon name="file" className="h-5 w-5 text-[#0795DC]" /> Documents checklist</h3>
         <p className="mt-2 leading-7 text-[#5C6A7B]">{a.documents}</p>
       </div>
-      <EnquiryButton className="mt-6 rounded-xl bg-[#EC0E58] px-6 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#EC0E58]/25 transition hover:bg-[#C8104F]">
+      <EnquiryButton className="mt-6 rounded-xl bg-[#EC0E58] px-6 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#EC0E58]/25 transition hover:bg-[#C8104F] vv-btn">
         Enquire for 2027-28
       </EnquiryButton>
     </div>

@@ -300,7 +300,7 @@ export default async function SchoolProfileView({ param, section }: { param: str
 
       {/* Mobile action bar */}
       <div className="fixed inset-x-0 bottom-0 z-50 flex gap-3 border-t border-[#E1E7EE] bg-white/95 p-3 shadow-[0_-8px_24px_rgba(11,42,71,0.08)] backdrop-blur lg:hidden">
-        <a href={`tel:${p.contact.phoneHref}`} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] py-3.5 text-center text-sm font-extrabold text-white"><Icon name="phone" className="h-4 w-4" /> Call Now</a>
+        <a href={`tel:${p.contact.phoneHref}`} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] py-3.5 text-center text-sm font-extrabold text-white vv-btn"><Icon name="phone" className="h-4 w-4" /> Call Now</a>
         <MobileEnquire />
       </div>
     </main>

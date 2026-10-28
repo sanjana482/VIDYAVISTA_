@@ -89,7 +89,7 @@ export default function LocationLanding({ kind, name, state, list, all, content 
               <span className="rounded-full border border-[#D6DDE5] bg-white px-4 py-2 shadow-sm"><strong className="text-[#0A5C91]">{list.length}</strong> {list.length === 1 ? "school" : "schools"}</span>
               {boards.map((b) => <span key={b} className="rounded-full border border-[#D6DDE5] bg-white px-4 py-2 shadow-sm">{b}</span>)}
             </div>
-            <Link href={listingHref({ [own]: name })} className="mt-7 inline-block rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-7 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#0A5C91]/25">
+            <Link href={listingHref({ [own]: name })} className="mt-7 inline-block rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-7 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#0A5C91]/25 vv-btn">
               Filter &amp; compare schools in {name} →
             </Link>
           </div>

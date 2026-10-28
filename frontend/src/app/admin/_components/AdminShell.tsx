@@ -107,6 +107,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
         <div className="lg:pl-64">
           <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-[#E1E7EE] bg-white/90 px-4 py-3 backdrop-blur-xl lg:px-8">
             <button aria-label="Open menu" onClick={() => setOpen(true)} className="rounded-xl border border-[#D6DDE5] p-2 text-lg text-[#0A5C91] lg:hidden">☰</button>
+            <Link href="/admin" aria-label="VidyaVista admin home" className="lg:hidden"><img src="/logo.png" alt="VidyaVista" className="h-8 w-auto object-contain" /></Link>
             <p className="hidden text-sm text-[#5C6A7B] sm:block">Discover <span className="text-[#EC0E58]">|</span> Learn <span className="text-[#EC0E58]">|</span> Grow</p>
             <div className="ml-auto flex items-center gap-3">
               <div className="text-right leading-tight">

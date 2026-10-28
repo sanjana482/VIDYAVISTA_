@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   DEFAULT_PREF,
   PREF_EVENT,
@@ -10,8 +9,8 @@ import {
   type SchoolTypeLabel,
 } from "../lib/preferences";
 import { openLocationPicker } from "../lib/places";
-import { listingHref } from "../lib/links";
 import Icon from "./Icon";
+import SchoolSearchBar, { type SearchSchool } from "./SchoolSearchBar";
 
 const schoolTypes: SchoolTypeLabel[] = [
   "Boarding Schools",
@@ -19,9 +18,8 @@ const schoolTypes: SchoolTypeLabel[] = [
   "Play School",
 ];
 
-export default function Hero() {
+export default function Hero({ schools = [] }: { schools?: SearchSchool[] }) {
   const [heroBroken, setHeroBroken] = useState(false);
-  const router = useRouter();
   // First visit => Boarding Schools is the default.
   const [schoolType, setSchoolType] = useState<SchoolTypeLabel>(DEFAULT_PREF.type);
   const [selectedLocation, setSelectedLocation] = useState("");
@@ -55,21 +53,6 @@ export default function Hero() {
   function chooseSchoolType(type: SchoolTypeLabel) {
     changeType(type);
     openLocationPicker(type);
-  }
-
-  function searchSchools() {
-    if (!selectedLocation) {
-      openLocationPicker();
-      return;
-    }
-
-    savePreference({ type: schoolType, location: selectedLocation });
-    router.push(
-      listingHref({
-        type: schoolType,
-        [isBoarding ? "state" : "city"]: selectedLocation,
-      })
-    );
   }
 
   return (
@@ -161,23 +144,10 @@ export default function Hero() {
               </span>
             </button>
 
-            <button
-              type="button"
-              onClick={searchSchools}
-              className="mt-4 flex w-full items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-[#0A5C91] via-[#0A7BBF] to-[#5C799A] px-5 py-4 font-extrabold text-white shadow-lg shadow-[#0A5C91]/20 transition hover:-translate-y-0.5 hover:shadow-xl"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <circle cx="11" cy="11" r="7" />
-                <path d="m16 16 4 4" />
-              </svg>
-              Search Schools
-            </button>
+            {/* school-name search: a round icon that opens into a bar */}
+            <div className="mt-4">
+              <SchoolSearchBar schools={schools} schoolType={schoolType} location={selectedLocation} />
+            </div>
           </div>
 
           <div className="mt-6 flex flex-wrap gap-3">

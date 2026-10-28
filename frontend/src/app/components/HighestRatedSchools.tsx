@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { typeRank } from "../lib/preferences";
 import type { School } from "../data/schools";
@@ -44,13 +44,40 @@ export default function HighestRatedSchools({ list }: { list: School[] }) {
   const [savedIds, setSavedIds] = useState<number[]>([]);
 
   function scrollSchools(direction: "left" | "right") {
-    if (!scrollRef.current) return;
-
-    scrollRef.current.scrollBy({
-      left: direction === "left" ? -350 : 350,
-      behavior: "smooth",
-    });
+    const el = scrollRef.current;
+    if (!el) return;
+    const card = el.querySelector<HTMLElement>("[data-rate-card]");
+    const step = (card?.offsetWidth ?? 320) + 20; // one card + the gap
+    el.scrollBy({ left: direction === "left" ? -step : step, behavior: "smooth" });
   }
+
+  // scroll animation: the card in the middle is big and bright, the ones further away shrink, tilt and fade
+  const count = ratedSchools.length;
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const box = el.getBoundingClientRect();
+      const mid = box.left + box.width / 2;
+      el.querySelectorAll<HTMLElement>("[data-rate-card]").forEach((c) => {
+        const r = c.getBoundingClientRect();
+        const d = (r.left + r.width / 2 - mid) / (r.width * 1.4);
+        c.style.setProperty("--p", Math.min(Math.abs(d), 1).toFixed(3));
+        c.style.setProperty("--s", Math.max(-1, Math.min(1, d)).toFixed(3));
+      });
+    };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(update); };
+    update();
+    el.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [count]);
 
   function toggleSaved(id: number) {
     setSavedIds((current) =>
@@ -105,12 +132,13 @@ export default function HighestRatedSchools({ list }: { list: School[] }) {
         {/* Horizontally scrollable school cards */}
         <div
           ref={scrollRef}
-          className="mt-9 flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth pb-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="vv-rate-track mt-9 flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth px-[calc(50%-142px)] pb-8 pt-4 sm:px-[calc(50%-160px)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {[...ratedSchools].sort((a, b) => typeRank(a.type) - typeRank(b.type)).map((school) => (
             <article
               key={school.id}
-              className="group w-[285px] min-w-[285px] snap-start overflow-hidden rounded-3xl border border-[#DDE2E8] bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-[#C8104F]/10 sm:w-[320px] sm:min-w-[320px]"
+              data-rate-card
+              className="vv-rate-card group w-[285px] min-w-[285px] snap-center overflow-hidden rounded-3xl border border-[#DDE2E8] bg-white shadow-sm hover:shadow-xl hover:shadow-[#C8104F]/10 sm:w-[320px] sm:min-w-[320px]"
             >
               {/* School photo */}
               <div className="relative h-44 overflow-hidden">

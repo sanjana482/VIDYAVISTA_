@@ -36,13 +36,16 @@ export default function LocationPicker() {
   const [search, setSearch] = useState("");
   const [place, setPlace] = useState("");
   const [showAll, setShowAll] = useState(false);
+  const [pendingQ, setPendingQ] = useState(""); // school name typed in the Hero search before the picker opened
   const index = useLocationIndex(); // states + cities that really have schools
 
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     const onOpen = (e: Event) => {
-      const wanted = (e as CustomEvent<{ type?: string }>).detail?.type;
+      const detail = (e as CustomEvent<{ type?: string; q?: string }>).detail;
+      const wanted = detail?.type;
+      setPendingQ(detail?.q?.trim() ?? "");
       const saved = readPreference();
       const idx = wanted ? indexFor(wanted) : saved ? indexFor(String(saved.type)) : 0;
       setTi(idx);
@@ -93,6 +96,12 @@ export default function LocationPicker() {
     if (!place) return;
     if (ti < 2) savePreference({ type: t.label as never, location: place });
     setOpen(false);
+    if (pendingQ) {
+      // came from the school-name search: open the listing with the name + the location just chosen
+      const qs = new URLSearchParams({ type: t.type, [t.by]: place, q: pendingQ });
+      router.push(`/schools?${qs.toString()}`);
+      return;
+    }
     router.push(typePath(t.type, place));
   }
 

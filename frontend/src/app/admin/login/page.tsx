@@ -64,8 +64,8 @@ export default function AdminLogin() {
 
           <div className="mt-8 space-y-4">
             <label className="block">
-              <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[#5C6A7B]">Email</span>
-              <input type="email" required autoComplete="username" className={inputCls} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@vidyavista.com" />
+              <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[#5C6A7B]">Email or username</span>
+              <input type="text" required autoComplete="username" className={inputCls} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@vidyavista.com" />
             </label>
             <label className="block">
               <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[#5C6A7B]">Password</span>

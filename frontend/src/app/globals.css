@@ -63,3 +63,140 @@ img { max-width: 100%; }
   input, select, textarea { font-size: 16px !important; }
 }
 @media (prefers-reduced-motion: reduce) { .vv-reveal { transition: none; } }
+
+/* ---------- animated border (a coloured light runs around the card) ---------- */
+@property --vv-angle { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+@keyframes vv-angle { to { --vv-angle: 360deg; } }
+.vv-border {
+  padding: 2px;
+  background: conic-gradient(from var(--vv-angle), #ec0e58, #0795dc, #6abeee, #ec0e58);
+  animation: vv-angle 5s linear infinite;
+}
+.vv-border:hover { animation-duration: 1.6s; }
+.vv-border-gold { background: conic-gradient(from var(--vv-angle), #f5a623, #ec0e58, #ffd27a, #f5a623); }
+
+/* ---------- buttons: shine sweep, lift, press ---------- */
+.vv-btn { transition: transform 0.2s ease, box-shadow 0.25s ease, filter 0.2s ease; overflow: hidden; }
+.vv-btn:not(.absolute):not(.fixed):not(.sticky) { position: relative; }
+.vv-btn::after {
+  content: ""; position: absolute; top: 0; left: -75%; width: 45%; height: 100%; pointer-events: none;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  transform: skewX(-20deg); transition: left 0.7s ease;
+}
+.vv-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 22px -8px rgba(10, 92, 145, 0.55); filter: saturate(1.1); }
+.vv-btn:hover::after { left: 130%; }
+.vv-btn:active { transform: translateY(0) scale(0.95); box-shadow: none; }
+
+/* ---------- like / delete style micro interactions ---------- */
+@keyframes vv-heart { 0% { transform: scale(1); } 30% { transform: scale(1.7) rotate(-10deg); } 60% { transform: scale(0.9); } 100% { transform: scale(1); } }
+.vv-heart { animation: vv-heart 0.6s ease; color: #ec0e58; }
+@keyframes vv-wiggle { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-14deg); } 75% { transform: rotate(14deg); } }
+.vv-wiggle-host:hover .vv-wiggle { animation: vv-wiggle 0.5s ease; }
+
+/* ---------- "Featured" flag + glow (like the offer tag on shopping apps) ---------- */
+.vv-flag { position: relative; overflow: hidden; }
+.vv-flag::after {
+  content: ""; position: absolute; top: 0; left: -80%; width: 50%; height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+  transform: skewX(-20deg); animation: vv-flag 2.8s ease-in-out infinite;
+}
+@keyframes vv-flag { 0% { left: -80%; } 55%, 100% { left: 140%; } }
+@keyframes vv-twinkle { 0%, 100% { transform: scale(1) rotate(0); } 50% { transform: scale(1.35) rotate(20deg); } }
+.vv-twinkle { animation: vv-twinkle 1.8s ease-in-out infinite; }
+@keyframes vv-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 166, 35, 0), 0 8px 24px -10px rgba(236, 14, 88, 0.25); }
+  50% { box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.28), 0 14px 30px -10px rgba(236, 14, 88, 0.38); }
+}
+.vv-glow { animation: vv-glow 3s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .vv-border, .vv-flag::after, .vv-twinkle, .vv-glow, .vv-heart { animation: none; }
+  .vv-btn, .vv-btn:hover, .vv-btn:active { transform: none; }
+}
+
+/* ---------- corner ribbon (diagonal banner that unfurls from the card corner) ---------- */
+.vv-corner { position: absolute; top: 0; left: 0; width: 120px; height: 120px; overflow: hidden; z-index: 5; pointer-events: none; }
+.vv-ribbon {
+  position: absolute; top: 25px; left: -45px; width: 180px; padding: 6px 0; rotate: -45deg; text-align: center;
+  background: linear-gradient(90deg, #f5a623, #ec0e58); color: #fff;
+  font-size: 11px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase;
+  box-shadow: 0 6px 16px -8px rgba(168, 18, 63, 0.9);
+  animation: vv-unfurl 0.72s cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: 0.3s;
+}
+@keyframes vv-unfurl { from { translate: -62px -62px; opacity: 0; } 60% { opacity: 1; } to { translate: 0 0; opacity: 1; } }
+.vv-ribbon::before, .vv-ribbon::after { content: ""; position: absolute; top: 100%; width: 0; height: 0; border-style: solid; border-color: #8f0f3a transparent transparent; }
+.vv-ribbon::before { left: 30px; border-width: 7px 0 0 7px; }
+.vv-ribbon::after { right: 30px; border-width: 7px 7px 0 0; }
+.vv-ribbon-host:hover .vv-ribbon { animation: vv-ribbon-wiggle 0.55s cubic-bezier(0.3, 0, 0.3, 1); }
+@keyframes vv-ribbon-wiggle { 0%, 100% { rotate: -45deg; } 30% { rotate: -43.6deg; } 65% { rotate: -46.2deg; } }
+.vv-ribbon-host:hover .vv-corner::after {
+  content: ""; position: absolute; top: 25px; left: -45px; width: 180px; height: 29px; rotate: -45deg; pointer-events: none;
+  background: linear-gradient(105deg, transparent 36%, rgba(255, 255, 255, 0.55) 50%, transparent 64%);
+  animation: vv-sheen 0.8s ease-out;
+}
+@keyframes vv-sheen { from { translate: -120px 0; opacity: 0; } 30% { opacity: 1; } to { translate: 120px 0; opacity: 0; } }
+
+/* ---------- featured carousel (centre card, neighbours peek out, slides sideways) ---------- */
+.vv-stage { position: relative; height: 40rem; }
+@media (min-width: 768px) { .vv-stage { height: 27rem; } }
+.vv-slide {
+  position: absolute; left: 50%; top: 0; height: 100%; width: min(86%, 940px);
+  translate: calc(-50% + var(--o, 0) * 104%) 0;
+  scale: calc(1 - var(--a, 0) * 0.1);
+  z-index: calc(10 - var(--a, 0) * 5);
+  transition: translate 0.7s cubic-bezier(0.22, 1, 0.36, 1), scale 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.5s ease, filter 0.5s ease;
+}
+@media (min-width: 768px) { .vv-slide { width: min(80%, 940px); } }
+.vv-slide[data-side] { opacity: 0.55; filter: saturate(0.7); }
+.vv-slide[data-side]:hover { opacity: 0.8; }
+.vv-slide[data-far] { opacity: 0; pointer-events: none; }
+.vv-slide[data-jump] { transition: none; opacity: 0; }
+@media (prefers-reduced-motion: reduce) { .vv-slide { transition-duration: 0.01ms; } }
+
+/* ---------- search bar ---------- */
+@keyframes vv-hint { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.vv-hint { animation: vv-hint 0.45s ease both; }
+@media (prefers-reduced-motion: reduce) { .vv-hint { animation: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .vv-ribbon { animation-duration: 1ms; }
+  .vv-ribbon-host:hover .vv-ribbon { animation: none; }
+  .vv-ribbon-host:hover .vv-corner::after { display: none; }
+}
+
+/* ---------- highest rated: cards grow in the middle, shrink / tilt / fade towards the edges ---------- */
+.vv-rate-track { perspective: 1200px; }
+.vv-rate-card {
+  transform: translateY(calc(var(--p, 0) * 16px)) scale(calc(1 - var(--p, 0) * 0.08)) rotateY(calc(var(--s, 0) * -9deg));
+  opacity: calc(1 - var(--p, 0) * 0.4);
+  box-shadow: 0 calc(18px - var(--p, 0) * 12px) 40px -22px rgba(11, 42, 71, calc(0.35 - var(--p, 0) * 0.25));
+  transition: opacity 0.2s linear, box-shadow 0.2s linear;
+  will-change: transform, opacity;
+}
+.vv-rate-card:hover { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .vv-rate-card { transform: none; opacity: 1; } }
+
+/* ---------- desktop: everything a little smaller (same as browser zoom 90%) ---------- */
+@media (min-width: 1024px) { html { font-size: 90%; } }
+
+/* ---------- find schools by board: cards slide up one by one, lift + tilt on hover, bar fills, middle card grows on phones ---------- */
+.vv-board-item { scale: calc(1 - var(--p, 0) * 0.07); transition: scale 0.2s linear; }
+.vv-bcard {
+  position: relative; display: block; overflow: hidden;
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.35s ease, background-color 0.35s ease, border-color 0.35s ease;
+}
+.vv-bcard:hover, .vv-bcard:focus-visible {
+  transform: translateY(-6px) rotate(-0.6deg); background-color: #fff; border-color: rgba(10, 123, 191, 0.25);
+  box-shadow: 0 24px 40px -24px rgba(10, 92, 145, 0.5);
+}
+.vv-bcard:active { transform: translateY(-2px) scale(0.98); }
+.vv-bcard .vv-mark { transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.vv-bcard:hover .vv-mark { transform: translate(-8px, -8px) scale(1.1); }
+.vv-bcard .vv-go { opacity: 0; transform: translateX(-10px) scale(0.8); transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.vv-bcard:hover .vv-go, .vv-bcard:focus-visible .vv-go { opacity: 1; transform: none; }
+@keyframes vv-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.vv-fill { transform-origin: left; animation: vv-fill 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) 0.25s both; }
+@media (prefers-reduced-motion: reduce) {
+  .vv-bcard, .vv-bcard .vv-mark, .vv-bcard .vv-go { transition: none; }
+  .vv-fill { animation: none; }
+  .vv-board-item { scale: none; }
+}

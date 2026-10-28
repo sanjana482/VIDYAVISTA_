@@ -49,7 +49,7 @@ export default function Settings() {
             <div><dt className="text-xs font-bold uppercase tracking-wide text-[#8896A6]">Last login</dt><dd className="mt-0.5 font-semibold">{admin?.lastLoginAt ? fmtDate(admin.lastLoginAt) : "—"}</dd></div>
             <div><dt className="text-xs font-bold uppercase tracking-wide text-[#8896A6]">API</dt><dd className="mt-0.5 break-all font-mono text-xs text-[#5C6A7B]">{API_URL}</dd></div>
           </dl>
-          <p className="mt-5 rounded-xl bg-[#F6FAFD] p-3 text-xs text-[#5C6A7B]">To add another admin, run <code className="font-bold">npm run create-admin -- &quot;Name&quot; email password</code> in the backend folder.</p>
+          <p className="mt-5 rounded-xl bg-[#F6FAFD] p-3 text-xs text-[#5C6A7B]">To add another admin, run <code className="font-bold">python manage.py createsuperuser</code> in the backend folder (or add a user with “Staff status” in the Django admin).</p>
         </Card>
 
         <Card className="p-6">

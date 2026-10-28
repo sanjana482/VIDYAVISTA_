@@ -54,7 +54,7 @@ export default function EnquirySidebar({ schoolName, feeRange, phone, phoneHref,
           <p className="mt-1 text-2xl font-extrabold text-[#0B2A47]">{feeRange} / year</p>
         </div>
 
-        <button type="button" onClick={() => openEnquiry()} className="mt-5 w-full rounded-xl bg-[#EC0E58] py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#EC0E58]/25 transition hover:bg-[#C8104F]">
+        <button type="button" onClick={() => openEnquiry()} className="mt-5 w-full rounded-xl bg-[#EC0E58] py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#EC0E58]/25 transition hover:bg-[#C8104F] vv-btn">
           Enquire for 2027-28
         </button>
         <p className="mt-4 text-center text-sm text-[#5C6A7B]">or request a quick callback</p>
@@ -89,7 +89,7 @@ export default function EnquirySidebar({ schoolName, feeRange, phone, phoneHref,
               {errors.cls && <p className="mt-1 text-xs font-semibold text-[#C8104F]">{errors.cls}</p>}
             </div>
             {errors.form && <p role="alert" className="text-sm font-semibold text-[#C8104F]">{errors.form}</p>}
-            <button type="submit" className="w-full rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#0A5C91]/25 transition hover:-translate-y-0.5">
+            <button type="submit" className="w-full rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#0A5C91]/25 transition hover:-translate-y-0.5 vv-btn">
               Request Callback
             </button>
             <p className="text-center text-xs text-[#707E8F]">Free counselling. No spam.</p>
