@@ -114,6 +114,17 @@ class School(models.Model):
     facility_groups = models.JSONField(default=dict, blank=True)
     latest_fee_session = models.CharField(max_length=20, blank=True, default='')
     page_last_updated = models.DateField(null=True, blank=True)
+        # --- extra fields (CSV import ke liye) ---
+    boarding_type = models.CharField('Boarding type', max_length=40, blank=True, default='', help_text='Jaise: Day Cum Boarding, Full Boarding')
+    hostel = models.BooleanField('Hostel available', default=False)
+    verified = models.BooleanField('Verified', default=False)
+    locality = models.CharField(max_length=180, blank=True, default='')
+    pincode = models.CharField(max_length=10, blank=True, default='')
+    extra_boards = models.CharField('All boards', max_length=200, blank=True, default='', help_text='Jaise: CBSE, IB Board')
+    medium = models.CharField('Medium', max_length=80, blank=True, default='')
+    academic_session = models.CharField('Academic session', max_length=40, blank=True, default='', help_text='Jaise: April to March')
+    languages = models.JSONField('Languages taught', default=list, blank=True, help_text='Jaise: ["English", "Hindi"]')
+    food_options = models.CharField('Food options', max_length=120, blank=True, default='')
     # social links
     youtube_url = models.URLField('YouTube', max_length=300, blank=True, default='')
     facebook_url = models.URLField('Facebook', max_length=300, blank=True, default='')
