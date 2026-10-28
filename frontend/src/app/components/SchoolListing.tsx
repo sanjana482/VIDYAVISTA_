@@ -373,8 +373,8 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
 
   return (
     <section id="results" className="scroll-mt-24 bg-white py-10 sm:py-12">
-      <div className="mx-auto grid max-w-7xl gap-8 px-5 lg:grid-cols-[290px_1fr] lg:px-8">
-        {/* ---------- Filters ---------- */}
+<div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)] gap-8 px-5 lg:grid-cols-[290px_minmax(0,1fr)] lg:px-8">       
+   {/* ---------- Filters ---------- */}
         <aside>
           <button
             type="button"
@@ -451,8 +451,8 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
         </aside>
 
         {/* ---------- Results ---------- */}
-        <div>
-          <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0">
+  <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <h2 className="text-3xl font-extrabold tracking-tight text-[#0B2A47]">{heading}</h2>
               <p className="mt-1 text-sm text-[#707E8F]">
@@ -486,8 +486,8 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
             )}
 
             {visible.map((s) => (
-              <article key={s.id} className="vv-ribbon-host rounded-3xl border border-[#E1E7EE] bg-white p-5 shadow-sm transition hover:border-[#9ED8F5] hover:shadow-xl hover:shadow-[#0795DC]/10">
-                <div className="grid gap-5 md:grid-cols-[260px_1fr] xl:grid-cols-[280px_1fr_230px]">
+              <article key={s.id} className="vv-ribbon-host min-w-0 rounded-3xl border ...">
+  <div className="grid grid-cols-[minmax(0,1fr)] gap-5 md:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)_230px]">
                   {/* Photo */}
                   <div className="relative h-52 overflow-hidden rounded-2xl bg-[#E6F4FC] md:h-auto md:min-h-[210px]">
                     <img src={s.image} alt={`${s.name} campus`} loading="lazy" className="h-full w-full object-cover" />
