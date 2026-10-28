@@ -99,38 +99,21 @@ class School(models.Model):
     isActive = models.BooleanField(default=True)
     about = models.TextField(blank=True, default='')
 
-    # school details
     established = models.PositiveSmallIntegerField('Established (year)', null=True, blank=True,
                                                    validators=[MinValueValidator(1800), MaxValueValidator(2100)])
     students = models.PositiveIntegerField('Total students', null=True, blank=True)
     teachers = models.PositiveIntegerField('Total teachers', null=True, blank=True)
     campus = models.CharField('Campus size', max_length=80, blank=True, default='', help_text='Jaise: 5 acres')
-
-    # more details (filled by CSV import, editable in admin)
-    boarding_type = models.CharField('Boarding type', max_length=40, blank=True, default='',
-                                     help_text='Jaise: Full Boarding / Day Cum Boarding')
-    locality = models.CharField(max_length=180, blank=True, default='')
-    pincode = models.CharField(max_length=10, blank=True, default='')
-    extra_boards = models.CharField('Other boards', max_length=120, blank=True, default='',
-                                    help_text='Agar school ek se zyada board follow karta hai (comma se alag)')
-    medium = models.CharField('Medium', max_length=80, blank=True, default='')
-    academic_session = models.CharField('Academic session', max_length=60, blank=True, default='',
-                                        help_text='Jaise: April to March')
-    student_teacher_ratio = models.CharField('Student : teacher ratio', max_length=20, blank=True, default='')
-    languages = models.CharField(max_length=200, blank=True, default='')
-    food_options = models.CharField(max_length=200, blank=True, default='')
-    hostel = models.BooleanField('Hostel available', default=False)
-    verified = models.BooleanField(default=False)
     affiliation_no = models.CharField('Affiliation no.', max_length=60, blank=True, default='')
+    current_admission_session = models.CharField(max_length=20, blank=True, default='')
+    student_teacher_ratio = models.CharField('Student : teacher ratio', max_length=20, blank=True, default='')
     school_timing = models.CharField('School timing', max_length=80, blank=True, default='')
     lat = models.FloatField('Latitude', null=True, blank=True)
     lng = models.FloatField('Longitude', null=True, blank=True)
     logo_url = models.URLField('School logo link (URL)', max_length=1000, blank=True, default='')
     facility_groups = models.JSONField(default=dict, blank=True)
     latest_fee_session = models.CharField(max_length=20, blank=True, default='')
-    current_admission_session = models.CharField(max_length=20, blank=True, default='')
     page_last_updated = models.DateField(null=True, blank=True)
-
     # social links
     youtube_url = models.URLField('YouTube', max_length=300, blank=True, default='')
     facebook_url = models.URLField('Facebook', max_length=300, blank=True, default='')
