@@ -1,0 +1,30 @@
+{% extends "admin/base_site.html" %}
+{% block breadcrumbs %}{% endblock %}
+{% block content_title %}{% endblock %}
+{% block content %}
+<style>
+  #vv-dash { margin: -8px 0 0; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; color: #0f172a; }
+  #vv-dash *, #vv-dash *::before, #vv-dash *::after { box-sizing: border-box; }
+  #vv-dash a { text-decoration: none; }
+  #vv-dash h1, #vv-dash h2, #vv-dash h3, #vv-dash p { margin: 0; }
+  #vv-dash table { border-collapse: collapse; width: 100%; }
+</style>
+
+<div id="vv-dash"><div id="vv-dash-root"></div></div>
+
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>
+  tailwind.config = {
+    corePlugins: { preflight: false },
+    important: "#vv-dash",
+    theme: { extend: { colors: { brand: { DEFAULT: "#0795DC", dark: "#0A5C91", pink: "#EC0E58" } } } },
+  };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+{% load static %}
+<script>window.VV_DASH_URL = "{% url 'vv_dashboard_data' %}";</script>
+<script src="{% static 'schools/dashboard.js' %}"></script>
+{% endblock %}

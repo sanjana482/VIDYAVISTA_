@@ -304,6 +304,7 @@ def parse_row(raw_row):
         'gender': parse_gender(row.get('gender')),
         'grade_from': grade_from, 'grade_to': grade_to, 'grades_raw': _s(row.get('classes'))[:80],
         'medium': _s(row.get('medium'))[:80], 'academic_session': _s(row.get('academic_session'))[:60],
+        'instruction_language': _s(row.get('medium'))[:80],
         'student_teacher_ratio': _s(row.get('student_teacher_ratio'))[:20],
         'campus': _s(row.get('campus_size'))[:80],
         'established': founded if founded and 1800 <= founded <= 2100 else None,

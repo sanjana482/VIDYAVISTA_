@@ -6,8 +6,8 @@ from django.db.models import Avg, Count
 from django.utils.text import slugify
 
 # ---------------------------------------------------------------- validators
-mobile_validator = RegexValidator(r'^[6-9]\d{9}$', 'Sirf 10 digit ka mobile number likhein (letters / space / +91 nahi).')
-landline_validator = RegexValidator(r'^\d{6,13}$', 'Sirf digits likhein, STD code ke saath. Jaise 01126543210 (letters / space / dash nahi).')
+mobile_validator = RegexValidator(r'^[6-9]\d{9}$', 'Enter a 10-digit mobile number only (no letters, spaces or +91).')
+landline_validator = RegexValidator(r'^\d{6,13}$', 'Enter digits only, including the STD code. Example: 01126543210 (no letters, spaces or dashes).')
 
 # ---------------------------------------------------------------- choices
 ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII']
@@ -32,11 +32,18 @@ FACILITY_CHOICES = [
     'Smart classes', 'Music & Arts', 'Cafeteria', 'Medical room', 'CCTV', 'Playground', 'Auditorium',
 ]
 
+ADMISSION_STATUS = [
+    ('open', 'Admissions Open'),
+    ('closing_soon', 'Closing Soon'),
+    ('closed', 'Admissions Closed'),
+    ('coming_soon', 'Coming Soon'),
+]
+
 
 class Owner(models.Model):
-    """School ka owner / founder / chairman. Pehle yahan owner banao, phir School me select karo."""
+    """Owner / founder / chairman of a school. Create the owner here first, then select them in the School."""
     name = models.CharField('Owner name', max_length=160)
-    designation = models.CharField(max_length=120, blank=True, default='', help_text='Jaise: Founder & Chairman')
+    designation = models.CharField(max_length=120, blank=True, default='', help_text='Example: Founder & Chairman')
     photo = models.ImageField('Photo (file)', upload_to='owners/', blank=True)
     photo_url = models.URLField('Photo link (URL)', max_length=1000, blank=True, default='')
     phone = models.CharField(max_length=10, blank=True, default='', validators=[mobile_validator])
@@ -70,31 +77,38 @@ class School(models.Model):
     type = models.CharField(max_length=30, choices=SCHOOL_TYPES, default='Day', db_index=True)
     gender = models.CharField(max_length=20, choices=GENDERS, default='Co-ed')
 
+    # admission status (shown as a badge, like "Admissions Open for 2027-28")
+    admission_status = models.CharField(
+        'Admission status', max_length=20, choices=ADMISSION_STATUS, default='open', db_index=True,
+        help_text='Shown as a badge on the school listing and profile page.')
+    admission_last_date = models.DateField(
+        'Last date to apply', null=True, blank=True, help_text='Optional.')
+
     # rating / reviews are calculated from parent reviews (see Review below)
     rating = models.DecimalField(max_digits=2, decimal_places=1, default=0, editable=False)
     reviews = models.PositiveIntegerField(default=0, editable=False)
 
     fee = models.PositiveIntegerField(default=0)
-    feeMin = models.PositiveIntegerField('Minimum yearly fee (₹)', default=0, help_text='Sabse kam saalana fee, jaise 80000')
-    feeMax = models.PositiveIntegerField('Maximum yearly fee (₹)', default=0, help_text='Sabse zyada saalana fee, jaise 150000')
+    feeMin = models.PositiveIntegerField('Minimum yearly fee (₹)', default=0, help_text='Lowest yearly fee, for example 80000')
+    feeMax = models.PositiveIntegerField('Maximum yearly fee (₹)', default=0, help_text='Highest yearly fee, for example 150000')
     facilities = models.JSONField(default=list, blank=True)
     photos = models.PositiveIntegerField(default=0)
 
-    # homepage sections (tick = school wahan dikhega)
-    topRated = models.BooleanField('Top rated badge', default=False, help_text='Listing par "Top rated" badge')
-    isFeatured = models.BooleanField('Featured school', default=False, help_text='Tick karo to homepage ke "Featured Schools" me dikhega')
-    isRecommended = models.BooleanField('Recommended school', default=False, help_text='Tick karo to homepage ke "Recommended Schools" me dikhega')
+    # homepage sections (tick = the school is shown there)
+    topRated = models.BooleanField('Top rated badge', default=False, help_text='Shows a "Top rated" badge on the listing.')
+    isFeatured = models.BooleanField('Featured school', default=False, help_text='Tick to show this school in "Featured Schools" on the homepage.')
+    isRecommended = models.BooleanField('Recommended school', default=False, help_text='Tick to show this school in "Recommended Schools" on the homepage.')
 
     phone = models.CharField('Mobile number', max_length=30, blank=True, default='', validators=[mobile_validator],
-                             help_text='Sirf 10 digits')
+                             help_text='10 digits only')
     landline = models.CharField('Telephone (landline) number', max_length=13, blank=True, default='',
-                                validators=[landline_validator], help_text='STD code ke saath, sirf digits. Jaise 01126543210')
+                                validators=[landline_validator], help_text='With STD code, digits only. Example: 01126543210')
     email = models.EmailField(blank=True, default='')
-    website = models.URLField('School website', max_length=300, blank=True, default='', help_text='https://... ke saath')
+    website = models.URLField('School website', max_length=300, blank=True, default='', help_text='Include https://')
 
     cover_image = models.ImageField('Cover image (file upload)', upload_to='schools/cover/', blank=True)
     image = models.URLField('Cover image link (URL)', max_length=1000, blank=True, default='',
-                            help_text='File upload ya link - dono me se koi ek. File ho to wahi use hoti hai.')
+                            help_text='Upload a file or paste a link, either one. If a file is uploaded, that is used.')
 
     isActive = models.BooleanField(default=True)
     about = models.TextField(blank=True, default='')
@@ -103,9 +117,10 @@ class School(models.Model):
                                                    validators=[MinValueValidator(1800), MaxValueValidator(2100)])
     students = models.PositiveIntegerField('Total students', null=True, blank=True)
     teachers = models.PositiveIntegerField('Total teachers', null=True, blank=True)
-    campus = models.CharField('Campus size', max_length=80, blank=True, default='', help_text='Jaise: 5 acres')
+    campus = models.CharField('Campus size', max_length=80, blank=True, default='', help_text='Example: 5 acres')
     affiliation_no = models.CharField('Affiliation no.', max_length=60, blank=True, default='')
-    current_admission_session = models.CharField(max_length=20, blank=True, default='')
+    current_admission_session = models.CharField('Admission session', max_length=20, blank=True, default='',
+                                                 help_text='Example: 2027-28')
     student_teacher_ratio = models.CharField('Student : teacher ratio', max_length=20, blank=True, default='')
     school_timing = models.CharField('School timing', max_length=80, blank=True, default='')
     lat = models.FloatField('Latitude', null=True, blank=True)
@@ -114,16 +129,30 @@ class School(models.Model):
     facility_groups = models.JSONField(default=dict, blank=True)
     latest_fee_session = models.CharField(max_length=20, blank=True, default='')
     page_last_updated = models.DateField(null=True, blank=True)
-        # --- extra fields (CSV import ke liye) ---
-    boarding_type = models.CharField('Boarding type', max_length=40, blank=True, default='', help_text='Jaise: Day Cum Boarding, Full Boarding')
+
+    # --- extra fields (for CSV import) ---
+    boarding_type = models.CharField('Boarding type', max_length=40, blank=True, default='', help_text='Example: Day Cum Boarding, Full Boarding')
     hostel = models.BooleanField('Hostel available', default=False)
     verified = models.BooleanField('Verified', default=False)
     locality = models.CharField(max_length=180, blank=True, default='')
     pincode = models.CharField(max_length=10, blank=True, default='')
-    extra_boards = models.CharField('All boards', max_length=200, blank=True, default='', help_text='Jaise: CBSE, IB Board')
+    extra_boards = models.CharField('All boards', max_length=200, blank=True, default='', help_text='Example: CBSE, IB Board')
     medium = models.CharField('Medium', max_length=80, blank=True, default='')
-    academic_session = models.CharField('Academic session', max_length=40, blank=True, default='', help_text='Jaise: April to March')
-    languages = models.JSONField('Languages taught', default=list, blank=True, help_text='Jaise: ["English", "Hindi"]')
+    instruction_language = models.CharField(
+        'Language of instruction',
+        max_length=80,
+        blank=True,
+        default='',
+    )
+    academic_session = models.CharField(
+        'Academic session',
+        max_length=40,
+        blank=True,
+        default='',
+        help_text='Example: April to March',
+    )
+
+    languages = models.JSONField('Languages taught', default=list, blank=True, help_text='Example: ["English", "Hindi"]')
     food_options = models.CharField('Food options', max_length=120, blank=True, default='')
     # social links
     youtube_url = models.URLField('YouTube', max_length=300, blank=True, default='')
@@ -150,14 +179,14 @@ class School(models.Model):
     def clean(self):
         from django.core.exceptions import ValidationError
         if self.feeMin and self.feeMax and self.feeMax < self.feeMin:
-            raise ValidationError('Maximum fee minimum fee se kam nahi ho sakta.')
+            raise ValidationError('Maximum fee cannot be less than minimum fee.')
         if self.grade_from and self.grade_to:
             order = [g for g, _ in GRADE_CHOICES]
             if order.index(self.grade_to) < order.index(self.grade_from):
-                raise ValidationError('"Grades to" "Grades from" se pehle ki class nahi ho sakti.')
+                raise ValidationError('"Grades to" cannot be earlier than "Grades from".')
 
     def refresh_rating(self):
-        """Parents ke approved reviews se average rating + count nikalta hai."""
+        """Calculates the average rating + count from approved parent reviews."""
         agg = self.review_items.filter(is_approved=True).aggregate(a=Avg('rating'), c=Count('id'))
         avg = Decimal(str(round(agg['a'] or 0, 1)))
         School.objects.filter(pk=self.pk).update(rating=avg, reviews=agg['c'] or 0)
@@ -182,8 +211,8 @@ class School(models.Model):
         self.ensure_locations()
 
     def ensure_locations(self):
-        """School save hote hi uska state aur city "Location pages" me apne aap aa jate hain.
-        Title khali rehta hai (site khud banati hai); description / highlights / FAQs baad me admin me bharo."""
+        """As soon as a school is saved, its state and city automatically appear in "Location pages".
+        Title stays empty (the site generates it); add description / highlights / FAQs later in the admin."""
         st = (self.state or '').strip()
         ct = (self.city or '').strip()
         if st and slugify(st):
@@ -235,14 +264,14 @@ class SchoolPhoto(models.Model):
     def clean(self):
         from django.core.exceptions import ValidationError
         if not self.image and not self.image_url:
-            raise ValidationError('Photo file choose karo ya link (URL) daalo.')
+            raise ValidationError('Choose a photo file or enter a link (URL).')
 
     def __str__(self):
         return self.caption or f'Photo {self.pk}'
 
 
 class Review(models.Model):
-    """Parent / student ka review. Approve hone ke baad hi school ki rating me judta hai."""
+    """Review by a parent / student. It counts towards the school's rating only after approval."""
     ROLES = [('Parent', 'Parent'), ('Student', 'Student'), ('Alumni', 'Alumni'), ('Staff', 'Staff')]
     school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='review_items')
     name = models.CharField(max_length=120)
@@ -308,10 +337,10 @@ class LocationPage(models.Model):
     metaTitle = models.CharField(max_length=240, blank=True, default='')
     description = models.TextField(blank=True, default='')
     image = models.ImageField('Card photo (file)', upload_to='locations/', blank=True,
-                              help_text='Homepage ke city / state card ki photo')
+                              help_text='Photo of the city / state card on the homepage')
     image_url = models.URLField('Card photo link (URL)', max_length=1000, blank=True, default='')
-    show_on_home = models.BooleanField('Homepage par dikhao', default=False,
-                                       help_text='Tick karo to homepage ke Popular cities / states me aayega')
+    show_on_home = models.BooleanField('Show on homepage', default=False,
+                                       help_text='Tick to show this in Popular cities / states on the homepage')
     photos = models.JSONField(default=list, blank=True)
     faqs = models.JSONField(default=list, blank=True)
     isActive = models.BooleanField(default=True)
@@ -331,7 +360,7 @@ class LocationPage(models.Model):
 
 
 class LocationHighlight(models.Model):
-    """Key highlights jo city/state page par dikhte hain (admin se edit)."""
+    """Key highlights shown on the city/state page (editable from the admin)."""
     location = models.ForeignKey(LocationPage, on_delete=models.CASCADE, related_name='highlight_items')
     text = models.CharField('Highlight', max_length=300)
     order = models.PositiveSmallIntegerField(default=0)
@@ -366,8 +395,8 @@ class FeeComponent(models.Model):
     SESSIONS = [('2027-28', '2027-28'), ('2026-27', '2026-27'), ('2025-26', '2025-26'), ('2024-25', '2024-25')]
     school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='fee_components')
     session = models.CharField(max_length=10, choices=SESSIONS, default='2027-28')
-    class_name = models.CharField('Class', max_length=20, choices=CLASS_CHOICES, blank=True, default='', help_text='Khali = saari classes ke liye')
-    name = models.CharField('Fee name', max_length=120, help_text='jaise Tuition fee, Admission fee, Transport fee')
+    class_name = models.CharField('Class', max_length=20, choices=CLASS_CHOICES, blank=True, default='', help_text='Leave empty = applies to all classes')
+    name = models.CharField('Fee name', max_length=120, help_text='For example: Tuition fee, Admission fee, Transport fee')
     frequency = models.CharField(max_length=10, choices=FREQ, default='Annually')
     amount = models.PositiveIntegerField('Amount (₹)')
 

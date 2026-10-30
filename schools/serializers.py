@@ -1,8 +1,7 @@
 import re
 
 from rest_framework import serializers
-
-from .models import Enquiry, LocationPage, Review, School
+from .models import ADMISSION_STATUS, Enquiry, LocationPage, Review, School
 
 
 def file_or_url(request, file_field, url):
@@ -16,6 +15,27 @@ def file_or_url(request, file_field, url):
             return request.build_absolute_uri(link) if request else link
     return url or ''
 
+ADMISSION_LABEL = dict(ADMISSION_STATUS)
+
+
+def _approved(obj, limit):
+    """Approved reviews. Uses the prefetched list if the view provided it (no extra query)."""
+    rows = getattr(obj, 'approved_reviews', None)
+    if rows is None:
+        rows = list(obj.review_items.filter(is_approved=True)[:limit])
+    return [
+        {'name': r.name, 'role': r.role, 'rating': r.rating, 'text': r.text, 'date': r.created_at.date().isoformat()}
+        for r in rows[:limit]
+    ]
+
+
+def _admission(obj):
+    return {
+        'admissionStatus': obj.admission_status,
+        'admissionLabel': ADMISSION_LABEL.get(obj.admission_status, 'Admissions Open'),
+        'admissionSession': obj.current_admission_session or '',
+        'admissionLastDate': obj.admission_last_date.isoformat() if obj.admission_last_date else '',
+    }
 
 class SchoolSerializer(serializers.ModelSerializer):
     schoolId = serializers.IntegerField(source='school_id', read_only=True)
@@ -82,6 +102,8 @@ class SchoolSerializer(serializers.ModelSerializer):
         if obj.address: prof['address'] = obj.address
         if obj.email: prof['email'] = obj.email
         if obj.website: prof['website'] = obj.website
+        prof['admissionStatus'] = ADMISSION_LABEL.get(obj.admission_status, 'Admissions Open')
+        data.update(_admission(obj))
         data['profile'] = prof
 
         # ---- approved parent reviews (latest 10)
@@ -89,6 +111,26 @@ class SchoolSerializer(serializers.ModelSerializer):
             {'name': r.name, 'role': r.role, 'rating': r.rating, 'text': r.text, 'date': r.created_at.date().isoformat()}
             for r in obj.review_items.filter(is_approved=True)[:10]
         ]
+        return data
+class SchoolListSerializer(serializers.ModelSerializer):
+    """Light version for listing pages: no about / FAQs / gallery / fee slabs / owner."""
+    schoolId = serializers.IntegerField(source='school_id', read_only=True)
+
+    class Meta:
+        model = School
+        fields = ('schoolId', 'slug', 'name', 'area', 'city', 'state', 'board', 'grades', 'type', 'gender',
+                  'rating', 'reviews', 'fee', 'feeMin', 'feeMax', 'facilities', 'photos',
+                  'topRated', 'isFeatured', 'isRecommended', 'phone', 'landline')
+
+    def to_representation(self, obj):
+        data = super().to_representation(obj)
+        req = self.context.get('request')
+        data['image'] = file_or_url(req, obj.cover_image, obj.image)
+        data['phone'] = ' / '.join(x for x in (obj.phone, obj.landline) if x)
+        data.pop('landline', None)
+        data['photos'] = len(obj.photo_items.all()) or obj.photos
+        data['reviewList'] = _approved(obj, 3)
+        data.update(_admission(obj))
         return data
 
 

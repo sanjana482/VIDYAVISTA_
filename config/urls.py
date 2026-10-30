@@ -6,6 +6,8 @@ from django.urls import path, include, re_path
 from django.views.static import serve
 from django.http import JsonResponse
 from schools.views import health
+from schools.dashboard import dashboard_data
+import schools.admin_accounts  # noqa: F401
 
 def home(request):
     return JsonResponse({
@@ -15,7 +17,8 @@ def home(request):
 
 urlpatterns = [
     path("", home, name="home"),
-    path("admin/", admin.site.urls),
+    path("admin/dashboard-data/", admin.site.admin_view(dashboard_data), name="vv_dashboard_data"),
+    path("admin/", admin.site.urls),   
     path("api/health/", health),
     path("api/", include("schools.urls")),
 ]

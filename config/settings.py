@@ -30,7 +30,7 @@ MIDDLEWARE = [
 ]
 DEBUG_PROPAGATE_EXCEPTIONS = False
 ROOT_URLCONF = 'config.urls'
-TEMPLATES = [{'BACKEND':'django.template.backends.django.DjangoTemplates','DIRS':[],'APP_DIRS':True,'OPTIONS':{'context_processors':['django.template.context_processors.debug','django.template.context_processors.request','django.contrib.auth.context_processors.auth','django.contrib.messages.context_processors.messages']}}]
+TEMPLATES = [{'BACKEND':'django.template.backends.django.DjangoTemplates','DIRS': [BASE_DIR / 'templates'],'APP_DIRS':True,'OPTIONS':{'context_processors':['django.template.context_processors.debug','django.template.context_processors.request','django.contrib.auth.context_processors.auth','django.contrib.messages.context_processors.messages']}}]
 WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {'default': dj_database_url.config(default=os.getenv('DATABASE_URL','sqlite:///' + str(BASE_DIR / 'db.sqlite3')), conn_max_age=600, ssl_require=not DEBUG and os.getenv('DATABASE_URL','').startswith('postgres'))}
 AUTH_PASSWORD_VALIDATORS = [
@@ -64,11 +64,15 @@ JAZZMIN_SETTINGS = {
     "site_icon": "schools/img/logo.png",
     "show_ui_builder": False,
     "navigation_expanded": True,
-
-    "order_with_respect_to": [
-        "schools",
-        "auth",
-    ],
+"order_with_respect_to": ["schools"],
+"hide_apps": ["auth", "token_blacklist"],
+"usermenu_links": [
+    {"name": "Change password", "url": "admin:password_change", "icon": "fas fa-key"},
+],
+"topmenu_links": [
+    {"name": "Dashboard", "url": "admin:index"},
+    {"name": "View website", "url": "https://vidyavista.vercel.app", "new_window": True},
+],
 
     "icons": {
         "schools": "fas fa-school",
@@ -82,7 +86,17 @@ JAZZMIN_SETTINGS = {
         "token_blacklist": "fas fa-key",
     },
 }
-
+JAZZMIN_UI_TWEAKS = {
+    "theme": "flatly",
+    "navbar": "navbar-white navbar-light",
+    "no_navbar_border": True,
+    "sidebar": "sidebar-dark-primary",
+    "brand_colour": "navbar-primary",
+    "accent": "accent-primary",
+    "sidebar_nav_flat_style": True,
+    "navbar_fixed": True,
+    "sidebar_fixed": True,
+}
 
 # Temporary logging to diagnose production admin errors
 

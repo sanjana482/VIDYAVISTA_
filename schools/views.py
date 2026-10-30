@@ -1,49 +1,83 @@
-from django.db.models import Q
-from django.http import JsonResponse
+from django.db.models import Prefetch, Q
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, filters, status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from .models import School, Enquiry, LocationPage, Review
-from .serializers import SchoolSerializer, EnquirySerializer, LocationSerializer, ReviewSerializer
+from .serializers import SchoolSerializer, SchoolListSerializer, EnquirySerializer, LocationSerializer, ReviewSerializer
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def health(request): return Response({'ok':True,'service':'VidyaVista API','database':'configured'})
 
+class SchoolPagination(PageNumberPagination):
+    page_size = 50
+    page_size_query_param = 'limit'   # /api/schools/?limit=300
+    max_page_size = 500
+
+
 class SchoolViewSet(viewsets.ModelViewSet):
-    serializer_class=SchoolSerializer
-    lookup_field='school_id'
-    lookup_url_kwarg='school_id'
-    def get_permissions(self): return [AllowAny()] if self.action in ('list','retrieve') else [IsAdminUser()]
+    lookup_field = 'school_id'
+    lookup_url_kwarg = 'school_id'
+    pagination_class = SchoolPagination
+    PUBLIC = ('list', 'retrieve', 'by_slug')
+
+    def get_serializer_class(self):
+        return SchoolListSerializer if self.action == 'list' else SchoolSerializer
+
+    def get_permissions(self):
+        return [AllowAny()] if self.action in self.PUBLIC else [IsAdminUser()]
+
     def get_queryset(self):
-        qs=School.objects.select_related('owner').prefetch_related('fee_components','highlight_items','faq_items','photo_items','review_items')
-        if self.action in ('list','retrieve'): qs=qs.filter(isActive=True)
-        p=self.request.query_params
-        for field in ('city','state','board','type'):
-            value=p.get(field)
-            if value: qs=qs.filter(**{field+'__iexact':value})
-        search=p.get('search') or p.get('q')
-        if search: qs=qs.filter(Q(name__icontains=search)|Q(area__icontains=search)|Q(city__icontains=search))
-        if p.get('topRated')=='true': qs=qs.filter(topRated=True)
-        if p.get('featured')=='true': qs=qs.filter(isFeatured=True)
-        if p.get('recommended')=='true': qs=qs.filter(isRecommended=True)
+        approved = Prefetch('review_items', queryset=Review.objects.filter(is_approved=True).order_by('-created_at'),
+                            to_attr='approved_reviews')
+        if self.action == 'list':
+            qs = School.objects.prefetch_related('photo_items', approved)
+        else:
+            qs = School.objects.select_related('owner').prefetch_related(
+                'fee_components', 'highlight_items', 'faq_items', 'photo_items', approved)
+        if self.action in self.PUBLIC:
+            qs = qs.filter(isActive=True)
+        p = self.request.query_params
+        for field in ('city', 'state', 'board', 'type'):
+            value = p.get(field)
+            if value: qs = qs.filter(**{field + '__iexact': value})
+        search = p.get('search') or p.get('q')
+        if search: qs = qs.filter(Q(name__icontains=search) | Q(area__icontains=search) | Q(city__icontains=search))
+        if p.get('topRated') == 'true': qs = qs.filter(topRated=True)
+        if p.get('featured') == 'true': qs = qs.filter(isFeatured=True)
+        if p.get('recommended') == 'true': qs = qs.filter(isRecommended=True)
         return qs
-    def list(self,request,*args,**kwargs):
-        qs=self.filter_queryset(self.get_queryset())
-        page=self.paginate_queryset(qs)
-        data=self.get_serializer(page if page is not None else qs,many=True).data
+
+    def list(self, request, *args, **kwargs):
+        qs = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(qs)
+        data = self.get_serializer(page if page is not None else qs, many=True).data
         if page is not None:
-            response=self.get_paginated_response(data)
-            response.data={'data':response.data['results'],'meta':{'page':int(request.query_params.get('page',1)),'pages':response.data.get('count',0)//self.paginator.page_size + (1 if response.data.get('count',0)%self.paginator.page_size else 0),'total':response.data.get('count',0)}}
-            return response
-        return Response({'data':data,'meta':{'pages':1,'total':len(data)}})
-    def retrieve(self,request,*args,**kwargs): return Response({'data':self.get_serializer(self.get_object()).data})
-    def create(self,request,*args,**kwargs):
-        s=self.get_serializer(data=request.data); s.is_valid(raise_exception=True); s.save(); return Response({'data':s.data},status=201)
-    def update(self,request,*args,**kwargs):
-        partial=kwargs.pop('partial',False); obj=self.get_object(); s=self.get_serializer(obj,data=request.data,partial=partial); s.is_valid(raise_exception=True); s.save(); return Response({'data':s.data})
+            pg = self.paginator.page.paginator
+            return Response({'data': data, 'meta': {'page': self.paginator.page.number, 'pages': pg.num_pages, 'total': pg.count}})
+        return Response({'data': data, 'meta': {'pages': 1, 'total': len(data)}})
+
+    def retrieve(self, request, *args, **kwargs):
+        return Response({'data': self.get_serializer(self.get_object()).data})
+
+    @action(detail=False, methods=['get'], url_path=r'by-slug/(?P<slug>[^/.]+)')
+    def by_slug(self, request, slug=None):
+        """GET /api/schools/by-slug/<slug>/ -> one school (this is what the school page uses)."""
+        obj = get_object_or_404(self.get_queryset(), slug=slug)
+        return Response({'data': self.get_serializer(obj).data})
+
+    def create(self, request, *args, **kwargs):
+        s = self.get_serializer(data=request.data); s.is_valid(raise_exception=True); s.save()
+        return Response({'data': s.data}, status=201)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False); obj = self.get_object()
+        s = self.get_serializer(obj, data=request.data, partial=partial); s.is_valid(raise_exception=True); s.save()
+        return Response({'data': s.data})
 
 class EnquiryViewSet(viewsets.ModelViewSet):
     queryset=Enquiry.objects.all(); serializer_class=EnquirySerializer

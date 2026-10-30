@@ -111,9 +111,9 @@ class SchoolAdmin(admin.ModelAdmin):
         ('1. Basic details', {'fields': (
             'name', 'owner', ('area', 'city', 'state'), 'address', ('board', 'type', 'gender'),
             ('grade_from', 'grade_to'), 'grades', 'isActive')}),
-        ('2. Homepage sections (tick karo)', {'fields': (('isFeatured', 'isRecommended', 'topRated'),),
+        ('2. Homepage sections (tick here)', {'fields': (('isFeatured', 'isRecommended', 'topRated'),),
             'description': 'Featured = homepage "Featured Schools". Recommended = "Recommended Schools". '
-                           '"Highest Rated" automatic hai: parents ke approved reviews ki average se.'}),
+                           '"Highest Rated" is automatic: it is calculated from the average of approved parent reviews.'}),
         ('3. Contact', {'fields': (('phone', 'landline'), 'email', 'website')}),
         ('4. Cover image', {'fields': ('cover_image', 'image', 'cover_preview')}),
         ('5. About the school', {'fields': ('about',)}),
@@ -126,7 +126,7 @@ class SchoolAdmin(admin.ModelAdmin):
             ('languages', 'food_options'), ('latest_fee_session', 'current_admission_session'),
             'page_last_updated', 'logo_url', 'facility_groups'), 'classes': ('collapse',)}),
         ('Ratings (auto, parents ke reviews se)', {'fields': (('rating', 'reviews'),), 'classes': ('collapse',)}),
-        ('Old data (purana JSON, ab use mat karo)', {'fields': ('highlights', 'faqs', 'gallery'), 'classes': ('collapse',)}),
+        
     )
 
     # ---------------------------------------------------------- "Import CSV" button on the schools list
@@ -144,16 +144,16 @@ class SchoolAdmin(admin.ModelAdmin):
         if request.method == 'POST':
             f = request.FILES.get('csv_file')
             if not f:
-                messages.error(request, 'Pehle CSV file choose karo.')
+                messages.error(request, 'First, choose the CSV file.')
             else:
                 try:
                     text = f.read().decode('utf-8-sig')
                 except UnicodeDecodeError:
-                    messages.error(request, 'File UTF-8 CSV honi chahiye (Excel: Save As > CSV UTF-8).')
+                    messages.error(request, 'The file must be a UTF-8 CSV (Excel: Save As > CSV UTF-8).')
                 else:
                     result = importer.import_csv_text(text)
                     if result['created']:
-                        messages.success(request, f"{result['created']} school add ho gaye.")
+                        messages.success(request, f"{result['created']} Schools added successfully.")
         ctx = dict(self.admin_site.each_context(request), title='Import schools from CSV', opts=self.model._meta, result=result)
         return TemplateResponse(request, 'admin/schools/school/import_csv.html', ctx)
 
@@ -236,10 +236,10 @@ class LocationAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ('Place', {'fields': ('kind', 'name', 'slug', 'state', 'isActive'),
-                   'description': 'School add karte hi city/state yahan apne aap aa jate hain. Naam / slug mat badlo, sirf neeche ka content bharo.'}),
-        ('Page content (Google + parents ko dikhta hai)', {'fields': ('title', 'metaTitle', 'description'),
-                   'description': 'Title: page ka heading. Meta title: Google ka title. Khali chhodoge to automatic bana hua text dikhega.'}),
+               'description': 'When you add a school, its city/state appear here automatically. Do not change the name / slug, just fill in the content below.'}),
+        ('Page content (shown to Google + parents)', {'fields': ('title', 'metaTitle', 'description'),
+               'description': 'Title: the heading of the page. Meta title: the title shown on Google. If you leave these empty, automatically generated text will be shown.'}),
         ('Hero photo (optional)', {'fields': ('image', 'image_url'),
-                   'description': 'Photo daalo to page ke upar animated photo dikhegi. Nahi daalo to school ki asli numbers (schools, boards, rating, fees) ke animated cards dikhte hain.'}),
+               'description': 'If you add a photo, an animated photo is shown at the top of the page. If you do not, animated cards with the real numbers of the schools (schools, boards, rating, fees) are shown.'}),
         ('Old data', {'fields': ('photos', 'faqs'), 'classes': ('collapse',)}),
     )
