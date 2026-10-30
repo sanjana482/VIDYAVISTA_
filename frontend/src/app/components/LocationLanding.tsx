@@ -10,6 +10,7 @@ import { fillPhotos, resolveContent, type LocationContent, type LocationKind } f
 import { TYPE_ORDER, listingHref, typeLabel } from "../lib/links";
 import { abs, cityPath, jsonLd, schoolPath, statePath } from "../lib/seo";
 import { typeRank } from "../lib/preferences";
+import ShowMore from "./ShowMore";
 
 type Props = {
   kind: LocationKind;
@@ -137,11 +138,11 @@ export default function LocationLanding({ kind, name, state, list, all, content 
         {kind === "state" && cityCounts.size > 0 && (
           <div className="mt-2">
             <h2 className="text-lg font-extrabold text-[#0B2A47]">Cities in {name}</h2>
-            <ul className="mt-3 flex flex-wrap gap-3">
+            <ShowMore className="mt-3 flex flex-wrap gap-3" initial={24} step={24}>
              {Array.from(cityCounts.entries()).sort((a, b) => b[1] - a[1]).map(([c, n]) => (
                 <li key={c}><Link href={cityPath(c)} className={chip}>Schools in {c} ({n})</Link></li>
               ))}
-            </ul>
+            </ShowMore>
           </div>
         )}
         {kind === "city" && (
@@ -150,9 +151,9 @@ export default function LocationLanding({ kind, name, state, list, all, content 
             {otherCities.length > 0 && (
               <div>
                 <h2 className="text-lg font-extrabold text-[#0B2A47]">Other cities in {state}</h2>
-                <ul className="mt-3 flex flex-wrap gap-3">
+                <ShowMore className="mt-3 flex flex-wrap gap-3" initial={24} step={24}>
                   {otherCities.map(([c, n]) => <li key={c}><Link href={cityPath(c)} className={chip}>Schools in {c} ({n})</Link></li>)}
-                </ul>
+                </ShowMore>
               </div>
             )}
           </div>

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import type { School } from "../../data/schools";
 import { openEnquiry } from "./enquiry";
 import Icon from "../Icon";
+import AdmissionBadge from "../AdmissionBadge";
 
 type Props = {
   school: School;
@@ -85,6 +86,7 @@ export default function ProfileHero({ school: s, intro, phoneHref, stats }: Prop
               <span className={`${chip} bg-[#E1F1FA] text-[#0A5C91]`}>{s.board}</span>
               <span className={`${chip} bg-[#E9EEF4] text-[#344251]`}>{s.type}</span>
               <span className={`${chip} bg-[#FDE8EF] text-[#C8104F]`}>{s.gender}</span>
+              <AdmissionBadge school={s} />
             </div>
 
             <h1 className="mt-4 text-3xl font-extrabold leading-tight tracking-tight text-[#0B2A47] sm:text-4xl lg:text-[2.6rem]">

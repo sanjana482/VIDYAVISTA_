@@ -8,6 +8,8 @@ import { TYPE_ORDER, listingHref, typeLabel, typePath } from "../lib/links";
 import { pretty } from "../lib/places";
 import { useActiveLocation } from "../lib/useActiveLocation";
 import type { ActiveLocation } from "../lib/locationsApi";
+import ShowMore from "./ShowMore";
+
 
 const row =
   "flex items-center justify-between gap-3 rounded-xl border border-[#E1E7EE] bg-white px-4 py-3 text-sm font-semibold text-[#0A5C91] transition hover:border-[#0795DC] hover:bg-[#E1F1FA]";
@@ -108,7 +110,7 @@ export default function RelatedLinks({ schools, initial }: { schools: School[]; 
             <h3 className="font-extrabold text-[#0B2A47]">
               {active.kind === "state" ? `Cities in ${name}` : `Other cities in ${pretty(state || "this state")}`}
             </h3>
-            <ul className="mt-4 grid gap-2">
+                        <ShowMore className="mt-4 grid gap-2" initial={8} step={8}>
               {cityRows.map(([c, n]) => (
                 <li key={c}>
                   <Link href={cityPath(c)} onClick={inPlace({ city: c })} className={row}>
@@ -117,7 +119,7 @@ export default function RelatedLinks({ schools, initial }: { schools: School[]; 
                   </Link>
                 </li>
               ))}
-            </ul>
+            </ShowMore>
           </div>
         )}
       </div>

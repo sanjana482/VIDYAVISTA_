@@ -1,55 +1,4 @@
-
-// import { readPreference } from "./preferences";
-
-// export const API_URL = (
-//   process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
-// ).replace(/\/+$/, "");
-
-// export type EnquiryInput = {
-//   schoolName: string;
-//   schoolId?: number;
-//   childName?: string;
-//   className?: string;
-//   session?: string;
-//   parentName: string;
-//   relation?: string;
-//   mobile: string;
-//   email?: string;
-//   city?: string;
-//   note?: string;
-// };
-
-// export async function postEnquiry(
-//   data: EnquiryInput
-// ): Promise<{ ok: boolean }> {
-//   const pref = readPreference();
-
-//   const res = await fetch(`${API_URL}/enquiries`, {
-//     method: "POST",
-//     headers: { "Content-Type": "application/json" },
-//     body: JSON.stringify({
-//       ...data,
-//       source:
-//         typeof window !== "undefined"
-//           ? window.location.pathname
-//           : "",
-//       preference: pref ?? undefined,
-//     }),
-//   });
-
-//   if (!res.ok) {
-//     throw new Error(`Enquiry failed (${res.status})`);
-//   }
-
-//   return { ok: true };
-// }
-
-
-
-
-
-
-// Loads schools from the Express/Mongo backend (the ones managed in /admin).
+// Loads schools from the Django backend (the ones managed in the admin).
 // Server pages call these with ISR: a new school shows up on the site within ~60 seconds.
 import { API_URL } from "./api";
 import type { School } from "../data/schools";
@@ -92,21 +41,14 @@ export const mapSchool = (d: ApiSchool): School => ({
   owner: d.owner ?? null,
   social: d.social && Object.keys(d.social).length ? d.social : undefined,
   reviewList: d.reviewList?.length ? d.reviewList : undefined,
+  admissionStatus: d.admissionStatus,
+  admissionLabel: d.admissionLabel || undefined,
+  admissionSession: d.admissionSession || undefined,
+  admissionLastDate: d.admissionLastDate || undefined,
 });
 
 const REVALIDATE = 60;
-
-// async function get(path: string) {
-//   try {
-//     return await fetch(`${API_URL}${path}`, { next: { revalidate: REVALIDATE } });
-//   } catch {
-//     throw new Error(`Cannot reach the API at ${API_URL}. Is the backend running? (set NEXT_PUBLIC_API_URL)`);
-//   }
-// }
-
-// this is the latest error changes after first push 
-
-
+const PAGE = 300; // schools per request
 
 async function get(path: string) {
   let lastErr: unknown;
@@ -118,35 +60,26 @@ async function get(path: string) {
     } catch (e) {
       lastErr = e;
     }
-    // backend so raha ho toh jagne ka time do
+    // backend may be asleep (Render free plan): give it time to wake up
     await new Promise((r) => setTimeout(r, 3000 * (attempt + 1)));
   }
   throw new Error(`Cannot reach the API at ${API_URL} (${lastErr instanceof Error ? lastErr.message : lastErr}). Is the backend running? (set NEXT_PUBLIC_API_URL)`);
 }
 
-
-
-
-
-
-
-
-
-
-/** every active school (the API returns max 50 per page, so we page through) */
+/** every active school (light data, 300 per request, remaining pages are fetched in parallel) */
 export async function fetchAllSchools(): Promise<School[]> {
-  const out: School[] = [];
-  let page = 1;
-  let pages = 1;
-  do {
-    const res = await get(`/schools?limit=50&page=${page}`);
-    if (!res.ok) throw new Error(`Schools API failed (${res.status})`);
-    const json = await res.json();
-    out.push(...(json.data as ApiSchool[]).map(mapSchool));
-    pages = json.meta?.pages ?? 1;
-    page++;
-  } while (page <= pages && page <= 40);
-  return out;
+  const first = await get(`/schools/?limit=${PAGE}&page=1`);
+  if (!first.ok) throw new Error(`Schools API failed (${first.status})`);
+  const j1 = await first.json();
+  const pages = Math.min(j1.meta?.pages ?? 1, 40);
+  const rest = await Promise.all(
+    Array.from({ length: pages - 1 }, async (_, i) => {
+      const res = await get(`/schools/?limit=${PAGE}&page=${i + 2}`);
+      if (!res.ok) throw new Error(`Schools API failed (${res.status})`);
+      return (await res.json()).data as ApiSchool[];
+    })
+  );
+  return ([] as ApiSchool[]).concat(j1.data as ApiSchool[], ...rest).map(mapSchool);
 }
 
 /** same as above but never throws - for generateStaticParams / sitemap during a build without backend */
@@ -159,9 +92,30 @@ export async function fetchAllSchoolsSafe(): Promise<School[]> {
   }
 }
 
+/** one school by its numeric id (old links like /schools/9) */
 export async function fetchSchool(id: number): Promise<School | undefined> {
-  const res = await get(`/schools/${id}`);
+  const res = await get(`/schools/${id}/`);
   if (res.status === 404) return undefined;
   if (!res.ok) throw new Error(`School API failed (${res.status})`);
   return mapSchool((await res.json()).data);
+}
+
+/** one school by its slug: a single request, this is what the school page uses */
+export async function fetchSchoolBySlug(slug: string): Promise<School | undefined> {
+  const res = await get(`/schools/by-slug/${encodeURIComponent(slug)}/`);
+  if (res.status === 404) return undefined;
+  if (!res.ok) throw new Error(`School API failed (${res.status})`);
+  return mapSchool((await res.json()).data);
+}
+
+/** schools in the same city (instead of downloading every school) */
+export async function fetchSimilarSchools(s: School, limit = 6): Promise<School[]> {
+  try {
+    const res = await get(`/schools/?city=${encodeURIComponent(s.city)}&limit=${limit + 1}`);
+    if (!res.ok) return [];
+    const json = await res.json();
+    return (json.data as ApiSchool[]).map(mapSchool).filter((x) => x.id !== s.id).slice(0, limit);
+  } catch {
+    return [];
+  }
 }

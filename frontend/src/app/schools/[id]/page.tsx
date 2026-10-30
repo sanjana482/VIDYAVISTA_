@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { fetchAllSchoolsSafe } from "../../lib/schoolsApi";
-import { schoolSlug } from "../../lib/seo";
 import SchoolProfileView, { schoolMetadata } from "./SchoolProfileView";
 
 type Props = { params: { id: string } };
@@ -9,7 +7,7 @@ type Props = { params: { id: string } };
 export const revalidate = 60;
 
 export async function generateStaticParams() {
-  return (await fetchAllSchoolsSafe()).map((s) => ({ id: schoolSlug(s) }));
+  return []; // pages are created on the first visit and cached, so the build stays fast
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

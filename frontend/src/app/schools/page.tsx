@@ -13,6 +13,7 @@ import { fetchAllSchools } from "../lib/schoolsApi";
 import { listingFaqs } from "../data/faqs";
 import { abs, cityPath, jsonLd, schoolPath } from "../lib/seo";
 import { pretty } from "../lib/places";
+import ShowMore from "../components/ShowMore";
 
 export const metadata: Metadata = {
   title: "Best Schools in India 2027-28",
@@ -82,7 +83,7 @@ export default async function Schools() {
       {/* Plain crawlable links (the filtered list above is client-rendered) */}
       <nav aria-label="Browse schools by city" className="mx-auto max-w-7xl px-5 pb-10 lg:px-8">
         <h2 className="text-xl font-extrabold text-[#0B2A47]">Browse schools by city</h2>
-        <ul className="mt-4 flex flex-wrap gap-3">
+                <ShowMore className="mt-4 flex flex-wrap gap-3" initial={24} step={24}>
           {CITIES.map((c) => (
             <li key={c}>
               <Link href={cityPath(c)} className="rounded-full border border-[#D6DDE5] bg-white px-4 py-2 text-sm font-semibold text-[#0A5C91] hover:border-[#0795DC]">
@@ -90,7 +91,7 @@ export default async function Schools() {
               </Link>
             </li>
           ))}
-        </ul>
+        </ShowMore>
       </nav>
       <ParentGuide />
       <SchoolsFAQ />

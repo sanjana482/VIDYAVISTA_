@@ -37,6 +37,10 @@ export type School = {
   owner?: SchoolOwner | null;
   social?: Partial<Record<"youtube" | "facebook" | "instagram" | "x" | "linkedin" | "other", string>>;
   reviewList?: { name: string; role: string; rating: number; text: string; date: string }[];
+  admissionStatus?: "open" | "closing_soon" | "closed" | "coming_soon";
+  admissionLabel?: string;
+  admissionSession?: string;
+  admissionLastDate?: string;
 };
 
 export type SchoolOwner = { name: string; designation?: string; bio?: string; photo?: string; email?: string; phone?: string };

@@ -16,20 +16,19 @@ import ApplyModal from "../../components/profile/ApplyModal";
 import { Admission, Contact, Facilities, OwnerCard } from "../../components/profile/StaticSections";
 import Icon from "../../components/Icon";
 import { BOARD_LABEL, stateFor } from "../../data/schools";
-import { fetchAllSchools, fetchSchool } from "../../lib/schoolsApi";
+import { fetchSchool, fetchSchoolBySlug, fetchSimilarSchools } from "../../lib/schoolsApi";
 import {
   abs, idFromParam, jsonLd, schoolPath, schoolSectionPath, schoolSlug, cityPath, statePath,
   SECTION_LABEL, type Section,
 } from "../../lib/seo";
-import { classList, feeRange, feeSlabs, getProfile, lakh, rupee, similarSchools } from "../../data/profile";
+import { classList, feeRange, feeSlabs, getProfile, lakh, rupee } from "../../data/profile";
 
 export const findSchool = async (param: string) => {
-  const all = await fetchAllSchools();
-  const bySlug = all.find((s) => s.slug === param);
+  const bySlug = await fetchSchoolBySlug(param);
   if (bySlug) return bySlug;
-  // purane links (/schools/9 ya /schools/naam-9) -> mil jayega, aur page naye URL pe redirect kar dega
+  // old links (/schools/9 or /schools/name-9) -> found by id, and the page redirects to the new URL
   const id = Number(idFromParam(param));
-  return Number.isFinite(id) && id > 0 ? all.find((s) => s.id === id) : undefined;
+  return Number.isFinite(id) && id > 0 ? fetchSchool(id) : undefined;
 };
 
 /** title / description / canonical for every tab page */
@@ -113,7 +112,8 @@ export default async function SchoolProfileView({ param, section }: { param: str
   const classes = classList(s);
   const lastCls = classes[classes.length - 1].cls;
   const slabs = { "2027-28": feeSlabs(s, "2027-28"), "2026-27": feeSlabs(s, "2026-27") };
-  const similar = similarSchools(s, await fetchAllSchools());
+  const similarList = await fetchSimilarSchools(s);
+  const similar = { list: similarList, sameCity: similarList.length >= 3 };   
 
   const stats = [
     { label: "Board", value: BOARD_LABEL[s.board] ?? s.board },

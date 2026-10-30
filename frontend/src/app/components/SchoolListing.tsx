@@ -23,9 +23,23 @@ import { announceLocation } from "../lib/useActiveLocation";
 import { typeRank } from "../lib/preferences";
 import Icon from "./Icon";
 import CornerRibbon from "./CornerRibbon";
+import AdmissionBadge from "./AdmissionBadge";
 
 
 const PAGE_SIZE = 5;
+
+/** 1 2 3 … 50 51 style: first 2, last 2 and the pages around the current one */
+function pageList(current: number, total: number): (number | "…")[] {
+  const wanted = [1, 2, current - 1, current, current + 1, total - 1, total]
+    .filter((p) => p >= 1 && p <= total);
+  const sorted = Array.from(new Set(wanted)).sort((a, b) => a - b);
+  const out: (number | "…")[] = [];
+  sorted.forEach((p, i) => {
+    if (i > 0 && p - sorted[i - 1] > 1) out.push("…");
+    out.push(p);
+  });
+  return out;
+}
 
 type Filters = {
   q: string;
@@ -512,6 +526,7 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
                     </p>
                     <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
                       <span className="rounded-lg bg-[#E1F1FA] px-3 py-1.5 text-xs font-extrabold text-[#0A5C91]">{s.board}</span>
+                      <AdmissionBadge school={s} />
                       <span className="text-[#5C6A7B]">{s.grades}</span>
                     </div>
                     <p className="mt-3 text-sm text-[#5C6A7B]">{s.type} · {s.gender}</p>
@@ -568,20 +583,24 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
 
           {/* Pagination */}
           {pages > 1 && (
-            <nav aria-label="Pagination" className="mt-8 flex items-center justify-center gap-2">
+            <nav aria-label="Pagination" className="mt-8 flex flex-wrap items-center justify-center gap-2">
               <button disabled={current === 1} onClick={() => goTo(current - 1)} className="h-11 w-11 rounded-xl border border-[#D6DDE5] font-bold text-[#0B2A47] disabled:opacity-40">‹</button>
-              {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
-                <button
-                  key={p}
-                  onClick={() => goTo(p)}
-                  aria-current={p === current}
-                  className={`h-11 w-11 rounded-xl border font-extrabold transition ${
-                    p === current ? "border-transparent bg-gradient-to-br from-[#0A5C91] to-[#0795DC] text-white shadow-md" : "border-[#D6DDE5] text-[#0B2A47] hover:border-[#0795DC]"
-                  }`}
-                >
-                  {p}
-                </button>
-              ))}
+              {pageList(current, pages).map((p, i) =>
+                p === "…" ? (
+                  <span key={`gap-${i}`} className="flex h-11 w-6 items-end justify-center pb-2 font-extrabold text-[#8896A6]">…</span>
+                ) : (
+                  <button
+                    key={p}
+                    onClick={() => goTo(p)}
+                    aria-current={p === current}
+                    className={`h-11 min-w-[2.75rem] rounded-xl border px-2 font-extrabold transition ${
+                      p === current ? "border-transparent bg-gradient-to-br from-[#0A5C91] to-[#0795DC] text-white shadow-md" : "border-[#D6DDE5] text-[#0B2A47] hover:border-[#0795DC]"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                )
+              )}
               <button disabled={current === pages} onClick={() => goTo(current + 1)} className="h-11 w-11 rounded-xl border border-[#D6DDE5] font-bold text-[#0B2A47] disabled:opacity-40">›</button>
             </nav>
           )}
