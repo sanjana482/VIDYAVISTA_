@@ -13,7 +13,7 @@ export const revalidate = 60;
 const findCity = (slug: string, cities: string[]) => cities.find((c) => slugify(c) === slug);
 
 export async function generateStaticParams() {
-  return citiesOf(await fetchAllSchoolsSafe()).map((c) => ({ city: slugify(c) }));
+  return [];
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

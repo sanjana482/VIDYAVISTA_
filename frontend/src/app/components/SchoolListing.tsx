@@ -24,6 +24,7 @@ import { typeRank } from "../lib/preferences";
 import Icon from "./Icon";
 import CornerRibbon from "./CornerRibbon";
 import AdmissionBadge from "./AdmissionBadge";
+import Watermark from "./Watermark";
 
 
 const PAGE_SIZE = 5;
@@ -500,11 +501,19 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
             )}
 
             {visible.map((s) => (
-              <article key={s.id} className="vv-ribbon-host min-w-0 rounded-3xl border ...">
-  <div className="grid grid-cols-[minmax(0,1fr)] gap-5 md:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)_230px]">
+              <article
+                key={s.id}
+                className="vv-ribbon-host vv-card group relative min-w-0 overflow-hidden rounded-3xl border border-[#E1E7EE] bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-transparent hover:shadow-2xl hover:shadow-[#0795DC]/15 sm:p-5"
+              >
+                {/* 1. flowing gradient border */}
+                <span aria-hidden className="vv-card-ring" />
+                {/* 2. glowing pill on the left edge, grows from the centre */}
+                <span aria-hidden className="pointer-events-none absolute left-0 top-1/2 h-0 w-1.5 -translate-y-1/2 rounded-r-full bg-gradient-to-b from-[#EC0E58] to-[#0795DC] opacity-0 shadow-[0_0_14px_rgba(236,14,88,0.55)] transition-all duration-500 ease-out group-hover:h-3/5 group-hover:opacity-100" />
+                <div className="grid grid-cols-[minmax(0,1fr)] gap-5 md:grid-cols-[260px_minmax(0,1fr)] xl:h-[220px] xl:grid-cols-[280px_minmax(0,1fr)_230px]">
                   {/* Photo */}
-                  <div className="relative h-52 overflow-hidden rounded-2xl bg-[#E6F4FC] md:h-auto md:min-h-[210px]">
-                    <img src={s.image} alt={`${s.name} campus`} loading="lazy" className="h-full w-full object-cover" />
+                  <div className="relative h-52 w-full overflow-hidden rounded-2xl bg-[#E6F4FC] md:h-[220px]">
+                    <img src={s.image} alt={`${s.name} campus`} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110" />
+                    <Watermark />
                     {s.isFeatured && <CornerRibbon label="Featured" radius="1rem" />}
                     {s.topRated && (
                       <span className={`absolute left-3 ${s.isFeatured ? "bottom-3" : "top-3"} rounded-lg bg-[#0795DC] px-3 py-1.5 text-xs font-extrabold text-white shadow`}>
@@ -517,11 +526,11 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
                   </div>
 
                   {/* Details */}
-                  <div className="min-w-0">
-                    <h3 className="text-2xl font-extrabold leading-tight text-[#0B2A47]">
-                      <Link href={schoolPath(s)} className="transition hover:text-[#0A7BBF]">{s.name}</Link>
+                  <div className="flex min-w-0 flex-col">
+                    <h3 className="line-clamp-2 text-2xl font-extrabold leading-tight text-[#0B2A47]">
+                      <Link href={schoolPath(s)} className="transition-colors duration-300 group-hover:text-[#0A7BBF]">{s.name}</Link>
                     </h3>
-                    <p className="mt-2 text-sm text-[#707E8F]">
+                    <p className="mt-2 line-clamp-2 text-sm text-[#707E8F]">
                       <Icon name="mapPin" className="mr-1 inline h-4 w-4 text-[#EC0E58]" /> {s.area}, {s.city === "Delhi" ? "New Delhi" : s.city}
                     </p>
                     <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
@@ -533,7 +542,7 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
                   </div>
 
                   {/* Price + actions */}
-                  <div className="flex flex-col border-t border-[#E1E7EE] pt-5 md:col-span-2 xl:col-span-1 xl:border-l xl:border-t-0 xl:pl-5 xl:pt-0 xl:text-right">
+                  <div className="flex flex-col border-t border-[#E1E7EE] pt-5 md:col-span-2 xl:col-span-1 xl:justify-between xl:border-l xl:border-t-0 xl:pl-5 xl:pt-0 xl:text-right">
                     <div className="flex items-center justify-between xl:flex-col xl:items-end xl:gap-1">
                       {s.reviews > 0 ? (
                         <>
@@ -544,14 +553,14 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
                         <Link href={`${schoolPath(s)}/reviews`} className="text-xs text-[#5C6A7B] underline underline-offset-2 hover:text-[#0A7BBF]">No reviews yet</Link>
                       )}
                     </div>
-                    <div className="mt-4">
+                    <div className="mt-4 xl:mt-0">
                       <p className="text-xs text-[#707E8F]">Annual tuition from</p>
                       <p className="text-3xl font-extrabold text-[#0B2A47]">{formatFee(s.fee)}</p>
                       <p className="text-xs text-[#8896A6]">per year · indicative</p>
                     </div>
                     <a
                       href={`tel:${s.phone}`}
-                      className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl border-2 border-[#0795DC] px-4 py-3 text-sm font-extrabold text-[#0A7BBF] transition hover:bg-[#0795DC] hover:text-white"
+                      className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl border-2 border-[#0795DC] px-4 text-sm font-extrabold text-[#0A7BBF] transition hover:bg-[#0795DC] hover:text-white xl:mt-0"
                     >
                       <Icon name="phone" className="h-4 w-4" /> Call Now
                     </a>
@@ -559,19 +568,21 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
                 </div>
 
                 {/* Footer row */}
-                <div className="mt-5 flex flex-wrap items-center justify-between gap-4 border-t border-[#E1E7EE] pt-4">
-                  <label className="flex cursor-pointer items-center gap-3 text-sm font-semibold text-[#4E5A68]">
-                    <input type="checkbox" checked={compare.includes(s.id)} onChange={() => toggleCompare(s.id)} className="h-4 w-4 accent-[#EC0E58]" />
-                    Add to compare
-                  </label>
-                  <span className="hidden text-xs text-[#707E8F] sm:flex sm:items-center sm:gap-1"><Icon name="school" className="h-4 w-4" /> Campus visits available</span>
-                  <div className="flex w-full gap-3 sm:w-auto">
-                    <Link href={schoolPath(s)} className="flex-1 rounded-xl border border-[#D6DDE5] px-5 py-3 text-sm font-bold text-[#0B2A47] transition hover:border-[#0795DC] hover:text-[#0A7BBF]">
-                      <span className="block text-center">View School</span>
+                <div className="mt-5 flex flex-col gap-4 border-t border-[#E1E7EE] pt-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                    <label className="flex cursor-pointer items-center gap-3 whitespace-nowrap text-sm font-semibold text-[#4E5A68]">
+                      <input type="checkbox" checked={compare.includes(s.id)} onChange={() => toggleCompare(s.id)} className="h-4 w-4 accent-[#EC0E58]" />
+                      Add to compare
+                    </label>
+                    <span className="hidden items-center gap-1.5 whitespace-nowrap text-xs text-[#707E8F] sm:flex"><Icon name="school" className="h-4 w-4" /> Campus visits available</span>
+                  </div>
+                  <div className="grid w-full grid-cols-2 gap-3 sm:w-auto sm:grid-cols-[140px_140px]">
+                    <Link href={schoolPath(s)} className="inline-flex h-11 items-center justify-center whitespace-nowrap rounded-xl border border-[#D6DDE5] px-4 text-sm font-bold text-[#0B2A47] transition hover:border-[#0795DC] hover:text-[#0A7BBF]">
+                      View School
                     </Link>
                     <Link
                       href={`/counselling?school=${encodeURIComponent(s.name)}`}
-                      className="flex-1 rounded-xl bg-[#EC0E58] px-5 py-3 text-center text-sm font-extrabold text-white shadow-md shadow-[#EC0E58]/25 transition hover:-translate-y-0.5 hover:bg-[#C8104F] vv-btn"
+                      className="vv-btn inline-flex h-11 items-center justify-center whitespace-nowrap rounded-xl bg-[#EC0E58] px-4 text-sm font-extrabold text-white shadow-md shadow-[#EC0E58]/25 transition hover:-translate-y-0.5 hover:bg-[#C8104F]"
                     >
                       Enquire ↗
                     </Link>

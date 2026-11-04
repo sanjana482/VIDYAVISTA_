@@ -13,8 +13,9 @@ export const revalidate = 60;
 const findState = (slug: string, states: string[]) => states.find((s) => slugify(s) === slug);
 
 export async function generateStaticParams() {
-  return statesOf(await fetchAllSchoolsSafe()).map((s) => ({ state: slugify(s) }));
+  return [];
 }
+
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const schools = await fetchAllSchools();

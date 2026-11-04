@@ -7,6 +7,7 @@ import type { School } from "../../data/schools";
 import { openEnquiry } from "./enquiry";
 import Icon from "../Icon";
 import AdmissionBadge from "../AdmissionBadge";
+import Watermark from "../Watermark";
 
 type Props = {
   school: School;
@@ -72,6 +73,7 @@ export default function ProfileHero({ school: s, intro, phoneHref, stats }: Prop
           {/* Photo */}
           <div className="relative h-72 overflow-hidden rounded-3xl bg-[#E1F1FA] shadow-xl shadow-[#0A5C91]/10 sm:h-96 lg:h-[475px]">
             <img src={s.image} alt={`${s.name} campus`} className="h-full w-full object-cover" />
+            <Watermark />
             <Link
   href={`${schoolPath(s)}/photos`}
   className="absolute bottom-4 left-4 rounded-full bg-white px-4 py-2.5 text-sm font-bold text-[#0B2A47] shadow-lg transition hover:bg-[#E1F1FA]"

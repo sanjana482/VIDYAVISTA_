@@ -200,3 +200,16 @@ img { max-width: 100%; }
   .vv-fill { animation: none; }
   .vv-board-item { scale: none; }
 }
+
+/* ---------- school card hover: animated gradient border ring ---------- */
+.vv-card-ring {
+  position: absolute; inset: 0; border-radius: inherit; padding: 1.5px; pointer-events: none;
+  background: linear-gradient(120deg, #EC0E58, #0795DC, #7C5CFF, #EC0E58);
+  background-size: 300% 300%;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  opacity: 0; transition: opacity 0.35s ease;
+}
+.vv-card:hover .vv-card-ring { opacity: 1; animation: vv-ring-flow 3s linear infinite; }
+@keyframes vv-ring-flow { to { background-position: 300% 0; } }
+@media (prefers-reduced-motion: reduce) { .vv-card:hover .vv-card-ring { animation: none; } }
