@@ -128,7 +128,7 @@ class SchoolListSerializer(serializers.ModelSerializer):
         data['image'] = file_or_url(req, obj.cover_image, obj.image)
         data['phone'] = ' / '.join(x for x in (obj.phone, obj.landline) if x)
         data.pop('landline', None)
-        data['photos'] = len(obj.photo_items.all()) or obj.photos
+        data['photos'] = getattr(obj, 'photo_count', 0) or obj.photos
         data['reviewList'] = _approved(obj, 3)
         data.update(_admission(obj))
         return data

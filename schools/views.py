@@ -1,4 +1,4 @@
-from django.db.models import Prefetch, Q
+from django.db.models import Count, Prefetch, Q
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action, api_view, permission_classes
@@ -32,15 +32,27 @@ class SchoolViewSet(viewsets.ModelViewSet):
         return [AllowAny()] if self.action in self.PUBLIC else [IsAdminUser()]
 
     def get_queryset(self):
-        approved = Prefetch('review_items', queryset=Review.objects.filter(is_approved=True).order_by('-created_at'),
-                            to_attr='approved_reviews')
         if self.action == 'list':
-            qs = School.objects.prefetch_related('photo_items', approved)
+            approved = Prefetch(
+                'review_items',
+                queryset=Review.objects.filter(is_approved=True)
+                .only('school_id', 'name', 'role', 'rating', 'text', 'created_at')
+                .order_by('-created_at')[:3],
+                to_attr='approved_reviews'
+            )
+
+            qs = School.objects.annotate(
+                photo_count=Count('photo_items')
+            ).prefetch_related(approved)
+
         else:
             qs = School.objects.select_related('owner').prefetch_related(
-                'fee_components', 'highlight_items', 'faq_items', 'photo_items', approved)
+                'fee_components', 'highlight_items', 'faq_items', 'photo_items'
+            )
+
         if self.action in self.PUBLIC:
             qs = qs.filter(isActive=True)
+
         p = self.request.query_params
         for field in ('city', 'state', 'board', 'type'):
             value = p.get(field)
