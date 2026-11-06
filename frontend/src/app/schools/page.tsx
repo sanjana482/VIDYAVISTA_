@@ -30,7 +30,7 @@ export const metadata: Metadata = {
 };
 
 // re-built every minute so schools added in /admin show up without a redeploy
-export const revalidate = 60;
+export const revalidate = 3600;
 
 const listingSchema = (schools: School[]) => [
   {

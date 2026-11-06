@@ -18,7 +18,7 @@ import { stateFor } from "./data/schools";
 import Reveal from "./components/Reveal";
 
 // the homepage re-reads schools / ticks / locations from the admin every minute
-export const revalidate = 60;
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: { absolute: "VidyaVista | Find the Best Day & Boarding Schools in India" },

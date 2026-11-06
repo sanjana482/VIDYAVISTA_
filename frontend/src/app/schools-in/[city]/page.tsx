@@ -8,7 +8,7 @@ import { cityPath, slugify } from "../../lib/seo";
 
 type Props = { params: { city: string } };
 
-export const revalidate = 60;
+export const revalidate = 3600;
 
 const findCity = (slug: string, cities: string[]) => cities.find((c) => slugify(c) === slug);
 
