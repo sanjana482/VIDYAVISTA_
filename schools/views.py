@@ -62,7 +62,7 @@ class SchoolViewSet(viewsets.ModelViewSet):
         if p.get('topRated') == 'true': qs = qs.filter(topRated=True)
         if p.get('featured') == 'true': qs = qs.filter(isFeatured=True)
         if p.get('recommended') == 'true': qs = qs.filter(isRecommended=True)
-        return qs
+        return qs.order_by('school_id', 'id')
 
     def list(self, request, *args, **kwargs):
         qs = self.filter_queryset(self.get_queryset())

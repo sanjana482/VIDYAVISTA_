@@ -10,7 +10,6 @@ load_dotenv(BASE_DIR / ".env")
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'dev-only-change-this-secret-before-deploying')
 DEBUG = os.getenv('DJANGO_DEBUG', 'False').lower() == 'true'
 ALLOWED_HOSTS = [
-    "vidyavista-be.onrender.com",
     "vv-backend-xcpp.onrender.com",
     "vidyavista.vercel.app",
     "localhost",
