@@ -1,4 +1,4 @@
-// Loads schools from the Django backend (the ones managed in the admin).
+﻿// Loads schools from the Django backend (the ones managed in the admin).
 // Server pages call these with ISR: a new school shows up on the site within ~60 seconds.
 import { API_URL } from "./api";
 import type { School } from "../data/schools";
@@ -47,7 +47,7 @@ export const mapSchool = (d: ApiSchool): School => ({
   admissionLastDate: d.admissionLastDate || undefined,
 });
 
-const revalidate = 604800;
+const REVALIDATE = 604800;
 const PAGE = 300; // schools per request
 
 async function get(path: string) {
