@@ -47,7 +47,7 @@ export const mapSchool = (d: ApiSchool): School => ({
   admissionLastDate: d.admissionLastDate || undefined,
 });
 
-const REVALIDATE = 3600;
+const revalidate = 604800;
 const PAGE = 300; // schools per request
 
 async function get(path: string) {

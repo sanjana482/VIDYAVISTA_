@@ -6,7 +6,7 @@ import { SECTIONS, type Section, schoolMetadata } from '@/app/lib/seo'
 
 type Props = { params: { id: string; section: string } };
 
-export const revalidate = 3600;
+export const revalidate = 604800;
 
 // section pages are created on first visit (keeps the build fast and independent of the backend)
 export async function generateStaticParams() {

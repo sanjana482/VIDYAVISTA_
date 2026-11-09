@@ -5,7 +5,7 @@ import { typePath } from "./lib/links";
 import { SECTIONS, SITE_URL, cityPath, schoolPath, schoolSectionPath, statePath } from "./lib/seo";
 
 // Auto-generated at /sitemap.xml from the live schools in the database.
-export const revalidate = 3600;
+export const revalidate = 604800;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const schools = await fetchAllSchoolsSafe();

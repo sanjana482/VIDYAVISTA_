@@ -2,7 +2,7 @@ import TypePlacePage, { typePlaceMetadata } from "../../components/TypePlacePage
 
 type Props = { params: { place: string } };
 
-export const revalidate = 3600;
+export const revalidate = 604800;
 
 export const generateMetadata = ({ params }: Props) => typePlaceMetadata("Day School", params.place);
 

@@ -60,7 +60,7 @@ export const fillPhotos = (photos: string[]) => [...photos, ...DEFAULT_PHOTOS.fi
 
 export async function fetchLocationContent(kind: LocationKind, name: string): Promise<LocationContent | null> {
   try {
-    const res = await fetch(`${API_URL}/locations/${kind}/${slugify(name)}`, { next: { revalidate: 3600 } });
+    const res = await fetch(`${API_URL}/locations/${kind}/${slugify(name)}`, { next: { revalidate: 604800 } });
     if (!res.ok) return null;
     return (await res.json()).data as LocationContent;
   } catch {
@@ -70,7 +70,7 @@ export async function fetchLocationContent(kind: LocationKind, name: string): Pr
 
 export async function fetchLocationIndex(): Promise<IndexState[]> {
   try {
-    const res = await fetch(`${API_URL}/locations/index`, { next: { revalidate: 3600 } });
+    const res = await fetch(`${API_URL}/locations/index`, { next: { revalidate: 604800 } });
     if (!res.ok) return [];
     return (await res.json()).data as IndexState[];
   } catch {
@@ -84,7 +84,7 @@ export type HomePlace = { name: string; image: string };
 /** states + cities ticked "show on homepage" in the admin (only those that have a photo) */
 export async function fetchHomeLocations(): Promise<{ states: HomePlace[]; cities: HomePlace[] }> {
   try {
-    const res = await fetch(`${API_URL}/locations/?page_size=100`, { next: { revalidate: 3600 } });
+    const res = await fetch(`${API_URL}/locations/?page_size=100`, { next: { revalidate: 604800 } });
     if (!res.ok) return { states: [], cities: [] };
     const json = await res.json();
     const rows = (json.results ?? json.data ?? []) as { kind: LocationKind; name: string; cover?: string; show_on_home?: boolean }[];
