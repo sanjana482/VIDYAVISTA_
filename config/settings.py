@@ -83,6 +83,7 @@ JAZZMIN_SETTINGS = {
     "site_logo_classes": "img-fluid",
     "site_icon": "schools/img/logo.png",
     "show_ui_builder": False,
+    "custom_css": "schools/css/custom_admin.css",
     "navigation_expanded": True,
     "order_with_respect_to": [
         "schools",

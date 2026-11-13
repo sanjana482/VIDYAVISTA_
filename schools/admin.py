@@ -296,6 +296,7 @@ class BranchClaimInline(admin.TabularInline):
 
 @admin.register(SchoolAccount)
 class SchoolAccountAdmin(admin.ModelAdmin):
+    change_list_template = 'admin/schools/schoolaccount/change_list.html'
     inlines = [BranchClaimInline]
     list_display = (
         'owner_contact_card', 'all_schools_display', 'mobile', 'email',
