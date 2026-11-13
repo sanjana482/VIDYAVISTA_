@@ -464,7 +464,7 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
     "h-11 w-full rounded-xl border border-[#D6DDE5] bg-white px-3 text-sm text-[#0B2A47] outline-none placeholder:text-[#8896A6] focus:border-[#0795DC] focus:ring-4 focus:ring-[#0795DC]/15";
 
   return (
-    <section id="results" className="scroll-mt-24 bg-white py-10 sm:py-12">
+    <section id="results" className="relative z-10 scroll-mt-24 bg-white py-10 sm:py-12">
 <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)] gap-8 px-5 lg:grid-cols-[290px_minmax(0,1fr)] lg:px-8">       
    {/* ---------- Filters ---------- */}
         <aside>
@@ -603,26 +603,45 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
                 <span aria-hidden className="vv-card-ring" />
                 {/* 2. glowing pill on the left edge, grows from the centre */}
                 <span aria-hidden className="pointer-events-none absolute left-0 top-1/2 h-0 w-1.5 -translate-y-1/2 rounded-r-full bg-gradient-to-b from-[#EC0E58] to-[#0795DC] opacity-0 shadow-[0_0_14px_rgba(236,14,88,0.55)] transition-all duration-500 ease-out group-hover:h-3/5 group-hover:opacity-100" />
-                <div className="grid grid-cols-[minmax(0,1fr)] gap-5 md:grid-cols-[260px_minmax(0,1fr)] xl:h-[220px] xl:grid-cols-[280px_minmax(0,1fr)_230px]">
-                  {/* Photo */}
-                  <div className="relative h-52 w-full overflow-hidden rounded-2xl bg-[#E6F4FC] md:h-[220px]">
-                    <img src={s.image} alt={`${s.name} campus`} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110" />
-                    <Watermark />
-                    {s.isFeatured && <CornerRibbon label="Featured" radius="1rem" />}
-                    {s.verified && (
-                      <span className="absolute left-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-lg bg-[#0F7A3D] px-3 py-1.5 text-xs font-extrabold text-white shadow-md">
-                        <Icon name="check" className="h-3.5 w-3.5 text-white" />
-                        Verified
+                <div className="grid grid-cols-[minmax(0,1fr)] gap-5 md:grid-cols-[280px_minmax(0,1fr)] xl:h-[220px] xl:grid-cols-[300px_minmax(0,1fr)_230px]">
+                  {/* Photo Section: 3-Image Ezyschooling Layout */}
+                  <div className="relative flex flex-col gap-1.5 overflow-hidden rounded-2xl md:h-[220px]">
+                    {/* Top Main Image */}
+                    <div className="relative h-36 w-full flex-1 overflow-hidden rounded-xl bg-[#E6F4FC]">
+                      <img src={s.image} alt={`${s.name} campus`} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
+                      <Watermark />
+                      {s.isFeatured && <CornerRibbon label="Featured" radius="0.75rem" />}
+                      {s.verified ? (
+                        <span className="absolute left-2.5 top-2.5 z-10 inline-flex items-center gap-1.5 rounded-lg bg-[#0F7A3D] px-2.5 py-1 text-xs font-extrabold text-white shadow-md">
+                          <Icon name="check" className="h-3.5 w-3.5 text-white" />
+                          Verified
+                        </span>
+                      ) : (
+                        <span className="absolute left-2.5 top-2.5 z-10 inline-flex items-center gap-1 rounded-md bg-[#0A5C91]/90 px-2.5 py-1 text-[11px] font-bold text-white shadow backdrop-blur-sm">
+                          Admissions Open
+                        </span>
+                      )}
+                      <span className="absolute right-2.5 top-2.5 z-10 rounded-md bg-black/60 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur-sm">
+                        {s.gender}
                       </span>
-                    )}
-                    {s.topRated && (
-                      <span className={`absolute left-3 ${s.isFeatured || s.verified ? "bottom-3" : "top-3"} rounded-lg bg-[#0795DC] px-3 py-1.5 text-xs font-extrabold text-white shadow`}>
-                        <span className="inline-flex items-center gap-1"><Icon name="star" filled className="h-3.5 w-3.5" /> Top rated</span>
-                      </span>
-                    )}
-                    <span className="absolute bottom-3 right-3 rounded-lg bg-[#0B2A47]/85 px-2.5 py-1.5 text-xs font-bold text-white">
-                      <Icon name="camera" className="mr-1 inline h-3.5 w-3.5 align-[-2px]" /> {s.photos} photos
-                    </span>
+                    </div>
+
+                    {/* 3 Thumbnails row below main photo */}
+                    <div className="grid grid-cols-3 gap-1.5 h-14 shrink-0">
+                      <div className="relative h-full w-full overflow-hidden rounded-lg bg-[#E6F4FC]">
+                        <img src={s.gallery?.[0] || s.image} alt={`${s.name} facility`} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 hover:scale-110" />
+                      </div>
+                      <div className="relative h-full w-full overflow-hidden rounded-lg bg-[#E6F4FC]">
+                        <img src={s.gallery?.[1] || s.gallery?.[0] || s.image} alt={`${s.name} campus`} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 hover:scale-110" />
+                      </div>
+                      <Link href={`${schoolPath(s)}/photos`} className="group/thumb relative h-full w-full overflow-hidden rounded-lg bg-[#0B2A47]">
+                        <img src={s.gallery?.[2] || s.gallery?.[1] || s.image} alt={`${s.name} more`} loading="lazy" className="h-full w-full object-cover opacity-60 transition-transform duration-500 group-hover/thumb:scale-110" />
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/45 text-white transition-colors group-hover/thumb:bg-black/60">
+                          <span className="text-[10px] font-extrabold leading-tight">View All</span>
+                          <span className="text-[9px] font-medium text-white/80">{Math.max(s.photos || 8, 3)} photos</span>
+                        </div>
+                      </Link>
+                    </div>
                   </div>
 
                   {/* Details */}
@@ -634,7 +653,7 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
                       <Icon name="mapPin" className="mr-1 inline h-4 w-4 text-[#EC0E58]" /> {s.area}, {s.city === "Delhi" ? "New Delhi" : s.city}
                     </p>
                     <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
-                      <span className="rounded-lg bg-[#E1F1FA] px-3 py-1.5 text-xs font-extrabold text-[#0A5C91]">{s.board === "No Board" ? "IB Board" : s.board}</span>
+                      <span className="rounded-lg bg-[#E1F1FA] px-3 py-1.5 text-xs font-extrabold text-[#0A5C91]">{BOARD_LABEL[s.board] ?? (s.board === "No Board" || s.board === "IB" ? "IB Board" : s.board)}</span>
                       <AdmissionBadge school={s} />
                       {s.verified && (
                         <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#E4F7EC] px-3 py-1.5 text-xs font-extrabold text-[#0F7A3D]">

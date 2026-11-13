@@ -88,9 +88,14 @@ export default function SchoolsHero({
   const fetched = useLocationContent(sameAsInitial ? null : active);
   const content = sameAsInitial ? initialContent : fetched;
 
+  // Active location: URL/cookie OR what the visitor clicked in the sidebar filter (applied.place)
+  const activePlace = applied?.place
+    ? (STATES.includes(applied.place) ? { kind: "state" as const, name: applied.place } : { kind: "city" as const, name: applied.place })
+    : active;
+
   // Filter placeSchools by BOTH location AND active school type/board
   const placeSchools = schools.filter((s) => {
-    const locMatch = !active || (active.kind === "state" ? stateFor(s) === active.name : s.city === active.name);
+    const locMatch = !activePlace ? true : (activePlace.kind === "state" ? stateFor(s) === activePlace.name : s.city === activePlace.name);
     const typeMatch = !activeType || s.type === activeType;
     const boardMatch = !activeBoard || s.board === activeBoard;
     return locMatch && typeMatch && boardMatch;
@@ -105,12 +110,9 @@ export default function SchoolsHero({
     : "schools";
 
   const rawBoards = Array.from(new Set(placeSchools.map((x) => BOARD_LABEL[x.board] ?? x.board)));
-  const cleanBoards = Array.from(new Set(rawBoards.map((b) => (b === "No Board" ? "IB Board" : b)).filter((b) => b && b !== "No Board")));
-  if (!cleanBoards.includes("IB Board") && (rawBoards.includes("No Board") || rawBoards.includes("IB"))) {
-    cleanBoards.push("IB Board");
-  }
+  const cleanBoards = Array.from(new Set(rawBoards.map((b) => (b === "No Board" || b === "IB" ? "IB Board" : b)).filter(Boolean)));
 
-  const view = resolveContent(active, content, placeSchools.length);
+  const view = resolveContent(activePlace || active, content, placeSchools.length);
   const adminPhotos = [content?.cover, ...(content?.photos ?? [])].filter((x): x is string => !!x);
 
   // a school type and/or board was picked: title + text speak about exactly that
@@ -120,7 +122,7 @@ export default function SchoolsHero({
   const heroDescription = (() => {
     if (activeType || picked) {
       const bName = activeBoard ? (BOARD_LABEL[activeBoard] ?? activeBoard) + " " : "";
-      const where = active ? `in ${active.name}` : "across India";
+      const where = activePlace ? `in ${activePlace.name}` : "across India";
       const lead = placeSchools.length > 0 ? `Explore ${placeSchools.length} ${bName}${typeNoun} ${where}` : `Explore ${bName}${typeNoun} ${where}`;
       const what =
         activeType === "Boarding School"
@@ -156,8 +158,8 @@ export default function SchoolsHero({
   })();
 
   const stats: [number, string][] = [
-    [placeSchools.length, active ? `${placeSchools.length === 1 ? typeNoun.slice(0, -1) : typeNoun} in ${active.name}` : `${typeNoun} listed`],
-    active?.kind === "city"
+    [placeSchools.length, activePlace ? `${placeSchools.length === 1 ? typeNoun.slice(0, -1) : typeNoun} in ${activePlace.name}` : `${typeNoun} listed`],
+    activePlace?.kind === "city"
       ? [new Set(placeSchools.map((s) => s.area)).size, "localities"]
       : [new Set(placeSchools.map((s) => s.city)).size, "cities"],
     [cleanBoards.length, "boards"],
@@ -185,7 +187,7 @@ export default function SchoolsHero({
   const label = "mb-2 block text-[11px] font-extrabold uppercase tracking-wider text-[#5C6A7B]";
 
   return (
-    <section className="relative z-30 bg-gradient-to-br from-[#E6F4FC] via-white to-[#FDE8EF]">
+    <section className="relative z-40 bg-gradient-to-br from-[#E6F4FC] via-white to-[#FDE8EF]">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -left-24 top-10 h-72 w-72 rounded-full bg-[#0795DC]/10 blur-3xl" />
         <div className="absolute -right-20 bottom-0 h-72 w-72 rounded-full bg-[#EC0E58]/10 blur-3xl" />
@@ -240,7 +242,7 @@ export default function SchoolsHero({
           </div>
 
           <HeroVisual
-            place={active?.name ?? ""}
+            place={activePlace?.name ?? ""}
             typeLabel={typeNoun}
             count={placeSchools.length}
             boards={cleanBoards}
@@ -252,12 +254,12 @@ export default function SchoolsHero({
         </div>
 
         {/* Search bar matching home page */}
-        <div className="mt-8 mx-auto max-w-2xl relative z-40">
-          <div className="rounded-3xl border border-[#D0DBE5] bg-white/95 p-3 shadow-lg shadow-[#0B2A47]/5 backdrop-blur-sm sm:p-4 relative z-40">
+        <div className="mt-8 mx-auto max-w-2xl relative z-50">
+          <div className="rounded-3xl border border-[#D0DBE5] bg-white/95 p-3 shadow-lg shadow-[#0B2A47]/5 backdrop-blur-sm sm:p-4 relative z-50">
             <SchoolSearchBar
               schools={schools}
               schoolType={activeType || type || "Day School"}
-              location={active?.name || (loc ? loc.split(":")[1] : "") || ""}
+              location={activePlace?.name || (loc ? loc.split(":")[1] : "") || ""}
               initialQuery={q}
             />
           </div>

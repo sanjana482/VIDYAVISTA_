@@ -78,9 +78,13 @@ export default function HeroVisual({ place, typeLabel, count, boards, rating, re
             </p>
             {boards.length > 0 && (
               <div className="mt-4 flex flex-wrap gap-1.5">
-                {boards
-                  .map((b) => (b === "No Board" ? "IB Board" : b))
-                  .filter((b) => b && b !== "No Board")
+                {Array.from(
+                  new Set(
+                    boards
+                      .map((b) => (b === "No Board" || b === "IB" ? "IB Board" : b))
+                      .filter((b) => b && b !== "No Board")
+                  )
+                )
                   .slice(0, 4)
                   .map((b) => (
                     <span key={b} className="rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-bold backdrop-blur">{b}</span>

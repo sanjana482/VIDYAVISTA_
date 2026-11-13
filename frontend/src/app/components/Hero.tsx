@@ -56,7 +56,7 @@ export default function Hero({ schools = [] }: { schools?: SearchSchool[] }) {
   }
 
   return (
-    <section className="relative z-30 bg-gradient-to-br from-[#DDEAF1] via-[#E6F0F8] to-[#F6DDE5]">
+    <section className="relative z-40 bg-gradient-to-br from-[#DDEAF1] via-[#E6F0F8] to-[#F6DDE5]">
       {/* Colourful decorative shapes */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden -z-10">
         <div className="absolute -right-24 -top-20 h-96 w-96 rounded-full bg-[#FF9DBB]/50 blur-3xl" />
@@ -147,7 +147,7 @@ export default function Hero({ schools = [] }: { schools?: SearchSchool[] }) {
             </button>
 
             {/* school-name search: a round icon that opens into a bar */}
-            <div className="mt-4 relative z-40">
+            <div className="mt-4 relative z-50">
               <SchoolSearchBar schools={schools} schoolType={schoolType} location={selectedLocation} />
             </div>
           </div>

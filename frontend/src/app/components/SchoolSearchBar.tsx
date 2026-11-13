@@ -140,7 +140,7 @@ export default function SchoolSearchBar({
 
         {/* name suggestions */}
         {hits.length > 0 && (
-          <ul className="vv-pop absolute left-0 right-0 top-full z-[1000] mt-2 max-h-80 overflow-y-auto rounded-2xl border border-[#D9E0E8] bg-white py-2 shadow-2xl">
+          <ul className="vv-pop absolute left-0 right-0 top-full z-[9999] mt-2 max-h-80 overflow-y-auto rounded-2xl border border-[#D9E0E8] bg-white py-2 shadow-2xl">
             {hits.map((s) => (
               <li key={s.id}>
                 <button
