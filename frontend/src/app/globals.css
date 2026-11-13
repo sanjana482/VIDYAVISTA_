@@ -135,20 +135,22 @@ img { max-width: 100%; }
 }
 @keyframes vv-sheen { from { translate: -120px 0; opacity: 0; } 30% { opacity: 1; } to { translate: 120px 0; opacity: 0; } }
 
-/* ---------- featured carousel (centre card, neighbours peek out, slides sideways) ---------- */
-.vv-stage { position: relative; height: 40rem; }
-@media (min-width: 768px) { .vv-stage { height: 27rem; } }
+/* ---------- featured carousel: elegant size, smooth coverflow ---------- */
+.vv-stage { position: relative; height: 32rem; }
+@media (min-width: 640px) { .vv-stage { height: 24rem; } }
+@media (min-width: 768px) { .vv-stage { height: 21rem; } }
+@media (min-width: 1024px) { .vv-stage { height: 19.5rem; } }
 .vv-slide {
-  position: absolute; left: 50%; top: 0; height: 100%; width: min(86%, 940px);
-  translate: calc(-50% + var(--o, 0) * 104%) 0;
-  scale: calc(1 - var(--a, 0) * 0.1);
+  position: absolute; left: 50%; top: 0; height: 100%; width: min(92%, 780px);
+  translate: calc(-50% + var(--o, 0) * 103%) 0;
+  scale: calc(1 - var(--a, 0) * 0.08);
   z-index: calc(10 - var(--a, 0) * 5);
-  transition: translate 0.7s cubic-bezier(0.22, 1, 0.36, 1), scale 0.7s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.5s ease, filter 0.5s ease;
+  transition: translate 0.6s cubic-bezier(0.22, 1, 0.36, 1), scale 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.4s ease, filter 0.4s ease;
 }
-@media (min-width: 768px) { .vv-slide { width: min(80%, 940px); } }
-.vv-slide[data-side] { opacity: 0.55; filter: saturate(0.7); }
-.vv-slide[data-side]:hover { opacity: 0.8; }
+@media (min-width: 768px) { .vv-slide { width: min(85%, 780px); } }
+.vv-slide[data-side] { opacity: 0.42; filter: saturate(0.65) blur(0.5px); }
+.vv-slide[data-side]:hover { opacity: 0.75; filter: none; }
 .vv-slide[data-far] { opacity: 0; pointer-events: none; }
 .vv-slide[data-jump] { transition: none; opacity: 0; }
 @media (prefers-reduced-motion: reduce) { .vv-slide { transition-duration: 0.01ms; } }
@@ -163,17 +165,17 @@ img { max-width: 100%; }
   .vv-ribbon-host:hover .vv-corner::after { display: none; }
 }
 
-/* ---------- highest rated: cards grow in the middle, shrink / tilt / fade towards the edges ---------- */
-.vv-rate-track { perspective: 1200px; }
+/* ---------- highest rated: modern cards with smooth hover lift ---------- */
+.vv-rate-track { scroll-behavior: smooth; }
 .vv-rate-card {
-  transform: translateY(calc(var(--p, 0) * 16px)) scale(calc(1 - var(--p, 0) * 0.08)) rotateY(calc(var(--s, 0) * -9deg));
-  opacity: calc(1 - var(--p, 0) * 0.4);
-  box-shadow: 0 calc(18px - var(--p, 0) * 12px) 40px -22px rgba(11, 42, 71, calc(0.35 - var(--p, 0) * 0.25));
-  transition: opacity 0.2s linear, box-shadow 0.2s linear;
-  will-change: transform, opacity;
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease, border-color 0.3s ease;
 }
-.vv-rate-card:hover { opacity: 1; }
-@media (prefers-reduced-motion: reduce) { .vv-rate-card { transform: none; opacity: 1; } }
+.vv-rate-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 35px -15px rgba(200, 16, 79, 0.15);
+  border-color: rgba(236, 14, 88, 0.35);
+}
+@media (prefers-reduced-motion: reduce) { .vv-rate-card { transform: none; } }
 
 /* ---------- desktop: comfortable 105% laptop zoom feel (95% root font scale) ---------- */
 @media (min-width: 1024px) { html { font-size: 95%; } }
