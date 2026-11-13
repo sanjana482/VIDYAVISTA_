@@ -1,4 +1,3 @@
-
 import type { Metadata } from "next";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
@@ -17,8 +16,8 @@ import { fetchAllSchoolsSafe } from "./lib/schoolsApi";
 import { stateFor } from "./data/schools";
 import Reveal from "./components/Reveal";
 
-// the homepage re-reads schools / ticks / locations from the admin every minute
-export const revalidate = 604800;
+// Cached for 24 hours (86400s) to prevent Vercel ISR spikes; use /api/revalidate for instant updates.
+export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: { absolute: "VidyaVista | Find the Best Day & Boarding Schools in India" },

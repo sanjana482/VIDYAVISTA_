@@ -21,6 +21,10 @@ export type School = {
   topRated?: boolean;
   phone: string;
   image: string;
+  logo?: string;
+  logoUrl?: string;
+  logo_url?: string;
+  brochureUrl?: string;
   // ---- optional profile content edited in /admin (the website falls back to generated text) ----
   about?: string;
   highlights?: string[];
@@ -34,6 +38,7 @@ export type School = {
   // ---- set from the Django admin ----
   isFeatured?: boolean;
   isRecommended?: boolean;
+  verified?: boolean;
   owner?: SchoolOwner | null;
   social?: Partial<Record<"youtube" | "facebook" | "instagram" | "x" | "linkedin" | "other", string>>;
   reviewList?: { name: string; role: string; rating: number; text: string; date: string }[];
@@ -58,11 +63,11 @@ const img = (id: string) =>
 
 export const CITIES = ["Mumbai", "Delhi", "Bengaluru", "Pune", "Hyderabad", "Chennai"] as const;
 export const TYPES = ["Day School", "Boarding School", "Play School"] as const;
-export const BOARDS = ["CBSE", "State Board", "ICSE", "No Board", "Cambridge", "IB", "NIOS"] as const;
+export const BOARDS = ["CBSE", "State Board", "ICSE", "Cambridge", "IB", "NIOS"] as const;
 /** what parents see (the stored value stays short, e.g. "ICSE") */
 export const BOARD_LABEL: Record<string, string> = {
-  CBSE: "CBSE", "State Board": "State Board", ICSE: "ICSE / CISCE", "No Board": "No Board",
-  Cambridge: "Cambridge / IGCSE", IB: "IB Board", NIOS: "NIOS",
+  CBSE: "CBSE", "State Board": "State Board", ICSE: "ICSE / CISCE",
+  Cambridge: "Cambridge / IGCSE", IB: "IB Board", NIOS: "NIOS", "No Board": "IB Board",
 };
 export const GENDERS = ["Co-ed", "Girls", "Boys"] as const;
 

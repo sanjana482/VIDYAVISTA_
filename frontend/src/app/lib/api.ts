@@ -2,7 +2,12 @@
 // (e.g. http://127.0.0.1:8000/api).
 import { readPreference } from "./preferences";
 
-export const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api").replace(/\/$/, "");
+let rawUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api").replace(/\/$/, "");
+if (!rawUrl.endsWith("/api")) {
+  rawUrl += "/api";
+}
+export const API_URL = rawUrl;
+export const BACKEND_ORIGIN = API_URL.replace(/\/api$/, "");
 
 export type EnquiryInput = {
   schoolName: string;
@@ -20,9 +25,13 @@ export type EnquiryInput = {
 
 export async function postEnquiry(data: EnquiryInput): Promise<{ ok: boolean }> {
   const pref = readPreference();
-  const res = await fetch(`${API_URL}/enquiries`, {
+  const token = typeof window !== "undefined" ? localStorage.getItem("vv_portal_token") : null;
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  const res = await fetch(`${API_URL}/enquiries/`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify({
       ...data,
       source: typeof window !== "undefined" ? window.location.pathname : "",

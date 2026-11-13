@@ -34,4 +34,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-src_backup_*/
+
+apply_*.py
+match_*.py
+export_*.py
+make_review_csv.py
+check_counts.py
+*.csv
+src_backup*
+.env

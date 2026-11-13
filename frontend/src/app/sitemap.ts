@@ -2,10 +2,10 @@ import type { MetadataRoute } from "next";
 import { citiesOf, stateFor, statesOf } from "./data/schools";
 import { fetchAllSchoolsSafe } from "./lib/schoolsApi";
 import { typePath } from "./lib/links";
-import { SECTIONS, SITE_URL, cityPath, schoolPath, schoolSectionPath, statePath } from "./lib/seo";
+import { SITE_URL, cityPath, schoolPath, statePath } from "./lib/seo";
 
-// Auto-generated at /sitemap.xml from the live schools in the database.
-export const revalidate = 604800;
+// Rebuilt once per 24 hours; omits the 7x duplicate sub-tab URLs per school to prevent 70k+ unnecessary Vercel ISR builds!
+export const revalidate = 86400;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const schools = await fetchAllSchoolsSafe();
@@ -26,7 +26,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly" as const,
       priority: 0.8,
     })),
-    // /day-schools/pune etc: only combinations that really have schools
     ...Array.from(
       new Set(schools.flatMap((s) => [`${s.type}|${s.city}`, ...(stateFor(s) ? [`${s.type}|${stateFor(s)}`] : [])]))
     ).map((k) => {
@@ -39,13 +38,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly" as const,
       priority: 0.7,
     })),
-        ...schools.flatMap((s) =>
-      SECTIONS.map((sec) => ({
-        url: `${SITE_URL}${schoolSectionPath(s, sec)}`,
-        lastModified: now,
-        changeFrequency: "weekly" as const,
-        priority: 0.6,
-      }))
-    ),
   ];
 }

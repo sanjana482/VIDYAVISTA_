@@ -23,13 +23,11 @@ export type LocationContent = {
 export type IndexCity = { name: string; slug: string; count: number; types: Record<string, number>; boards: Record<string, number> };
 export type IndexState = { state: string; slug: string; count: number; types: Record<string, number>; boards: Record<string, number>; cities: IndexCity[] };
 
-const unsplash = (id: string) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=900&q=80`;
 export const DEFAULT_PHOTOS = ["/images/location-1.jpg", "/images/location-2.jpg", "/images/location-3.jpg"];
 
 export const DEFAULT_DESCRIPTION =
   "Choosing a school is easier when you can compare boards, annual fees, facilities and parent feedback in one place. VidyaVista lists CBSE, ICSE, IB, Cambridge and State Board schools across major Indian cities, with day, boarding and day-cum-boarding options.";
 
-/** what the page shows when the admin has not written anything for this place yet */
 export function resolveContent(loc: ActiveLocation, content: LocationContent | null, count?: number) {
   if (!loc) {
     return {
@@ -55,12 +53,11 @@ export function resolveContent(loc: ActiveLocation, content: LocationContent | n
   };
 }
 
-/** always 3 photos: the admin's first, the default school photos fill the rest */
 export const fillPhotos = (photos: string[]) => [...photos, ...DEFAULT_PHOTOS.filter((p) => !photos.includes(p))].slice(0, 3);
 
 export async function fetchLocationContent(kind: LocationKind, name: string): Promise<LocationContent | null> {
   try {
-    const res = await fetch(`${API_URL}/locations/${kind}/${slugify(name)}`, { next: { revalidate: 604800 } });
+    const res = await fetch(`${API_URL}/locations/${kind}/${slugify(name)}`, { next: { revalidate: 86400 } });
     if (!res.ok) return null;
     return (await res.json()).data as LocationContent;
   } catch {
@@ -70,7 +67,7 @@ export async function fetchLocationContent(kind: LocationKind, name: string): Pr
 
 export async function fetchLocationIndex(): Promise<IndexState[]> {
   try {
-    const res = await fetch(`${API_URL}/locations/index`, { next: { revalidate: 604800 } });
+    const res = await fetch(`${API_URL}/locations/index`, { next: { revalidate: 86400 } });
     if (!res.ok) return [];
     return (await res.json()).data as IndexState[];
   } catch {
@@ -78,13 +75,11 @@ export async function fetchLocationIndex(): Promise<IndexState[]> {
   }
 }
 
-
 export type HomePlace = { name: string; image: string };
 
-/** states + cities ticked "show on homepage" in the admin (only those that have a photo) */
 export async function fetchHomeLocations(): Promise<{ states: HomePlace[]; cities: HomePlace[] }> {
   try {
-    const res = await fetch(`${API_URL}/locations/?page_size=100`, { next: { revalidate: 604800 } });
+    const res = await fetch(`${API_URL}/locations/?page_size=100`, { next: { revalidate: 86400 } });
     if (!res.ok) return { states: [], cities: [] };
     const json = await res.json();
     const rows = (json.results ?? json.data ?? []) as { kind: LocationKind; name: string; cover?: string; show_on_home?: boolean }[];

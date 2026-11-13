@@ -22,6 +22,7 @@ function useCountUp(target: number, ms = 900) {
 
 type Props = {
   place: string; // "" = all India
+  typeLabel?: string;
   count: number;
   boards: string[];
   rating: number; // 0 = no reviews yet
@@ -32,7 +33,7 @@ type Props = {
 
 const rupee = (n: number) => "₹" + n.toLocaleString("en-IN");
 
-export default function HeroVisual({ place, count, boards, rating, reviews, minFee, photos = [] }: Props) {
+export default function HeroVisual({ place, typeLabel, count, boards, rating, reviews, minFee, photos = [] }: Props) {
   const shown = useCountUp(count);
   const where = place || "India";
 
@@ -72,11 +73,17 @@ export default function HeroVisual({ place, count, boards, rating, reviews, minF
           </span>
           <div>
             <p className="text-6xl font-extrabold leading-none tracking-tight">{shown}</p>
-            <p className="mt-2 text-sm font-semibold text-white/90">{count === 1 ? "school" : "schools"} in {where}</p>
+            <p className="mt-2 text-sm font-semibold text-white/90">
+              {typeLabel ? `${typeLabel} in ${where}` : `${count === 1 ? "school" : "schools"} in ${where}`}
+            </p>
             {boards.length > 0 && (
               <div className="mt-4 flex flex-wrap gap-1.5">
-                {boards.slice(0, 4).map((b) => (
-                  <span key={b} className="rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-bold backdrop-blur">{b}</span>
+                {boards
+                  .map((b) => (b === "No Board" ? "IB Board" : b))
+                  .filter((b) => b && b !== "No Board")
+                  .slice(0, 4)
+                  .map((b) => (
+                    <span key={b} className="rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-bold backdrop-blur">{b}</span>
                 ))}
               </div>
             )}

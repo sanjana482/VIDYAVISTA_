@@ -59,6 +59,14 @@ export async function uploadImage(file: File): Promise<string> {
   return ((await res.json()) as { url: string }).url;
 }
 
+// Excel (.xlsx) file -> rows of text. The server reads the workbook; CSV files are read in the browser.
+export async function uploadSheet(file: File): Promise<string[][]> {
+  const fd = new FormData();
+  fd.append("file", file);
+  const res = await request("/schools/sheet-to-rows", { method: "POST", body: fd }, true);
+  return ((await res.json()) as { table: string[][] }).table;
+}
+
 export async function downloadFile(path: string, filename: string) {
   const res = await request(path);
   const url = URL.createObjectURL(await res.blob());

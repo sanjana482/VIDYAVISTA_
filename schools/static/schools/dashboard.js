@@ -1,11 +1,10 @@
-/* VidyaVista admin dashboard: React (UMD) + Tailwind (CDN) + Chart.js. No build step. */
+/* VidyaVista Boss Admin Dashboard: React (UMD) + Tailwind (CDN) + Chart.js. */
 (function () {
   const { useState, useEffect, useRef } = React;
   const html = htm.bind(React.createElement);
   const fmt = (n) => Number(n || 0).toLocaleString("en-IN");
   const PALETTE = ["#0795DC", "#EC0E58", "#6ABEEE", "#F5A623", "#0A5C91", "#8B5CF6", "#10B981", "#94A3B8"];
 
-  /* ---------- small building blocks ---------- */
   const ICONS = {
     school: "M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6",
     mail: "M3 6h18v12H3zM3 7l9 6 9-6",
@@ -14,13 +13,15 @@
     check: "M5 12.5l4.5 4.5L19 7.5",
     plus: "M12 5v14M5 12h14",
     upload: "M12 16V4m0 0l-4 4m4-4l4 4M4 20h16",
-    up: "M7 17l9-9M8 8h8v8",
     arrow: "M5 12h14m0 0l-5-5m5 5l-5 5",
     sparkle: "M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z",
     inbox: "M3 13l3-8h12l3 8v6H3zM3 13h5l1 3h6l1-3h5",
+    user: "M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75",
+    bolt: "M13 2L3 14h9l-1 8 10-12h-9l1-8z",
+    key: "M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4",
   };
   const Icon = ({ name, className = "h-5 w-5" }) => html`
-    <svg className=${className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d=${ICONS[name]} /></svg>`;
+    <svg className=${className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d=${ICONS[name] || ICONS.sparkle} /></svg>`;
 
   const Card = ({ title, subtitle, action, children, className = "" }) => html`
     <section className=${"rounded-2xl border border-slate-200 bg-white p-5 shadow-sm " + className}>
@@ -42,7 +43,7 @@
     green: "bg-emerald-50 text-emerald-600",
     violet: "bg-violet-50 text-violet-600",
   };
-  const Stat = ({ label, value, hint, icon, tone = "blue", href, trend }) => html`
+  const Stat = ({ label, value, prefix = "", hint, icon, tone = "blue", href, trend }) => html`
     <a href=${href} className="group block rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-md">
       <div className="flex items-center justify-between">
         <span className=${"flex h-10 w-10 items-center justify-center rounded-xl " + TONES[tone]}><${Icon} name=${icon} /></span>
@@ -51,8 +52,8 @@
             ${trend >= 0 ? "▲" : "▼"} ${Math.abs(trend)}%
           </span>`}
       </div>
-      <p className="mt-4 text-3xl font-bold tracking-tight text-slate-900">${fmt(value)}</p>
-      <p className="mt-1 text-sm font-medium text-slate-600">${label}</p>
+      <p className="mt-4 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">${prefix}${fmt(value)}</p>
+      <p className="mt-1 text-sm font-semibold text-slate-700">${label}</p>
       ${hint && html`<p className="mt-0.5 text-xs text-slate-400">${hint}</p>`}
     </a>`;
 
@@ -69,8 +70,6 @@
   }
 
   const hasData = (d) => d && d.values && d.values.some((v) => v > 0);
-
-  /* ---------- chart configs ---------- */
   const gridColor = "rgba(148,163,184,.18)";
   const lineConfig = (d) => ({
     type: "line",
@@ -98,9 +97,8 @@
     },
   });
 
-  /* ---------- page ---------- */
   const STATUS_STYLE = {
-    new: "bg-sky-50 text-sky-700", contacted: "bg-amber-50 text-amber-700",
+    new: "bg-amber-50 text-amber-700", contacted: "bg-sky-50 text-sky-700",
     converted: "bg-emerald-50 text-emerald-700", closed: "bg-slate-100 text-slate-600",
   };
   const ViewAll = ({ href }) => html`<a href=${href} className="inline-flex items-center gap-1 text-xs font-semibold text-sky-600 hover:text-sky-800">View all <${Icon} name="arrow" className="h-3.5 w-3.5" /></a>`;
@@ -139,29 +137,52 @@
     return html`
       <div className="space-y-6">
         <!-- header -->
-        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-gradient-to-r from-sky-700 via-sky-600 to-sky-500 p-6 text-white shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-gradient-to-r from-[#0A5C91] via-[#0795DC] to-sky-500 p-6 text-white shadow-sm">
           <div>
-            <p className="text-sm text-sky-100">${greet}, ${data.user}</p>
-            <h1 className="mt-1 text-2xl font-bold tracking-tight">VidyaVista dashboard</h1>
-            <p className="mt-1 text-sm text-sky-100">${fmt(k.schools)} schools · ${fmt(k.newEnquiries)} new enquiries waiting · ${fmt(k.pendingReviews)} reviews to approve</p>
+            <p className="text-sm text-sky-100">${greet}, ${data.user} (Administrator)</p>
+            <h1 className="mt-1 text-2xl font-bold tracking-tight">VidyaVista Administration Portal</h1>
+            <p className="mt-1 text-sm text-sky-100">${fmt(k.schools)} Schools · ${fmt(k.schoolAccounts)} School Owners · ${fmt(k.parentAccounts)} Parents · ${fmt(k.enquiries)} Leads</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <a href=${L.addSchool} className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-sky-700 shadow-sm hover:bg-sky-50"><${Icon} name="plus" className="h-4 w-4" />Add school</a>
-            <a href=${L.importCsv} className="inline-flex items-center gap-2 rounded-xl border border-white/40 px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/10"><${Icon} name="upload" className="h-4 w-4" />Import CSV</a>
+            <a href=${L.createSchoolLogin} className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-[#0A5C91] shadow-sm hover:bg-sky-50"><${Icon} name="key" className="h-4 w-4" />Create School Login</a>
+            <a href=${L.assignPlan} className="inline-flex items-center gap-2 rounded-xl bg-[#EC0E58] px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:opacity-95"><${Icon} name="bolt" className="h-4 w-4" />Assign Plan / 100 Leads</a>
+            <a href=${L.addSchool} className="inline-flex items-center gap-2 rounded-xl border border-white/40 px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/10"><${Icon} name="plus" className="h-4 w-4" />Add School</a>
           </div>
         </div>
 
-        <!-- KPIs -->
+        <!-- KPIs Row 1: Portal Accounts, Plans & Leads -->
         <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-          <${Stat} label="Total schools" value=${k.schools} hint=${fmt(k.active) + " active · +" + fmt(k.newSchools30) + " in 30 days"} icon="school" tone="blue" href=${L.schools} />
-          <${Stat} label="Enquiries" value=${k.enquiries} hint=${fmt(k.enquiries7) + " in the last 7 days"} icon="mail" tone="pink" href=${L.enquiries} trend=${trend} />
-          <${Stat} label="Reviews to approve" value=${k.pendingReviews} hint=${fmt(k.approvedReviews) + " approved so far"} icon="star" tone="amber" href=${L.reviews} />
-          <${Stat} label="Featured / Recommended" value=${k.featured + k.recommended} hint=${fmt(k.featured) + " featured · " + fmt(k.recommended) + " recommended"} icon="sparkle" tone="violet" href=${L.schools} />
+          <${Stat} label="School Owners & Approvals" value=${k.schoolAccounts} hint=${fmt(k.pendingClaims) + " owner pending · " + fmt(k.pendingSchoolLinks || 0) + " school pending · " + fmt(k.pendingEdits || 0) + " edits pending"} icon="school" tone="blue" href=${L.schoolAccounts} />
+          <${Stat} label="Parent / Student Accounts" value=${k.parentAccounts} hint="Registered parents & education preferences" icon="user" tone="pink" href=${L.parentAccounts} />
+          <${Stat} label="Active Subscriptions" value=${k.activePlans} hint=${"Rs. " + fmt(k.totalRevenue) + " total revenue (" + fmt(k.invoicesCount) + " GST invoices)"} icon="bolt" tone="green" href=${L.memberships} />
+          <${Stat} label="Parent Leads / Enquiries" value=${k.enquiries} hint=${fmt(k.unlockedLeads) + " unlocked by schools · " + fmt(k.newEnquiries) + " new"} icon="mail" tone="violet" href=${L.enquiries} trend=${trend} />
         </div>
+
+        <!-- KPIs Row 2: Directory Stats -->
+        <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+          <${Stat} label="Total Listed Schools" value=${k.schools} hint=${fmt(k.active) + " active · +" + fmt(k.newSchools30) + " in 30 days"} icon="school" tone="blue" href=${L.schools} />
+          <${Stat} label="Featured & Recommended" value=${k.featured + k.recommended} hint=${fmt(k.featured) + " featured · " + fmt(k.recommended) + " recommended"} icon="sparkle" tone="violet" href=${L.schools} />
+          <${Stat} label="Reviews to Approve" value=${k.pendingReviews} hint=${fmt(k.approvedReviews) + " approved so far"} icon="star" tone="amber" href=${L.reviews} />
+          <${Stat} label="GST Sales Revenue" value=${k.totalRevenue} prefix="Rs. " hint="Click to view & print GST Invoices" icon="check" tone="green" href=${L.invoices} />
+        </div>
+
+        <!-- Quick Actions -->
+        <${Card} title="Quick Administration Actions (Approvals, Passwords, Plans & Leads)">
+          <div className="flex flex-wrap gap-2.5">
+            <${Button} href=${L.schoolAccounts} icon="check" primary=${true}>Review Owner, School & Edit Approvals<//>
+            <${Button} href=${L.createSchoolLogin} icon="key" primary=${true}>Create Login ID/Password for a School<//>
+            <${Button} href=${L.assignPlan} icon="bolt">Assign 1-Year Plan / +100 Lead Top-up<//>
+            <${Button} href=${L.parentAccounts} icon="user">All Parent Accounts (${fmt(k.parentAccounts)})<//>
+            <${Button} href=${L.plans} icon="sparkle">Edit Plans & Pricing<//>
+            <${Button} href=${L.invoices} icon="check">GST Invoices & Sales CSV<//>
+            <${Button} href=${L.users} icon="key">Reset Any User Password<//>
+            <${Button} href=${L.importCsv} icon="upload">Import Schools (CSV)<//>
+          </div>
+        <//>
 
         <!-- charts row 1 -->
         <div className="grid gap-4 xl:grid-cols-3">
-          <${Card} title="Enquiries" subtitle="Last 30 days" className="xl:col-span-2" action=${html`<${ViewAll} href=${L.enquiries} />`}>
+          <${Card} title="Parent Leads / Enquiries" subtitle="Last 30 days" className="xl:col-span-2" action=${html`<${ViewAll} href=${L.enquiries} />`}>
             ${hasData(data.enquiriesDaily) ? html`<${ChartCanvas} config=${lineConfig(data.enquiriesDaily)} />` : html`<${Empty} text="No enquiries in the last 30 days" />`}
           <//>
           <${Card} title="Enquiry status" subtitle="All time">
@@ -169,31 +190,15 @@
           <//>
         </div>
 
-        <!-- charts row 2 -->
-        <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
-          <${Card} title="Schools by state" subtitle="Top 8 states">
-            ${hasData(data.byState) ? html`<${ChartCanvas} config=${barConfig(data.byState)} />` : html`<${Empty} />`}
-          <//>
-          <${Card} title="Schools by board"2
-            ${hasData(data.byBoard) ? html`<${ChartCanvas} config=${doughnutConfig(data.byBoard)} />` : html`<${Empty} />`}
-          <//>
-          <${Card} title="Schools by type">
-            ${hasData(data.byType) ? html`<${ChartCanvas} config=${doughnutConfig(data.byType)} />` : html`<${Empty} />`}
-          <//>
-          <${Card} title="Admission status">
-            ${hasData(data.byAdmission) ? html`<${ChartCanvas} config=${doughnutConfig(data.byAdmission)} />` : html`<${Empty} />`}
-          <//>
-        </div>
-
         <!-- tables -->
         <div className="grid gap-4 xl:grid-cols-3">
-          <${Card} title="Recent enquiries" className="xl:col-span-2" action=${html`<${ViewAll} href=${L.enquiries} />`}>
+          <${Card} title="Recent Parent Leads (Masked vs Unlocked)" className="xl:col-span-2" action=${html`<${ViewAll} href=${L.enquiries} />`}>
             ${data.recentEnquiries.length === 0 ? html`<${Empty} text="No enquiries yet" />` : html`
               <div className="overflow-x-auto">
                 <table className="text-sm">
                   <thead><tr className="border-b border-slate-100 text-left text-xs uppercase tracking-wide text-slate-400">
                     <th className="pb-2 pr-3 font-semibold">Parent</th><th className="pb-2 pr-3 font-semibold">School</th>
-                    <th className="pb-2 pr-3 font-semibold">Mobile</th><th className="pb-2 pr-3 font-semibold">Status</th><th className="pb-2 font-semibold">Received</th>
+                    <th className="pb-2 pr-3 font-semibold">Mobile</th><th className="pb-2 pr-3 font-semibold">Lead Status</th><th className="pb-2 font-semibold">Received</th>
                   </tr></thead>
                   <tbody>
                     ${data.recentEnquiries.map((e, i) => html`
@@ -237,17 +242,6 @@
             <//>
           </div>
         </div>
-
-        <!-- quick links -->
-        <${Card} title="Quick actions">
-          <div className="flex flex-wrap gap-2">
-            <${Button} href=${L.addSchool} icon="plus" primary=${true}>Add school<//>
-            <${Button} href=${L.importCsv} icon="upload">Import schools (CSV)<//>
-            <${Button} href=${L.locations} icon="pin">Edit city & state pages<//>
-            <${Button} href=${L.enquiries} icon="inbox">Open enquiries<//>
-            <${Button} href=${L.reviews} icon="star">Approve reviews<//>
-          </div>
-        <//>
       </div>`;
   }
 

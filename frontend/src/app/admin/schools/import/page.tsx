@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
-import { post } from "../../_lib/api";
+import { downloadFile, post, uploadSheet } from "../../_lib/api";
 import { parseCsv, toCsv } from "../../_lib/csv";
 import { inr } from "../../_lib/constants";
 import { Card, PageHeader, Spinner, btn, cx, useToast } from "../../_components/ui";
@@ -75,6 +75,7 @@ export default function ImportSchools() {
   const [rows, setRows] = useState<Row[]>([]);
   const [unknown, setUnknown] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  const [reading, setReading] = useState(false);
   const [done, setDone] = useState(0);
   const [result, setResult] = useState<Result | null>(null);
 
@@ -90,11 +91,39 @@ export default function ImportSchools() {
     URL.revokeObjectURL(url);
   }
 
+  async function excelTemplate() {
+    try {
+      await downloadFile("/schools/template.xlsx", "vidyavista-schools-template.xlsx");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not download the template");
+    }
+  }
+
   async function onFile(file?: File) {
     if (!file) return;
     setResult(null);
     setFileName(file.name);
-    const table = parseCsv(await file.text());
+    if (/\.xls$/i.test(file.name)) {
+      setRows([]);
+      setUnknown([]);
+      setFileName("");
+      toast.error("Old .xls files are not supported. In Excel use File → Save As → Excel Workbook (.xlsx)");
+      return;
+    }
+    let table: string[][];
+    setReading(true);
+    try {
+      // .xlsx is read by the server, .csv right here in the browser
+      table = /\.(xlsx|xlsm)$/i.test(file.name) ? await uploadSheet(file) : parseCsv(await file.text());
+    } catch (e) {
+      setRows([]);
+      setUnknown([]);
+      setFileName("");
+      toast.error(e instanceof Error ? e.message : "Could not read the file");
+      return;
+    } finally {
+      setReading(false);
+    }
     if (table.length < 2) {
       setRows([]);
       setUnknown([]);
@@ -155,7 +184,7 @@ export default function ImportSchools() {
   return (
     <>
       <Link href="/admin/schools" className="mb-3 inline-block text-sm font-bold text-[#0A5C91] hover:underline">← Back to schools</Link>
-      <PageHeader title="Bulk import" subtitle="Add many schools at once from a CSV sheet. Photos, fees, facilities and contact details come along." />
+      <PageHeader title="Bulk import" subtitle="Add many schools at once from an Excel or CSV sheet. Photos, fees, facilities and contact details come along." />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="p-6 lg:col-span-2">
@@ -165,18 +194,21 @@ export default function ImportSchools() {
               <div>
                 <p className="font-bold">Download the template</p>
                 <p className="mb-3 text-sm text-[#5C6A7B]">One school per row. Only <b>name</b> and <b>city</b> are compulsory, every other column is optional. A sheet that already uses these column names works as it is.</p>
-                <button onClick={template} className={btn.ghost}>⬇ Download CSV template</button>
+                <div className="flex flex-wrap gap-2">
+                  <button onClick={excelTemplate} className={btn.ghost}>⬇ Download Excel template (.xlsx)</button>
+                  <button onClick={template} className={btn.ghost}>⬇ Download CSV template</button>
+                </div>
               </div>
             </li>
             <li className="flex gap-4">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0795DC] font-extrabold text-white">2</span>
               <div className="flex-1">
                 <p className="font-bold">Upload your file</p>
-                <p className="mb-3 text-sm text-[#5C6A7B]">In Excel: File → Save As → CSV UTF-8. Up to {MAX_ROWS} schools at a time.</p>
-                <input ref={fileRef} type="file" accept=".csv,text/csv" hidden onChange={(e) => { onFile(e.target.files?.[0]); e.target.value = ""; }} />
-                <button onClick={() => fileRef.current?.click()} disabled={busy} className="flex w-full flex-col items-center rounded-2xl border-2 border-dashed border-[#B9D7EA] bg-[#F6FAFD] px-4 py-8 text-center transition hover:border-[#0795DC] hover:bg-[#E1F1FA] disabled:opacity-60">
+                <p className="mb-3 text-sm text-[#5C6A7B]">Upload the Excel file (.xlsx) as it is, or a CSV (UTF-8). Up to {MAX_ROWS} schools at a time.</p>
+                <input ref={fileRef} type="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden onChange={(e) => { onFile(e.target.files?.[0]); e.target.value = ""; }} />
+                <button onClick={() => fileRef.current?.click()} disabled={busy || reading} className="flex w-full flex-col items-center rounded-2xl border-2 border-dashed border-[#B9D7EA] bg-[#F6FAFD] px-4 py-8 text-center transition hover:border-[#0795DC] hover:bg-[#E1F1FA] disabled:opacity-60">
                   <span className="text-3xl">📄</span>
-                  <span className="mt-2 font-bold text-[#0A5C91]">{fileName || "Click to choose a CSV file"}</span>
+                  <span className="mt-2 font-bold text-[#0A5C91]">{reading ? "Reading file…" : fileName || "Click to choose an Excel or CSV file"}</span>
                 </button>
               </div>
             </li>

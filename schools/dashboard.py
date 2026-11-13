@@ -1,13 +1,17 @@
-"""JSON data for the admin dashboard (staff only, wired in config/urls.py)."""
+"""JSON data for the Boss Admin dashboard (staff only, wired in config/urls.py)."""
 from datetime import timedelta
 
-from django.db.models import Count
+from django.db.models import Count, Sum
 from django.db.models.functions import TruncDate
 from django.http import JsonResponse
 from django.urls import reverse
 from django.utils import timezone
 
-from .models import ADMISSION_STATUS, BOARDS, Enquiry, LocationPage, Review, School
+from .models import (
+    ADMISSION_STATUS, BOARDS, Enquiry, Invoice, LocationPage,
+    ParentProfile, Plan, Review, School, SchoolAccount, SchoolMembership,
+)
+from .portal_api import ensure_default_plans
 
 BOARD_LABEL = dict(BOARDS)
 ADMISSION_LABEL = dict(ADMISSION_STATUS)
@@ -22,6 +26,7 @@ def _pairs(qs, key, labels=None, limit=None):
 
 
 def dashboard_data(request):
+    ensure_default_plans()
     today = timezone.localdate()
     start30 = today - timedelta(days=29)
     schools = School.objects.all()
@@ -43,7 +48,8 @@ def dashboard_data(request):
     recent_enquiries = [
         {
             "name": e.parentName, "school": e.schoolName, "mobile": e.mobile, "cls": e.className,
-            "status": STATUS_LABEL.get(e.status, e.status), "statusKey": e.status,
+            "status": "Unlocked" if e.is_unlocked else "Masked",
+            "statusKey": "converted" if e.is_unlocked else "new",
             "date": timezone.localtime(e.created_at).strftime("%d %b, %I:%M %p"),
             "url": reverse("admin:schools_enquiry_change", args=[e.pk]),
         }
@@ -66,6 +72,9 @@ def dashboard_data(request):
         for r in Review.objects.filter(is_approved=False).select_related("school").order_by("-created_at")[:5]
     ]
 
+    total_revenue = Invoice.objects.filter(status="paid").aggregate(s=Sum("total_amount"))["s"] or 0
+    active_plans = SchoolMembership.objects.filter(status="active", end_date__gte=today).count()
+
     data = {
         "kpis": {
             "schools": schools.count(),
@@ -75,11 +84,20 @@ def dashboard_data(request):
             "newSchools30": schools.filter(created_at__date__gte=start30).count(),
             "enquiries": Enquiry.objects.count(),
             "newEnquiries": Enquiry.objects.filter(status="new").count(),
+            "unlockedLeads": Enquiry.objects.filter(is_unlocked=True).count(),
             "enquiries7": last7,
             "enquiriesPrev7": prev7,
             "pendingReviews": Review.objects.filter(is_approved=False).count(),
             "approvedReviews": Review.objects.filter(is_approved=True).count(),
             "locations": LocationPage.objects.count(),
+            "schoolAccounts": SchoolAccount.objects.count(),
+            "pendingClaims": SchoolAccount.objects.filter(status="pending").count(),
+            "pendingSchoolLinks": SchoolAccount.objects.filter(school_link_status__in=["pending_claim", "pending_new"]).count(),
+            "pendingEdits": SchoolAccount.objects.filter(edit_approval_status="pending").count(),
+            "parentAccounts": ParentProfile.objects.count(),
+            "activePlans": active_plans,
+            "totalRevenue": total_revenue,
+            "invoicesCount": Invoice.objects.count(),
         },
         "enquiriesDaily": daily,
         "enquiryStatus": _pairs(Enquiry.objects.values("status").annotate(n=Count("id")).order_by("-n"), "status", STATUS_LABEL),
@@ -97,6 +115,14 @@ def dashboard_data(request):
             "reviews": reverse("admin:schools_review_changelist"),
             "locations": reverse("admin:schools_locationpage_changelist"),
             "importCsv": "/admin/schools/school/import-csv/",
+            "schoolAccounts": reverse("admin:schools_schoolaccount_changelist"),
+            "createSchoolLogin": reverse("admin:schools_schoolaccount_quick_create"),
+            "parentAccounts": reverse("admin:schools_parentprofile_changelist"),
+            "plans": reverse("admin:schools_plan_changelist"),
+            "memberships": reverse("admin:schools_schoolmembership_changelist"),
+            "assignPlan": reverse("admin:schools_schoolmembership_add"),
+            "invoices": reverse("admin:schools_invoice_changelist"),
+            "users": reverse("admin:auth_user_changelist"),
         },
         "user": request.user.get_short_name() or request.user.get_username(),
     }

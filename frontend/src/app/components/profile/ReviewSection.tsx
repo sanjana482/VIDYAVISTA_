@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { API_URL } from "../../lib/api";
 import Icon, { Stars } from "../Icon";
 
-type Review = { name: string; role: string; rating: number; text: string; date: string };
+type Review = { id?: number; name: string; role: string; rating: number; text: string; date: string };
 type Props = { schoolId: number; schoolName: string; rating: number; count: number; reviews?: Review[] };
 
 export default function ReviewSection({ schoolId, schoolName, rating, count, reviews = [] }: Props) {
+  const router = useRouter();
   const [formOpen, setFormOpen] = useState(false);
   const [stars, setStars] = useState(0);
   const [hover, setHover] = useState(0);
@@ -16,6 +18,45 @@ export default function ReviewSection({ schoolId, schoolName, rating, count, rev
   const [done, setDone] = useState(false);
   const [sending, setSending] = useState(false);
 
+  // Live state for reviews and ratings
+  const [reviewList, setReviewList] = useState<Review[]>(reviews);
+  const [liveRating, setLiveRating] = useState<number>(rating);
+  const [liveCount, setLiveCount] = useState<number>(count);
+
+  // Fetch live approved reviews from API on mount
+  useEffect(() => {
+    if (!schoolId) return;
+    fetch(`${API_URL}/reviews/?schoolId=${schoolId}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.ok && Array.isArray(data.data) && data.data.length > 0) {
+          setReviewList(data.data);
+          if (typeof data.rating === "number" && data.rating > 0) setLiveRating(data.rating);
+          if (typeof data.count === "number" && data.count > 0) setLiveCount(data.count);
+        }
+      })
+      .catch(() => {});
+  }, [schoolId]);
+
+  // Pre-fill user data from parent session when opening form
+  const handleOpenForm = () => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("vv_portal_token") : null;
+    if (!token) {
+      router.push(`/login?role=parent&redirect=/schools/${schoolId}`);
+      return;
+    }
+    try {
+      const u = JSON.parse(localStorage.getItem("vv_portal_user") || "{}");
+      setF((prev) => ({
+        ...prev,
+        name: prev.name || u.name || u.parentName || "",
+        mobile: prev.mobile || u.mobile || "",
+        email: prev.email || u.email || "",
+      }));
+    } catch {}
+    setFormOpen(true);
+  };
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const err: Record<string, string> = {};
@@ -23,17 +64,31 @@ export default function ReviewSection({ schoolId, schoolName, rating, count, rev
     if (f.name.trim().length < 2) err.name = "Please enter your name";
     if (!/^[6-9]\d{9}$/.test(f.mobile)) err.mobile = "Enter a valid 10-digit mobile number";
     if (f.email && !/^\S+@\S+\.\S+$/.test(f.email)) err.email = "Enter a valid email";
-    if (f.text.trim().length < 20) err.text = "Please write at least 20 characters";
+    if (!f.text.trim()) err.text = "Please write your review";
     if (!f.confirm) err.confirm = "Please confirm this is your genuine experience";
     setErrors(err);
     if (Object.keys(err).length) return;
+
     setSending(true);
+    const token = typeof window !== "undefined" ? localStorage.getItem("vv_portal_token") : null;
     try {
       const res = await fetch(`${API_URL}/reviews/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ schoolId, name: f.name.trim(), role: f.role, mobile: f.mobile, email: f.email, rating: stars, text: f.text }),
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          schoolId,
+          name: f.name.trim(),
+          role: f.role,
+          mobile: f.mobile,
+          email: f.email,
+          rating: stars,
+          text: f.text.trim(),
+        }),
       });
+
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
         const first = Object.values(j as Record<string, string[] | string>)[0];
@@ -41,6 +96,19 @@ export default function ReviewSection({ schoolId, schoolName, rating, count, rev
         setSending(false);
         return;
       }
+
+      const json = await res.json().catch(() => ({}));
+      const createdReview: Review = json.review || {
+        name: f.name.trim(),
+        role: f.role,
+        rating: stars,
+        text: f.text.trim(),
+        date: new Date().toISOString().split("T")[0],
+      };
+
+      // Add to review list immediately
+      setReviewList((prev) => [createdReview, ...prev.filter((r) => r.text !== createdReview.text)]);
+      setLiveCount((c) => c + 1);
       setDone(true);
     } catch {
       setErrors({ confirm: "Cannot reach the server. Please try again." });
@@ -59,17 +127,21 @@ export default function ReviewSection({ schoolId, schoolName, rating, count, rev
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h2 className="text-3xl font-extrabold tracking-tight text-[#0B2A47]">Parent reviews</h2>
-        <button type="button" onClick={() => setFormOpen(true)} className="rounded-xl border border-[#D6DDE5] bg-white px-5 py-3 text-sm font-bold text-[#0B2A47] transition hover:border-[#0795DC] hover:text-[#0A7BBF]">
+        <button
+          type="button"
+          onClick={handleOpenForm}
+          className="rounded-xl border border-[#D6DDE5] bg-white px-5 py-3 text-sm font-bold text-[#0B2A47] transition hover:border-[#0795DC] hover:text-[#0A7BBF]"
+        >
           Write a review
         </button>
       </div>
 
-      {count > 0 ? (
+      {liveCount > 0 ? (
         <div className="mt-5 flex flex-wrap items-center gap-5 rounded-2xl border border-[#E1E7EE] bg-[#F6FAFD] px-6 py-5">
-          <p className="text-5xl font-extrabold text-[#0B2A47]">{rating}<span className="text-xl font-bold text-[#8896A6]"> / 5</span></p>
+          <p className="text-5xl font-extrabold text-[#0B2A47]">{Number(liveRating).toFixed(1)}<span className="text-xl font-bold text-[#8896A6]"> / 5</span></p>
           <div>
-            <Stars value={rating} className="h-6 w-6" />
-            <p className="mt-1 text-sm text-[#5C6A7B]">Based on {count} parent reviews of {schoolName}</p>
+            <Stars value={liveRating} className="h-6 w-6" />
+            <p className="mt-1 text-sm text-[#5C6A7B]">Based on {liveCount} parent reviews of {schoolName}</p>
           </div>
         </div>
       ) : (
@@ -78,12 +150,15 @@ export default function ReviewSection({ schoolId, schoolName, rating, count, rev
         </div>
       )}
 
-      {reviews.length > 0 && (
+      {reviewList.length > 0 && (
         <ul className="mt-6 space-y-4">
-          {reviews.map((r, i) => (
+          {reviewList.map((r, i) => (
             <li key={i} className="rounded-2xl border border-[#E1E7EE] bg-white p-5">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="font-extrabold text-[#0B2A47]">{r.name} <span className="text-sm font-semibold text-[#707E8F]">· {r.role}</span></p>
+                <p className="font-extrabold text-[#0B2A47]">
+                  {r.name} <span className="text-sm font-semibold text-[#707E8F]">· {r.role}</span>
+                  {r.date && <span className="ml-2 text-xs font-normal text-[#8896A6]">({r.date})</span>}
+                </p>
                 <Stars value={r.rating} className="h-4 w-4" />
               </div>
               <p className="mt-2 leading-7 text-[#4E5A68]">{r.text}</p>
@@ -92,13 +167,20 @@ export default function ReviewSection({ schoolId, schoolName, rating, count, rev
         </ul>
       )}
 
-      {(formOpen || count === 0) && (
+      {(formOpen || liveCount === 0) && (
         <div className="mt-5 rounded-3xl border border-[#E1E7EE] bg-white p-6 shadow-sm sm:p-8">
           {done ? (
             <div role="status" className="py-6 text-center">
               <Icon name="party" className="mx-auto h-10 w-10 text-[#EC0E58]" />
               <p className="mt-3 text-xl font-extrabold text-[#0A5C91]">Thank you for sharing your experience!</p>
-              <p className="mt-2 text-sm text-[#5C6A7B]">Your review will appear after verification.</p>
+              <p className="mt-2 text-sm text-[#5C6A7B]">Your review is published and live on this school profile.</p>
+              <button
+                type="button"
+                onClick={() => setFormOpen(false)}
+                className="mt-4 rounded-xl bg-[#0A5C91] px-5 py-2.5 text-xs font-bold text-white"
+              >
+                Done
+              </button>
             </div>
           ) : (
             <form onSubmit={submit} noValidate>
@@ -108,10 +190,19 @@ export default function ReviewSection({ schoolId, schoolName, rating, count, rev
               <div className="mt-2 flex gap-1" onMouseLeave={() => setHover(0)}>
                 {[1, 2, 3, 4, 5].map((n) => (
                   <button
-                    key={n} type="button" aria-label={`${n} star${n > 1 ? "s" : ""}`} aria-pressed={stars === n}
-                    onMouseEnter={() => setHover(n)} onClick={() => setStars(n)}
+                    key={n}
+                    type="button"
+                    aria-label={`${n} star${n > 1 ? "s" : ""}`}
+                    aria-pressed={stars === n}
+                    onMouseEnter={() => setHover(n)}
+                    onClick={() => setStars(n)}
                     className="transition hover:scale-110"
-                  ><Icon name="star" className={`h-9 w-9 ${(hover || stars) >= n ? "fill-[#E99A24] text-[#E99A24]" : "fill-[#E1E7EE] text-[#D0D6DD]"}`} /></button>
+                  >
+                    <Icon
+                      name="star"
+                      className={`h-9 w-9 ${(hover || stars) >= n ? "fill-[#E99A24] text-[#E99A24]" : "fill-[#E1E7EE] text-[#D0D6DD]"}`}
+                    />
+                  </button>
                 ))}
               </div>
               <Err k="stars" />
@@ -125,12 +216,21 @@ export default function ReviewSection({ schoolId, schoolName, rating, count, rev
                 <div>
                   <label htmlFor="rr" className={label}>You are a</label>
                   <select id="rr" value={f.role} onChange={(e) => setF({ ...f, role: e.target.value })} className={`${input()} h-12`}>
-                    <option>Parent</option><option>Student</option><option>Alumni</option><option>Staff</option>
+                    <option>Parent</option>
+                    <option>Student</option>
+                    <option>Alumni</option>
+                    <option>Staff</option>
                   </select>
                 </div>
                 <div>
                   <label htmlFor="rm" className={label}>Mobile number (for verification, not shown)</label>
-                  <input id="rm" inputMode="numeric" value={f.mobile} onChange={(e) => setF({ ...f, mobile: e.target.value.replace(/\D/g, "").slice(0, 10) })} className={`${input(errors.mobile)} h-12`} />
+                  <input
+                    id="rm"
+                    inputMode="numeric"
+                    value={f.mobile}
+                    onChange={(e) => setF({ ...f, mobile: e.target.value.replace(/\D/g, "").slice(0, 10) })}
+                    className={`${input(errors.mobile)} h-12`}
+                  />
                   <Err k="mobile" />
                 </div>
                 <div>
@@ -142,7 +242,14 @@ export default function ReviewSection({ schoolId, schoolName, rating, count, rev
 
               <div className="mt-5">
                 <label htmlFor="rt" className={label}>Your review</label>
-                <textarea id="rt" rows={5} value={f.text} onChange={(e) => setF({ ...f, text: e.target.value })} placeholder="Tell other parents about teaching, facilities, fees, safety and admission process." className={`${input(errors.text)} py-3`} />
+                <textarea
+                  id="rt"
+                  rows={5}
+                  value={f.text}
+                  onChange={(e) => setF({ ...f, text: e.target.value })}
+                  placeholder="Tell other parents about teaching, facilities, fees, safety and admission process."
+                  className={`${input(errors.text)} py-3`}
+                />
                 <Err k="text" />
               </div>
 
@@ -152,9 +259,22 @@ export default function ReviewSection({ schoolId, schoolName, rating, count, rev
               </label>
               <Err k="confirm" />
 
-              <button type="submit" disabled={sending} className="mt-6 rounded-xl disabled:opacity-60 bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-7 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#0A5C91]/25 transition hover:-translate-y-0.5 vv-btn">
-                {sending ? "Sending…" : "Submit review"}
-              </button>
+              <div className="mt-6 flex items-center gap-3">
+                <button
+                  type="submit"
+                  disabled={sending}
+                  className="vv-btn rounded-xl disabled:opacity-60 bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-7 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#0A5C91]/25 transition hover:-translate-y-0.5"
+                >
+                  {sending ? "Sending..." : "Submit review"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormOpen(false)}
+                  className="rounded-xl border border-[#D6DDE5] px-5 py-3.5 text-sm font-bold text-[#4E5A68] hover:bg-[#F0F4F8]"
+                >
+                  Cancel
+                </button>
+              </div>
             </form>
           )}
         </div>

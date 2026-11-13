@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import LocationLanding from "../../components/LocationLanding";
 import { citiesOf, stateFor } from "../../data/schools";
-import { fetchAllSchools, fetchAllSchoolsSafe } from "../../lib/schoolsApi";
+import { fetchAllSchools } from "../../lib/schoolsApi";
 import { fetchLocationContent, resolveContent } from "../../lib/locationsApi";
 import { cityPath, slugify } from "../../lib/seo";
 
 type Props = { params: { city: string } };
 
-export const revalidate = 604800;
+export const revalidate = 86400;
 
 const findCity = (slug: string, cities: string[]) => cities.find((c) => slugify(c) === slug);
 
@@ -26,7 +26,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = content?.metaTitle || `Best Schools in ${city} 2027-28 – Fees, Boards & Reviews`;
   const description = view.description.slice(0, 200);
   return {
-    // the admin's own title is used as-is; the default one gets the "| VidyaVista" suffix
     title: content?.metaTitle ? { absolute: title } : title,
     description,
     alternates: { canonical: cityPath(city) },

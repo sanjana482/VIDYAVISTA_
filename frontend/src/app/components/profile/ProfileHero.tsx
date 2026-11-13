@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { School } from "../../data/schools";
 import { openEnquiry } from "./enquiry";
+import { portalApi } from "../../lib/portalApi";
+import { BACKEND_ORIGIN } from "../../lib/api";
 import Icon from "../Icon";
 import AdmissionBadge from "../AdmissionBadge";
 import Watermark from "../Watermark";
@@ -16,10 +18,30 @@ type Props = {
   stats: { label: string; value: string }[];
 };
 
+function resolveMediaUrl(url?: string): string {
+  if (!url) return "";
+  const trimmed = url.trim();
+  if (!trimmed) return "";
+  if (
+    trimmed.startsWith("http://") ||
+    trimmed.startsWith("https://") ||
+    trimmed.startsWith("data:") ||
+    trimmed.startsWith("blob:")
+  ) {
+    return trimmed;
+  }
+  const cleanPath = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+  return `${BACKEND_ORIGIN}${cleanPath}`;
+}
+
 export default function ProfileHero({ school: s, intro, phoneHref, stats }: Props) {
   const router = useRouter();
   const [saved, setSaved] = useState(false);
   const [toast, setToast] = useState("");
+  const [logoFailed, setLogoFailed] = useState(false);
+
+  const rawLogo = s.logo || s.logoUrl || s.logo_url || (s.profile as any)?.logo_url || (s.profile as any)?.logo || "";
+  const logoSrc = resolveMediaUrl(rawLogo);
 
   useEffect(() => {
     try {
@@ -33,7 +55,13 @@ export default function ProfileHero({ school: s, intro, phoneHref, stats }: Prop
     setTimeout(() => setToast(""), 2200);
   }
 
-  function toggleSave() {
+  async function toggleSave() {
+    // Require login/signup before shortlisting
+    const token = typeof window !== "undefined" ? localStorage.getItem("vv_portal_token") : null;
+    if (!token) {
+      router.push(`/login?role=parent&redirect=${encodeURIComponent(window.location.pathname)}`);
+      return;
+    }
     const next = !saved;
     setSaved(next);
     try {
@@ -41,6 +69,15 @@ export default function ProfileHero({ school: s, intro, phoneHref, stats }: Prop
       const updated = next ? Array.from(new Set([...list, s.id])) : list.filter((x) => x !== s.id);
       localStorage.setItem("vv_saved", JSON.stringify(updated));
     } catch {}
+
+    // Persist to parent portal database immediately
+    try {
+      await portalApi("/portal/parent/shortlist/toggle", {
+        method: "POST",
+        body: JSON.stringify({ schoolId: s.id }),
+      });
+    } catch {}
+
     flash(next ? "School saved" : "Removed from saved");
   }
 
@@ -75,32 +112,55 @@ export default function ProfileHero({ school: s, intro, phoneHref, stats }: Prop
             <img src={s.image} alt={`${s.name} campus`} className="h-full w-full object-cover" />
             <Watermark />
             <Link
-  href={`${schoolPath(s)}/photos`}
-  className="absolute bottom-4 left-4 rounded-full bg-white px-4 py-2.5 text-sm font-bold text-[#0B2A47] shadow-lg transition hover:bg-[#E1F1FA]"
->
-  <Icon name="camera" className="mr-1.5 inline h-4 w-4" /> View photos
-</Link>
+              href={`${schoolPath(s)}/photos`}
+              className="absolute bottom-4 left-4 rounded-full bg-white px-4 py-2.5 text-sm font-bold text-[#0B2A47] shadow-lg transition hover:bg-[#E1F1FA]"
+            >
+              <Icon name="camera" className="mr-1.5 inline h-4 w-4" /> View photos
+            </Link>
           </div>
 
           {/* Summary */}
           <div>
             <div className="flex flex-wrap gap-2">
-              <span className={`${chip} bg-[#E1F1FA] text-[#0A5C91]`}>{s.board}</span>
+              <span className={`${chip} bg-[#E1F1FA] text-[#0A5C91]`}>{s.board === "No Board" ? "IB Board" : s.board}</span>
               <span className={`${chip} bg-[#E9EEF4] text-[#344251]`}>{s.type}</span>
               <span className={`${chip} bg-[#FDE8EF] text-[#C8104F]`}>{s.gender}</span>
               <AdmissionBadge school={s} />
+              {s.verified && (
+                <span className={`${chip} bg-[#EBF5FF] text-[#0066CC] border border-[#B8DAFF] inline-flex items-center gap-1.5`}>
+                  <Icon name="check" className="h-3.5 w-3.5 text-[#0066CC]" /> Verified School
+                </span>
+              )}
             </div>
 
-            <h1 className="mt-4 text-3xl font-extrabold leading-tight tracking-tight text-[#0B2A47] sm:text-4xl lg:text-[2.6rem]">
-              {s.name}
-            </h1>
-            <p className="mt-3 text-[#5C6A7B]"><Icon name="mapPin" className="mr-1 inline h-4 w-4 text-[#EC0E58]" /> {s.area}, {s.city}</p>
+            <div className="mt-4 flex items-center gap-4 sm:gap-5">
+              {logoSrc && !logoFailed ? (
+                <div className="relative h-16 w-16 sm:h-20 sm:w-20 shrink-0 overflow-hidden rounded-2xl border-2 border-white bg-white p-1.5 shadow-md shadow-[#0A5C91]/15 flex items-center justify-center">
+                  <img
+                    src={logoSrc}
+                    alt={`${s.name} logo`}
+                    onError={() => setLogoFailed(true)}
+                    className="h-full w-full object-contain"
+                  />
+                </div>
+              ) : (
+                <div className="relative h-14 w-14 sm:h-16 sm:w-16 shrink-0 overflow-hidden rounded-2xl border border-[#D6DDE5] bg-gradient-to-br from-[#E1F1FA] to-white p-2 shadow-sm flex items-center justify-center text-[#0A5C91]">
+                  <Icon name="school" className="h-7 w-7" />
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <h1 className="text-2xl font-extrabold leading-tight tracking-tight text-[#0B2A47] sm:text-3xl lg:text-[2.4rem]">
+                  {s.name}
+                </h1>
+                <p className="mt-1 text-sm text-[#5C6A7B]"><Icon name="mapPin" className="mr-1 inline h-4 w-4 text-[#EC0E58]" /> {s.area}, {s.city}</p>
+              </div>
+            </div>
 
             <p className="mt-5 rounded-2xl border border-[#E1E7EE] border-l-4 border-l-[#EC0E58] bg-white px-5 py-4 text-[#4E5A68]">
               {intro}
             </p>
 
-                        <p className="mt-5 text-sm text-[#5C6A7B]">
+            <p className="mt-5 text-sm text-[#5C6A7B]">
               {s.reviews > 0 ? (
                 <>
                   <span className="font-extrabold text-[#C8104F]"><Icon name="star" filled className="mr-1 inline h-4 w-4 align-[-2px]" />{s.rating}</span> ·{" "}
@@ -130,6 +190,13 @@ export default function ProfileHero({ school: s, intro, phoneHref, stats }: Prop
                 <Icon name="heart" filled={saved} className={`mr-1 inline h-4 w-4 ${saved ? "vv-heart" : ""}`} />{saved ? "Saved" : "Save"}
               </button>
               <button type="button" onClick={share} className={ghost}><Icon name="share" className="mr-1 inline h-4 w-4" />Share</button>
+              <Link
+                href={`/login?role=school&mode=register&claim_school_id=${s.id}&claim_school_name=${encodeURIComponent(s.name)}&city=${encodeURIComponent(s.city || "")}&state=${encodeURIComponent(s.state || "")}`}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-[#0795DC]/40 bg-[#F0F9FF] px-4 py-3.5 text-sm font-bold text-[#0A5C91] transition hover:border-[#0795DC] hover:bg-[#E0F2FE]"
+                title="Are you the owner or principal? Claim this school listing"
+              >
+                <Icon name="check" className="h-4 w-4 text-[#0795DC]" /> Claim School
+              </Link>
             </div>
           </div>
         </div>

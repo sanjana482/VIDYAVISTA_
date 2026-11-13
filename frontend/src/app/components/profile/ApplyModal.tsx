@@ -11,10 +11,13 @@ type Session = "2027-28" | "2026-27";
 
 type Props = {
   schoolName: string;
+  schoolId?: number;
   city: string;
-  status: string; // e.g. "Dates not announced yet"
-  classes: string[];
-  slabs: Record<Session, FeeSlab[]>;
+  status?: string; // e.g. "Dates not announced yet"
+  classes?: string[];
+  slabs?: Record<Session, FeeSlab[]>;
+  initialOpen?: boolean;
+  onClose?: () => void;
 };
 
 const STEPS = ["Child", "Parent", "Review"];
@@ -27,8 +30,25 @@ const INITIAL = {
 };
 
 
-export default function ApplyModal({ schoolName, city, status, classes, slabs }: Props) {
-  const [open, setOpen] = useState(false);
+const DEFAULT_CLASSES = [
+  "Toddler", "Nursery", "LKG", "UKG",
+  "Class 1", "Class 2", "Class 3", "Class 4", "Class 5", "Class 6",
+  "Class 7", "Class 8", "Class 9", "Class 10", "Class 11", "Class 12",
+];
+
+const DEFAULT_SLABS: Record<Session, FeeSlab[]> = { "2027-28": [], "2026-27": [] };
+
+export default function ApplyModal({
+  schoolName,
+  schoolId,
+  city,
+  status = "Admissions Open",
+  classes = DEFAULT_CLASSES,
+  slabs = DEFAULT_SLABS,
+  initialOpen = false,
+  onClose,
+}: Props) {
+  const [open, setOpen] = useState(Boolean(initialOpen));
   const [step, setStep] = useState(0);
   const [f, setF] = useState(INITIAL);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -48,21 +68,58 @@ export default function ApplyModal({ schoolName, city, status, classes, slabs }:
     function onApply(e: Event) {
       const cls = ((e as CustomEvent).detail as { cls?: string } | undefined)?.cls;
       lastFocus.current = document.activeElement as HTMLElement;
-      if (cls) setF((p) => ({ ...p, cls }));
+      try {
+        const raw = localStorage.getItem("vv_portal_user");
+        const u = raw ? JSON.parse(raw) : null;
+        if (u && u.role === "parent") {
+          setF((p) => ({
+            ...p,
+            child: p.child || u.studentName || "",
+            parent: p.parent || u.name || "",
+            mobile: p.mobile || u.mobile || "",
+            email: p.email || u.email || "",
+            ...(cls ? { cls } : {}),
+          }));
+        } else if (cls) {
+          setF((p) => ({ ...p, cls }));
+        }
+      } catch {
+        if (cls) setF((p) => ({ ...p, cls }));
+      }
       setOpen(true);
     }
     window.addEventListener("vv-apply", onApply);
     return () => window.removeEventListener("vv-apply", onApply);
   }, []);
 
+  useEffect(() => {
+    if (initialOpen) {
+      try {
+        const raw = localStorage.getItem("vv_portal_user");
+        const u = raw ? JSON.parse(raw) : null;
+        if (u && u.role === "parent") {
+          setF((p) => ({
+            ...p,
+            child: p.child || u.studentName || "",
+            parent: p.parent || u.name || "",
+            mobile: p.mobile || u.mobile || "",
+            email: p.email || u.email || "",
+          }));
+        }
+      } catch {}
+      setOpen(true);
+    }
+  }, [initialOpen]);
+
   const close = useCallback(() => {
     setOpen(false);
+    onClose?.();
     if (done) {
       setF(INITIAL); setStep(0); setDone(false); setErrors({});
     }
     setSendError("");
     setTimeout(() => lastFocus.current?.focus?.(), 0);
-  }, [done]);
+  }, [done, onClose]);
 
   // scroll lock, ESC, focus trap, initial focus
   useEffect(() => {
@@ -114,6 +171,7 @@ export default function ApplyModal({ schoolName, city, status, classes, slabs }:
     try {
       const res = await postEnquiry({
         schoolName,
+        schoolId,
         childName: f.child,
         className: f.cls,
         session: f.session,
@@ -135,7 +193,7 @@ export default function ApplyModal({ schoolName, city, status, classes, slabs }:
 
   if (!open) return null;
 
-  const slab = slabs[f.session].find((x) => x.cls === f.cls);
+  const slab = slabs?.[f.session]?.find((x) => x.cls === f.cls);
   const field = (bad?: string) =>
     `mt-2 h-12 w-full rounded-xl border bg-white px-4 text-[15px] text-[#0B2A47] outline-none transition placeholder:text-[#8896A6] focus:ring-4 ${
       bad ? "border-[#EC0E58] focus:ring-[#EC0E58]/15" : "border-[#D6DDE5] focus:border-[#0795DC] focus:ring-[#0795DC]/15"

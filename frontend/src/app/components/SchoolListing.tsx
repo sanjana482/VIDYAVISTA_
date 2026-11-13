@@ -16,14 +16,17 @@ import {
 } from "../lib/preferences";
 import { schoolPath } from "../lib/seo";
 import { typePath } from "../lib/links";
-import { classList } from "../data/profile";
+import { classList, feeSlabs } from "../data/profile";
 import LocationReviews from "./LocationReviews";
 import { APPLIED_EVENT } from "./PlaceHeading";
 import { announceLocation } from "../lib/useActiveLocation";
 import { typeRank } from "../lib/preferences";
 import Icon from "./Icon";
+import ApplyModal from "./profile/ApplyModal";
 import CornerRibbon from "./CornerRibbon";
 import AdmissionBadge from "./AdmissionBadge";
+import SchoolSkeletonCard from "./SchoolSkeletonCard";
+
 import Watermark from "./Watermark";
 
 
@@ -46,6 +49,7 @@ type Filters = {
   q: string;
   state: string[];
   city: string[];
+  area: string[];
   type: string[];
   board: string[];
   gender: string[];
@@ -54,8 +58,8 @@ type Filters = {
   max: string;
 };
 
-const EMPTY: Filters = { q: "", state: [], city: [], type: [], board: [], gender: [], cls: [], min: "", max: "" };
-const URL_FILTER_KEYS = ["q", "city", "state", "type", "board"];
+const EMPTY: Filters = { q: "", state: [], city: [], area: [], type: [], board: [], gender: [], cls: [], min: "", max: "" };
+const URL_FILTER_KEYS = ["q", "city", "state", "area", "type", "board"];
 
 // Saved cookie preference -> listing filters
 function filtersFromPref(pref: Preference): Filters {
@@ -162,6 +166,7 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
       q: params.get("q") ?? "",
       state: params.get("state") ? [params.get("state")!] : [],
       city: params.get("city") ? [params.get("city")!] : [],
+      area: params.get("area") ? [params.get("area")!] : [],
       type: normalizeType(params.get("type") ?? "") ? [normalizeType(params.get("type")!)] : [],
       board: params.get("board") ? [params.get("board")!] : [],
     }),
@@ -190,6 +195,26 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
   const [page, setPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
   const [compare, setCompare] = useState<number[]>([]);
+  const [enquireSchool, setEnquireSchool] = useState<School | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Initial skeleton loader on mount
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 300);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Subtle skeleton transition when filters / sort change
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    setLoading(true);
+    const t = setTimeout(() => setLoading(false), 200);
+    return () => clearTimeout(t);
+  }, [applied, sort, page]);
 
   // Filters come from (1) the URL, or (2) when the URL has none, from the saved cookie
   // (what the user selected on Home last time). This is what pre-selects Mumbai + Day School.
@@ -254,12 +279,22 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
   }
 
   // every filter group allows ONE choice. State and City depend on each other.
-  const pick = (key: "state" | "city" | "type" | "board" | "gender" | "cls", value: string) =>
+  const pick = (key: "state" | "city" | "area" | "type" | "board" | "gender" | "cls", value: string) =>
     setDraft((d) => {
       const on = d[key][0] === value;
       let next: Filters = { ...d, [key]: on ? [] : [value] };
-      if (key === "state") next = { ...next, city: [] }; // another state -> its cities only
-      if (key === "city" && !on) next = normalize(next); // city -> its state gets ticked automatically
+      if (key === "state") next = { ...next, city: [], area: [] }; // another state -> its cities and areas reset
+      if (key === "city" && !on) {
+        next = { ...next, area: [] };
+        next = normalize(next); // city -> its state gets ticked automatically
+      }
+      if (key === "type") {
+        if (value === "Day School" || value === "Play School") {
+          next = { ...next, state: [] };
+        } else if (value === "Boarding School") {
+          next = { ...next, area: [] };
+        }
+      }
       return next;
     });
 
@@ -304,7 +339,7 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
   // schools whose class range includes the chosen class
   const offersClass = (sc: School, cls: string) => classList(sc).some((c) => c.cls === cls);
 
-  const activeCount = [applied.state, applied.city, applied.type, applied.board, applied.gender, applied.cls].filter((a) => a.length).length + (applied.min || applied.max ? 1 : 0);
+  const activeCount = [applied.state, applied.city, applied.area, applied.type, applied.board, applied.gender, applied.cls].filter((a) => a && a.length).length + (applied.min || applied.max ? 1 : 0);
 
   // no page scroll behind the open filter panel (phones)
   useEffect(() => {
@@ -323,6 +358,7 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
         (!q || `${s.name} ${s.area} ${s.city} ${s.board}`.toLowerCase().includes(q)) &&
         (!applied.state.length || applied.state.includes(stateFor(s))) &&
         (!applied.city.length || applied.city.includes(s.city)) &&
+        (!applied.area?.length || (s.area && s.area.toLowerCase() === applied.area[0].toLowerCase())) &&
         (!applied.type.length || applied.type.includes(s.type)) &&
         (!applied.board.length || applied.board.includes(s.board)) &&
         (!applied.gender.length || applied.gender.includes(s.gender)) &&
@@ -366,16 +402,57 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
     setCompare((c) => (c.includes(id) ? c.filter((x) => x !== id) : c.length < 3 ? [...c, id] : c));
   }
 
+  const activeType = draft.type[0] || applied.type[0] || "";
+  const isBoarding = activeType === "Boarding School";
+  const isDay = activeType === "Day School";
+  const isPlay = activeType === "Play School";
+
+  // Base pool of schools for counts based strictly on active school type:
+  // Boarding counts only boarding schools, Day counts only day schools!
+  const typeScopedSchools = useMemo(() => {
+    if (isBoarding) return schools.filter((s) => s.type === "Boarding School");
+    if (isDay) return schools.filter((s) => s.type === "Day School");
+    if (isPlay) return schools.filter((s) => s.type === "Play School");
+    return schools;
+  }, [schools, isBoarding, isDay, isPlay]);
+
   const stateOpts: Opt[] = useMemo(() => {
     const m = new Map<string, number>();
-    schools.forEach((x) => { const st = stateFor(x); if (st) m.set(st, (m.get(st) ?? 0) + 1); });
-    return [...m.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([value, count]) => ({ value, count }));
-  }, [schools]);
+    typeScopedSchools.forEach((x) => {
+      const st = stateFor(x);
+      if (st) m.set(st, (m.get(st) ?? 0) + 1);
+    });
+    return [...m.entries()]
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .map(([value, count]) => ({ value, count }));
+  }, [typeScopedSchools]);
+
   const cityOpts: Opt[] = useMemo(() => {
     const m = new Map<string, number>();
-    schools.filter((x) => !draft.state[0] || stateFor(x) === draft.state[0]).forEach((x) => m.set(x.city, (m.get(x.city) ?? 0) + 1));
-    return [...m.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([value, count]) => ({ value, count }));
-  }, [schools, draft.state]);
+    const pool = (isBoarding && draft.state[0])
+      ? typeScopedSchools.filter((x) => stateFor(x) === draft.state[0])
+      : typeScopedSchools;
+    pool.forEach((x) => {
+      if (x.city) m.set(x.city, (m.get(x.city) ?? 0) + 1);
+    });
+    return [...m.entries()]
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .map(([value, count]) => ({ value, count }));
+  }, [typeScopedSchools, draft.state, isBoarding]);
+
+  const areaOpts: Opt[] = useMemo(() => {
+    const m = new Map<string, number>();
+    const pool = draft.city[0]
+      ? typeScopedSchools.filter((x) => x.city.toLowerCase() === draft.city[0].toLowerCase())
+      : typeScopedSchools;
+    pool.forEach((x) => {
+      if (x.area) m.set(x.area, (m.get(x.area) ?? 0) + 1);
+    });
+    return [...m.entries()]
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .map(([value, count]) => ({ value, count }));
+  }, [typeScopedSchools, draft.city]);
+
   const classOpts: Opt[] = useMemo(() => {
     const seen = new Set<string>();
     schools.forEach((x) => classList(x).forEach((c) => seen.add(c.cls)));
@@ -418,12 +495,26 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
               </div>
 
               <div className="flex-1 overflow-y-auto px-5 py-5">
-                <FilterGroup title="State">
-                  <FilterList noun="states" searchable options={stateOpts} value={draft.state[0]} onPick={(v) => pick("state", v)} />
-                </FilterGroup>
-                <FilterGroup title={draft.state[0] ? `City in ${draft.state[0]}` : "City"}>
-                  <FilterList noun="cities" searchable options={cityOpts} value={draft.city[0]} onPick={(v) => pick("city", v)} />
-                </FilterGroup>
+                {isBoarding || (!isDay && !isPlay) ? (
+                  <>
+                    <FilterGroup title="State">
+                      <FilterList noun="states" searchable options={stateOpts} value={draft.state[0]} onPick={(v) => pick("state", v)} />
+                    </FilterGroup>
+                    <FilterGroup title={draft.state[0] ? `City in ${draft.state[0]}` : "City"}>
+                      <FilterList noun="cities" searchable options={cityOpts} value={draft.city[0]} onPick={(v) => pick("city", v)} />
+                    </FilterGroup>
+                  </>
+                ) : (
+                  <>
+                    <FilterGroup title="City">
+                      <FilterList noun="cities" searchable options={cityOpts} value={draft.city[0]} onPick={(v) => pick("city", v)} />
+                    </FilterGroup>
+                    <FilterGroup title={draft.city[0] ? `Area in ${draft.city[0]}` : "Area / Locality"}>
+                      <FilterList noun="areas" searchable options={areaOpts} value={draft.area[0]} onPick={(v) => pick("area", v)} />
+                    </FilterGroup>
+                  </>
+                )}
+
                 <FilterGroup title="School type">
                   {TYPES.map((c) => <Radio key={c} label={c} checked={draft.type[0] === c} onPick={() => pick("type", c)} />)}
                 </FilterGroup>
@@ -490,7 +581,11 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
           </div>
 
           <div className="mt-6 space-y-5">
-            {visible.length === 0 && (
+            {loading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <SchoolSkeletonCard key={i} />
+              ))
+            ) : visible.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-[#C9D3DE] bg-[#F6FAFD] p-10 text-center">
                 <p className="text-lg font-extrabold text-[#0B2A47]">No schools match these filters</p>
                 <p className="mt-2 text-sm text-[#707E8F]">Try removing a filter or widening your fee range.</p>
@@ -498,9 +593,8 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
                   Clear all filters
                 </button>
               </div>
-            )}
-
-            {visible.map((s) => (
+            ) : (
+              visible.map((s) => (
               <article
                 key={s.id}
                 className="vv-ribbon-host vv-card group relative min-w-0 overflow-hidden rounded-3xl border border-[#E1E7EE] bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-transparent hover:shadow-2xl hover:shadow-[#0795DC]/15 sm:p-5"
@@ -515,8 +609,14 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
                     <img src={s.image} alt={`${s.name} campus`} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110" />
                     <Watermark />
                     {s.isFeatured && <CornerRibbon label="Featured" radius="1rem" />}
+                    {s.verified && (
+                      <span className="absolute left-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-lg bg-[#0F7A3D] px-3 py-1.5 text-xs font-extrabold text-white shadow-md">
+                        <Icon name="check" className="h-3.5 w-3.5 text-white" />
+                        Verified
+                      </span>
+                    )}
                     {s.topRated && (
-                      <span className={`absolute left-3 ${s.isFeatured ? "bottom-3" : "top-3"} rounded-lg bg-[#0795DC] px-3 py-1.5 text-xs font-extrabold text-white shadow`}>
+                      <span className={`absolute left-3 ${s.isFeatured || s.verified ? "bottom-3" : "top-3"} rounded-lg bg-[#0795DC] px-3 py-1.5 text-xs font-extrabold text-white shadow`}>
                         <span className="inline-flex items-center gap-1"><Icon name="star" filled className="h-3.5 w-3.5" /> Top rated</span>
                       </span>
                     )}
@@ -534,8 +634,14 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
                       <Icon name="mapPin" className="mr-1 inline h-4 w-4 text-[#EC0E58]" /> {s.area}, {s.city === "Delhi" ? "New Delhi" : s.city}
                     </p>
                     <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
-                      <span className="rounded-lg bg-[#E1F1FA] px-3 py-1.5 text-xs font-extrabold text-[#0A5C91]">{s.board}</span>
+                      <span className="rounded-lg bg-[#E1F1FA] px-3 py-1.5 text-xs font-extrabold text-[#0A5C91]">{s.board === "No Board" ? "IB Board" : s.board}</span>
                       <AdmissionBadge school={s} />
+                      {s.verified && (
+                        <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#E4F7EC] px-3 py-1.5 text-xs font-extrabold text-[#0F7A3D]">
+                          <span className="h-2 w-2 rounded-full bg-current" />
+                          Verified
+                        </span>
+                      )}
                       <span className="text-[#5C6A7B]">{s.grades}</span>
                     </div>
                     <p className="mt-3 text-sm text-[#5C6A7B]">{s.type} · {s.gender}</p>
@@ -554,9 +660,19 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
                       )}
                     </div>
                     <div className="mt-4 xl:mt-0">
-                      <p className="text-xs text-[#707E8F]">Annual tuition from</p>
-                      <p className="text-3xl font-extrabold text-[#0B2A47]">{formatFee(s.fee)}</p>
-                      <p className="text-xs text-[#8896A6]">per year · indicative</p>
+                      {s.fee > 0 ? (
+                        <>
+                          <p className="text-xs text-[#707E8F]">Annual tuition from</p>
+                          <p className="text-3xl font-extrabold text-[#0B2A47]">{formatFee(s.fee)}</p>
+                          <p className="text-xs text-[#8896A6]">per year · indicative</p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-xs text-[#707E8F]">Annual tuition</p>
+                          <p className="text-2xl font-extrabold text-[#0A5C91]">Beginning Soon</p>
+                          <p className="text-xs text-[#8896A6]">Fee structure updating</p>
+                        </>
+                      )}
                     </div>
                     <a
                       href={`tel:${s.phone}`}
@@ -580,20 +696,22 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
                     <Link href={schoolPath(s)} className="inline-flex h-11 items-center justify-center whitespace-nowrap rounded-xl border border-[#D6DDE5] px-4 text-sm font-bold text-[#0B2A47] transition hover:border-[#0795DC] hover:text-[#0A7BBF]">
                       View School
                     </Link>
-                    <Link
-                      href={`/counselling?school=${encodeURIComponent(s.name)}`}
+                    <button
+                      type="button"
+                      onClick={() => setEnquireSchool(s)}
                       className="vv-btn inline-flex h-11 items-center justify-center whitespace-nowrap rounded-xl bg-[#EC0E58] px-4 text-sm font-extrabold text-white shadow-md shadow-[#EC0E58]/25 transition hover:-translate-y-0.5 hover:bg-[#C8104F]"
                     >
-                      Enquire ↗
-                    </Link>
+                      Enquire &rarr;
+                    </button>
                   </div>
                 </div>
               </article>
-            ))}
+            ))
+            )}
           </div>
 
           {/* Pagination */}
-          {pages > 1 && (
+          {!loading && pages > 1 && (
             <nav aria-label="Pagination" className="mt-8 flex flex-wrap items-center justify-center gap-2">
               <button disabled={current === 1} onClick={() => goTo(current - 1)} className="h-11 w-11 rounded-xl border border-[#D6DDE5] font-bold text-[#0B2A47] disabled:opacity-40">‹</button>
               {pageList(current, pages).map((p, i) =>
@@ -635,7 +753,25 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
               Compare →
             </button>
           </div>
-        </div>
+    
+    </div>
+      )}
+          {/* Quick Enquiry Modal for any school on listing */}
+      {enquireSchool && (
+        <ApplyModal
+          key={enquireSchool.id}
+          schoolName={enquireSchool.name}
+          schoolId={enquireSchool.id}
+          city={enquireSchool.city}
+          status="Admissions Open 2027-28"
+          classes={classList(enquireSchool).map((c) => c.cls)}
+          slabs={{
+            "2027-28": feeSlabs(enquireSchool, "2027-28"),
+            "2026-27": feeSlabs(enquireSchool, "2026-27"),
+          }}
+          initialOpen={true}
+          onClose={() => setEnquireSchool(null)}
+        />
       )}
     </section>
   );

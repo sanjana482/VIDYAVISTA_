@@ -13,6 +13,8 @@ def file_or_url(request, file_field, url):
             link = ''
         if link:
             return request.build_absolute_uri(link) if request else link
+    if url and str(url).startswith('/media/') and request:
+        return request.build_absolute_uri(url)
     return url or ''
 
 ADMISSION_LABEL = dict(ADMISSION_STATUS)
@@ -57,7 +59,23 @@ class SchoolSerializer(serializers.ModelSerializer):
                     {'label': c.name, 'freq': c.frequency, 'amount': c.amount})
             data['feeSlabs'] = [{'session': s, 'cls': cl, 'rows': rows} for (s, cl), rows in groups.items()]
 
-        # ---- cover image: file upload wins, else link
+        # ---- cover image & logo: file upload wins, else link
+        logo_val = obj.logo_url or ''
+        if not logo_val and isinstance(obj.profile, dict):
+            logo_val = obj.profile.get('logo_url') or obj.profile.get('logo') or ''
+        if not logo_val and hasattr(obj, 'school_accounts'):
+            sa_with_logo = obj.school_accounts.exclude(logo_file='').first()
+            if sa_with_logo:
+                logo_val = file_or_url(req, sa_with_logo.logo_file, '')
+            else:
+                sa = obj.school_accounts.first()
+                if sa and isinstance(sa.pending_edit_data, dict):
+                    logo_val = sa.pending_edit_data.get('logoUrl') or ''
+        if logo_val and str(logo_val).startswith('/media/') and req:
+            logo_val = req.build_absolute_uri(logo_val)
+        data['logo'] = logo_val
+        data['logoUrl'] = logo_val
+        data['logo_url'] = logo_val
         data['image'] = file_or_url(req, obj.cover_image, obj.image)
 
         # ---- highlights / FAQs / gallery: new inline rows win, old JSON is the fallback
@@ -78,9 +96,20 @@ class SchoolSerializer(serializers.ModelSerializer):
 
         # ---- owner
         o = obj.owner
+        def _mask_em(em):
+            em = (em or '').strip()
+            if '@' in em:
+                u, d = em.split('@', 1)
+                return f'{u[:2]}****@{d}'
+            return 'hidden@email.com' if em else ''
+        def _mask_ph(ph):
+            ph = (ph or '').strip()
+            return f'+91 {ph[:2]}XXXXXX{ph[-2:]}' if len(ph) >= 10 else ('+91 XXXXXXXXXX' if ph else '')
         data['owner'] = None if not o else {
-            'name': o.name, 'designation': o.designation, 'bio': o.bio, 'email': o.email, 'phone': o.phone,
+            'name': o.name, 'designation': o.designation or 'Verified School Leadership', 'bio': o.bio,
+            'email': _mask_em(o.email), 'phone': _mask_ph(o.phone),
             'photo': file_or_url(req, o.photo, o.photo_url),
+            'isVerified': True,
         }
 
         # ---- social links
@@ -106,12 +135,22 @@ class SchoolSerializer(serializers.ModelSerializer):
         data.update(_admission(obj))
         data['profile'] = prof
 
+        # ---- verified badge
+        is_ver = (
+            getattr(obj, 'verified', False)
+            or (obj.owner is not None and getattr(obj.owner, 'approval_status', '') == 'approved')
+            or (hasattr(obj, 'school_accounts') and obj.school_accounts.filter(status='approved', school_link_status='approved').exists())
+        )
+        data['verified'] = bool(is_ver)
+
         # ---- approved parent reviews (latest 10)
         data['reviewList'] = [
             {'name': r.name, 'role': r.role, 'rating': r.rating, 'text': r.text, 'date': r.created_at.date().isoformat()}
             for r in obj.review_items.filter(is_approved=True)[:10]
         ]
         return data
+
+
 class SchoolListSerializer(serializers.ModelSerializer):
     """Light version for listing pages: no about / FAQs / gallery / fee slabs / owner."""
     schoolId = serializers.IntegerField(source='school_id', read_only=True)
@@ -120,7 +159,7 @@ class SchoolListSerializer(serializers.ModelSerializer):
         model = School
         fields = ('schoolId', 'slug', 'name', 'area', 'city', 'state', 'board', 'grades', 'type', 'gender',
                   'rating', 'reviews', 'fee', 'feeMin', 'feeMax', 'facilities', 'photos',
-                  'topRated', 'isFeatured', 'isRecommended', 'phone', 'landline')
+                  'topRated', 'isFeatured', 'isRecommended', 'phone', 'landline', 'verified')
 
     def to_representation(self, obj):
         data = super().to_representation(obj)
@@ -128,7 +167,21 @@ class SchoolListSerializer(serializers.ModelSerializer):
         data['image'] = file_or_url(req, obj.cover_image, obj.image)
         data['phone'] = ' / '.join(x for x in (obj.phone, obj.landline) if x)
         data.pop('landline', None)
+        logo_val = obj.logo_url or ''
+        if not logo_val and isinstance(obj.profile, dict):
+            logo_val = obj.profile.get('logo_url') or obj.profile.get('logo') or ''
+        if logo_val and str(logo_val).startswith('/media/') and req:
+            logo_val = req.build_absolute_uri(logo_val)
+        data['logo'] = logo_val
+        data['logoUrl'] = logo_val
+        data['logo_url'] = logo_val
         data['photos'] = getattr(obj, 'photo_count', 0) or obj.photos
+        is_ver = (
+            getattr(obj, 'verified', False)
+            or (obj.owner is not None and getattr(obj.owner, 'approval_status', '') == 'approved')
+            or (hasattr(obj, 'school_accounts') and obj.school_accounts.filter(status='approved', school_link_status='approved').exists())
+        )
+        data['verified'] = bool(is_ver)
         data['reviewList'] = _approved(obj, 3)
         data.update(_admission(obj))
         return data
@@ -147,17 +200,25 @@ class ReviewSerializer(serializers.ModelSerializer):
         return v
 
     def validate_text(self, v):
-        if len(v.strip()) < 20:
-            raise serializers.ValidationError('Please write at least 20 characters.')
+        if not v or not v.strip():
+            raise serializers.ValidationError('Please write a review.')
         return v.strip()
 
     def create(self, validated):
         sid = validated.pop('schoolId')
-        try:
-            school = School.objects.get(school_id=sid, isActive=True)
-        except School.DoesNotExist:
+        school = School.objects.filter(school_id=sid, isActive=True).first()
+        if not school:
+            school = School.objects.filter(pk=sid, isActive=True).first()
+        if not school:
             raise serializers.ValidationError({'schoolId': 'School not found.'})
-        return Review.objects.create(school=school, is_approved=False, **validated)
+
+        request = self.context.get('request')
+        user = getattr(request, 'user', None) if request and request.user.is_authenticated else None
+        extra = {}
+        if user:
+            extra['parent_user'] = user
+
+        return Review.objects.create(school=school, is_approved=True, **extra, **validated)
 
 
 class EnquirySerializer(serializers.ModelSerializer):

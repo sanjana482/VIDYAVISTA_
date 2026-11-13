@@ -175,8 +175,8 @@ img { max-width: 100%; }
 .vv-rate-card:hover { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .vv-rate-card { transform: none; opacity: 1; } }
 
-/* ---------- desktop: everything a little smaller (same as browser zoom 90%) ---------- */
-@media (min-width: 1024px) { html { font-size: 90%; } }
+/* ---------- desktop: comfortable 105% laptop zoom feel (95% root font scale) ---------- */
+@media (min-width: 1024px) { html { font-size: 95%; } }
 
 /* ---------- find schools by board: cards slide up one by one, lift + tilt on hover, bar fills, middle card grows on phones ---------- */
 .vv-board-item { scale: calc(1 - var(--p, 0) * 0.07); transition: scale 0.2s linear; }

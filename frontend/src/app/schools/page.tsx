@@ -3,17 +3,20 @@ import { Suspense } from "react";
 import Navbar from "../components/Navbar";
 import SchoolsHero from "../components/SchoolsHero";
 import SchoolListing from "../components/SchoolListing";
+import SchoolSkeletonCard from "../components/SchoolSkeletonCard";
+
 import ParentGuide from "../components/ParentGuide";
 import SchoolsFAQ from "../components/SchoolsFAQ";
 import RelatedLinks from "../components/RelatedLinks";
 import Footer from "../components/Footer";
 import Link from "next/link";
 import { citiesOf, type School } from "../data/schools";
-import { fetchAllSchools } from "../lib/schoolsApi";
+import { fetchAllSchoolsSafe } from "../lib/schoolsApi";
 import { listingFaqs } from "../data/faqs";
 import { abs, cityPath, jsonLd, schoolPath } from "../lib/seo";
 import { pretty } from "../lib/places";
 import ShowMore from "../components/ShowMore";
+
 
 export const metadata: Metadata = {
   title: "Best Schools in India 2027-28",
@@ -29,8 +32,9 @@ export const metadata: Metadata = {
   },
 };
 
-// re-built every minute so schools added in /admin show up without a redeploy
-export const revalidate = 604800;
+// re-built every hour so schools added in /admin show up without a redeploy
+export const revalidate = 86400; // 24 hours (prevents Vercel ISR write quota burn)
+
 
 const listingSchema = (schools: School[]) => [
   {
@@ -66,13 +70,17 @@ const listingSchema = (schools: School[]) => [
 
 
 export default async function Schools() {
-  const schools = await fetchAllSchools();
+  const schools = await fetchAllSchoolsSafe();
   const CITIES = citiesOf(schools);
   return (
     <main className="min-h-screen bg-white">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(listingSchema(schools)) }} />
       <Navbar />
-      <Suspense fallback={null}>
+      <Suspense fallback={
+        <div className="mx-auto max-w-7xl px-5 py-10 space-y-5">
+          {Array.from({ length: 4 }).map((_, i) => <SchoolSkeletonCard key={i} />)}
+        </div>
+      }>
         <SchoolsHero schools={schools} />
         <SchoolListing schools={schools} />
       </Suspense>

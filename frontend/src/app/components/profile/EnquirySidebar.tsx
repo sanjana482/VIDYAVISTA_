@@ -7,13 +7,14 @@ import Icon from "../Icon";
 
 type Props = {
   schoolName: string;
+  schoolId?: number;
   feeRange: string;
   phone: string;
   phoneHref: string;
   classes: string[];
 };
 
-export default function EnquirySidebar({ schoolName, feeRange, phone, phoneHref, classes }: Props) {
+export default function EnquirySidebar({ schoolName, schoolId, feeRange, phone, phoneHref, classes }: Props) {
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
   const [cls, setCls] = useState("");
@@ -30,7 +31,7 @@ export default function EnquirySidebar({ schoolName, feeRange, phone, phoneHref,
     setErrors(err);
     if (Object.keys(err).length) return;
     try {
-      await postEnquiry({ schoolName, parentName: name.trim(), mobile, className: cls });
+      await postEnquiry({ schoolName, schoolId, parentName: name.trim(), mobile, className: cls });
       setDone(true);
     } catch {
       setErrors({ form: "Something went wrong. Please try again." });
@@ -99,6 +100,19 @@ export default function EnquirySidebar({ schoolName, feeRange, phone, phoneHref,
         <a href={`tel:${phoneHref}`} className="mt-4 flex items-center justify-center gap-2 rounded-xl border border-[#9ED8F5] bg-[#EAF6FD] px-4 py-3.5 text-sm font-extrabold text-[#0A5C91] transition hover:bg-[#D7EEFA]">
           <Icon name="phone" className="h-4 w-4" /> Or call the school: {phone.split(" / ")[0]}
         </a>
+
+        <div className="mt-5 rounded-2xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC] p-4 text-center">
+          <p className="text-xs font-bold text-[#0B2A47]">Are you the Owner or Principal?</p>
+          <p className="mt-1 text-[11px] text-[#64748b]">
+            Claim this official listing to manage admissions, update fees, and receive parent enquiries.
+          </p>
+          <a
+            href={`/login?role=school&mode=register&claim_school_id=${schoolId || ""}&claim_school_name=${encodeURIComponent(schoolName)}`}
+            className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[#0B2A47] to-[#0A5C91] py-2.5 text-xs font-bold text-white shadow-sm transition hover:from-[#0795DC] hover:to-[#0A5C91]"
+          >
+            Claim This School Listing &rarr;
+          </a>
+        </div>
       </div>
     </aside>
   );

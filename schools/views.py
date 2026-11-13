@@ -6,7 +6,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
-from .models import School, Enquiry, LocationPage, Review
+from .models import School, Enquiry, LocationPage, Review, ParentProfile
 from .serializers import SchoolSerializer, SchoolListSerializer, EnquirySerializer, LocationSerializer, ReviewSerializer
 
 @api_view(['GET'])
@@ -96,7 +96,14 @@ class EnquiryViewSet(viewsets.ModelViewSet):
     http_method_names=['get','post','patch','delete','head','options']
     def get_permissions(self): return [AllowAny()] if self.action=='create' else [IsAdminUser()]
     def create(self,request,*args,**kwargs):
-        s=self.get_serializer(data=request.data); s.is_valid(raise_exception=True); s.save(); return Response({'ok':True,'data':s.data},status=201)
+        s=self.get_serializer(data=request.data); s.is_valid(raise_exception=True)
+        parent_user = request.user if (request.user and request.user.is_authenticated) else None
+        if not parent_user:
+            pp = ParentProfile.objects.filter(mobile=s.validated_data.get('mobile','')).select_related('user').first()
+            if pp:
+                parent_user = pp.user
+        obj = s.save(parent_user=parent_user)
+        return Response({'ok':True,'data':self.get_serializer(obj).data},status=201)
 
 class LocationViewSet(viewsets.ModelViewSet):
     serializer_class=LocationSerializer
@@ -111,18 +118,54 @@ class LocationViewSet(viewsets.ModelViewSet):
 
 
 class ReviewViewSet(viewsets.GenericViewSet):
-    """POST /api/reviews/  - koi bhi review bhej sakta hai, par admin approve kare tab tak rating me nahi judta."""
+    """GET /api/reviews/?schoolId=... to list approved reviews; POST /api/reviews/ to submit."""
     queryset = Review.objects.none()
     serializer_class = ReviewSerializer
     permission_classes = [AllowAny]
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = 'reviews'
 
+    def list(self, request, *args, **kwargs):
+        school_id = request.query_params.get('schoolId') or request.query_params.get('school')
+        if not school_id:
+            return Response({'ok': True, 'data': []})
+        school = School.objects.filter(Q(school_id=school_id) | Q(pk=school_id)).first()
+        if not school:
+            return Response({'ok': True, 'data': []})
+        qs = school.review_items.filter(is_approved=True).order_by('-created_at')
+        data = [
+            {
+                'id': r.pk,
+                'name': r.name,
+                'role': r.role,
+                'rating': r.rating,
+                'text': r.text,
+                'date': r.created_at.date().isoformat(),
+            }
+            for r in qs
+        ]
+        return Response({
+            'ok': True,
+            'data': data,
+            'rating': round(float(school.rating or 0), 1),
+            'count': school.reviews,
+        })
+
     def create(self, request, *args, **kwargs):
-        s = self.get_serializer(data=request.data)
+        s = self.get_serializer(data=request.data, context={'request': request})
         s.is_valid(raise_exception=True)
-        s.save()
-        return Response({'ok': True}, status=201)
+        obj = s.save()
+        return Response({
+            'ok': True,
+            'review': {
+                'id': obj.pk,
+                'name': obj.name,
+                'role': obj.role,
+                'rating': obj.rating,
+                'text': obj.text,
+                'date': obj.created_at.date().isoformat(),
+            }
+        }, status=201)
 
 
 from django.utils.text import slugify as _slugify

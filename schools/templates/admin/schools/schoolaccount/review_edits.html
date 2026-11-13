@@ -1,0 +1,360 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  .vv-review-container {
+    max-width: 1100px;
+    margin: 24px auto 60px;
+    padding: 0 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  .vv-header-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 24px 28px;
+    box-shadow: 0 4px 16px rgba(11,42,71,0.06);
+    margin-bottom: 24px;
+  }
+  .vv-stats-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .vv-section-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .vv-section-title {
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 14px 20px;
+    font-size: 14px;
+    font-weight: 800;
+    color: #0B2A47;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .vv-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .vv-table th {
+    background: #f1f5f9;
+    padding: 10px 16px;
+    color: #475569;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .vv-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: top;
+  }
+  .vv-row-changed {
+    background: #f0fdf4 !important;
+  }
+  .vv-tag {
+    display: inline-block;
+    background: #e2e8f0;
+    color: #334155;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    margin: 2px;
+  }
+  .vv-tag-new {
+    background: #bbf7d0;
+    color: #166534;
+    font-weight: 700;
+  }
+  .vv-modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.65);
+    z-index: 99999;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(2px);
+  }
+  .vv-modal-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 30px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    text-align: center;
+    animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes modalPop {
+    from { opacity: 0; transform: scale(0.92); }
+    to { opacity: 1; transform: scale(1); }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="vv-review-container">
+
+  <!-- Breadcrumbs & Back -->
+  <div style="margin-bottom: 14px;">
+    <a href="{% url 'admin:schools_schoolaccount_changelist' %}" style="color: #0A5C91; font-weight: 700; text-decoration: none; font-size: 13px;">
+      &larr; Back to School Owners &amp; Institutions
+    </a>
+  </div>
+
+  <!-- Header Card -->
+  <div class="vv-header-card">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <h1 style="margin: 0; font-size: 24px; font-weight: 800; color: #0B2A47;">
+            {{ school.name|default:account.institution_name }}
+          </h1>
+          {% if school.slug %}
+            <a href="/schools/{{ school.slug }}" target="_blank" style="color: #0795DC; font-size: 12px; font-weight: 700; text-decoration: none;">
+              <i class="fas fa-external-link-alt"></i> View Public Listing
+            </a>
+          {% endif %}
+        </div>
+        <p style="margin: 6px 0 0; color: #475569; font-size: 13px;">
+          Submitted by Owner: <strong>{{ account.contact_person }}</strong> ({{ account.designation|default:"Owner" }}) &bull;
+          Email: <strong>{{ account.email }}</strong> &bull;
+          Mobile: <strong>{{ account.mobile }}</strong>
+        </p>
+      </div>
+
+      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        {% if changed_count > 0 %}
+          <span class="vv-stats-badge" style="background: #dcfce7; color: #15803d; border: 1px solid #86efac;">
+            <i class="fas fa-pencil-alt"></i> {{ changed_count }} Field{{ changed_count|pluralize }} Modified
+          </span>
+        {% else %}
+          <span class="vv-stats-badge" style="background: #f1f5f9; color: #64748b;">
+            <i class="fas fa-check"></i> No Changes from Live
+          </span>
+        {% endif %}
+
+        {% if account.edit_approval_status == 'pending' %}
+          <span class="vv-stats-badge" style="background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5;">
+            <i class="fas fa-clock"></i> Pending Approval
+          </span>
+        {% elif account.edit_approval_status == 'approved' %}
+          <span class="vv-stats-badge" style="background: #dcfce7; color: #15803d;">
+            <i class="fas fa-check-double"></i> Approved &amp; Published
+          </span>
+        {% elif account.edit_approval_status == 'rejected' %}
+          <span class="vv-stats-badge" style="background: #fee2e2; color: #b91c1c;">
+            <i class="fas fa-times-circle"></i> Rejected
+          </span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Quick action buttons bar -->
+    <div style="margin-top: 20px; padding-top: 18px; border-top: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+      <div style="color: #64748b; font-size: 12px;">
+        <i class="fas fa-info-circle" style="color: #0795DC; margin-right: 4px;"></i>
+        Review the fields edited by the school owner below. Once approved, changes are instantly published live to VidyaVista.
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <button type="button" onclick="openApproveModal()" class="btn btn-success" style="padding: 9px 22px; font-weight: 700; border-radius: 8px; font-size: 13px;">
+          <i class="fas fa-check-circle" style="margin-right: 6px;"></i> Approve &amp; Publish Live
+        </button>
+        <button type="button" onclick="openRejectModal()" class="btn btn-danger" style="padding: 9px 18px; font-weight: 700; border-radius: 8px; font-size: 13px;">
+          <i class="fas fa-times-circle" style="margin-right: 6px;"></i> Reject Changes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- The 10 Comparison Sections -->
+  {% for sec in sections_data %}
+    <div class="vv-section-card">
+      <div class="vv-section-title">
+        <span>{{ sec.title }}</span>
+        {% if sec.changed_in_section > 0 %}
+          <span style="font-size: 11px; background: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 6px;">
+            {{ sec.changed_in_section }} change{{ sec.changed_in_section|pluralize }}
+          </span>
+        {% else %}
+          <span style="font-size: 11px; color: #94a3b8; font-weight: normal;">No changes</span>
+        {% endif %}
+      </div>
+      <table class="vv-table">
+        <thead>
+          <tr>
+            <th style="width: 25%;">Field Name</th>
+            <th style="width: 35%;">Current Live Value (On Website)</th>
+            <th style="width: 40%;">New Submitted Value (Pending Approval)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for field in sec.fields %}
+            <tr class="{% if field.is_changed %}vv-row-changed{% endif %}">
+              <td style="font-weight: 700; color: #1e293b;">
+                {{ field.label }}
+                {% if field.is_changed %}
+                  <span style="display: block; font-size: 10px; color: #15803d; font-weight: 700; margin-top: 2px;">
+                    <i class="fas fa-pencil-alt"></i> Changed
+                  </span>
+                {% endif %}
+              </td>
+              <td style="color: #64748b;">
+                {% if field.is_image and field.current_val %}
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <img src="{{ field.current_val }}" alt="" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1;">
+                    <a href="{{ field.current_val }}" target="_blank" style="font-size: 11px; color: #0284c7;">View Live</a>
+                  </div>
+                {% elif field.is_list %}
+                  {% for item in field.current_val %}
+                    <span class="vv-tag">{{ item }}</span>
+                  {% empty %}
+                    <span style="font-style: italic; color: #94a3b8;">None</span>
+                  {% endfor %}
+                {% else %}
+                  {{ field.current_val|default:"-"|linebreaksbr }}
+                {% endif %}
+              </td>
+              <td>
+                {% if field.is_image and field.new_val %}
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <img src="{{ field.new_val }}" alt="" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px; border: 2px solid #16a34a;">
+                    <a href="{{ field.new_val }}" target="_blank" style="font-size: 11px; color: #15803d; font-weight: 700;">View New Photo</a>
+                  </div>
+                {% elif field.is_list %}
+                  {% for item in field.new_val %}
+                    <span class="vv-tag {% if field.is_changed %}vv-tag-new{% endif %}">{{ item }}</span>
+                  {% empty %}
+                    <span style="font-style: italic; color: #94a3b8;">None</span>
+                  {% endfor %}
+                {% else %}
+                  <span style="{% if field.is_changed %}font-weight: 700; color: #0f172a;{% else %}color: #64748b;{% endif %}">
+                    {{ field.new_val|default:"-"|linebreaksbr }}
+                  </span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endfor %}
+
+  <!-- Bottom Floating / Sticky Action Bar -->
+  <div style="margin-top: 30px; text-align: center; background: #fff; padding: 20px; border-radius: 14px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
+    <button type="button" onclick="openApproveModal()" class="btn btn-success" style="padding: 12px 32px; font-weight: 800; border-radius: 8px; font-size: 15px; margin-right: 12px;">
+      <i class="fas fa-check-circle" style="margin-right: 6px;"></i> Approve &amp; Publish Changes to Website
+    </button>
+    <button type="button" onclick="openRejectModal()" class="btn btn-danger" style="padding: 12px 24px; font-weight: 700; border-radius: 8px; font-size: 15px; margin-right: 12px;">
+      <i class="fas fa-times-circle" style="margin-right: 6px;"></i> Reject Changes
+    </button>
+    <a href="{% url 'admin:schools_schoolaccount_changelist' %}" class="btn btn-outline-secondary" style="padding: 12px 20px; font-weight: 600; border-radius: 8px; font-size: 14px;">
+      Cancel &amp; Return
+    </a>
+  </div>
+
+</div>
+
+<!-- Hidden Action Form -->
+<form id="reviewActionForm" method="POST" action="">
+  {% csrf_token %}
+  <input type="hidden" name="decision" id="decisionInput" value="">
+  <input type="hidden" name="reason" id="reasonInput" value="">
+</form>
+
+<!-- Modal 1: Approve Confirmation (2-Step Double Confirmation) -->
+<div id="approveConfirmModal" class="vv-modal-backdrop">
+  <div class="vv-modal-box">
+    <div style="width: 60px; height: 60px; background: #dcfce7; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #16a34a; font-size: 28px; margin-bottom: 16px;">
+      <i class="fas fa-check"></i>
+    </div>
+    <h3 style="margin: 0 0 10px; font-weight: 800; color: #0B2A47; font-size: 20px;">
+      Confirm Approval &amp; Publish Live?
+    </h3>
+    <p style="color: #64748b; font-size: 14px; line-height: 1.6; margin: 0 0 24px;">
+      Are you sure you want to approve and publish these profile edits for <strong>{{ school.name|default:account.institution_name }}</strong>?
+      <br><br>
+      <span style="color: #15803d; font-weight: 600;">
+        <i class="fas fa-shield-alt"></i> All modified details will be updated live immediately on VidyaVista.
+      </span>
+    </p>
+    <div style="display: flex; gap: 12px; justify-content: center;">
+      <button type="button" onclick="closeApproveModal()" class="btn btn-outline-secondary" style="padding: 10px 22px; font-weight: 700; border-radius: 8px;">
+        Cancel
+      </button>
+      <button type="button" onclick="submitApprove()" class="btn btn-success" style="padding: 10px 26px; font-weight: 800; border-radius: 8px;">
+        Yes, Approve &amp; Publish Live
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal 2: Reject with Optional Reason -->
+<div id="rejectConfirmModal" class="vv-modal-backdrop">
+  <div class="vv-modal-box">
+    <div style="width: 60px; height: 60px; background: #fee2e2; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #dc2626; font-size: 28px; margin-bottom: 16px;">
+      <i class="fas fa-exclamation-triangle"></i>
+    </div>
+    <h3 style="margin: 0 0 10px; font-weight: 800; color: #0B2A47; font-size: 20px;">
+      Reject Profile Edits?
+    </h3>
+    <p style="color: #64748b; font-size: 13px; line-height: 1.5; margin: 0 0 14px;">
+      You are rejecting the changes submitted by <strong>{{ account.contact_person }}</strong>.
+      You can provide optional feedback so the owner knows what to correct:
+    </p>
+    <textarea id="modalRejectReasonInput" placeholder="Optional feedback for school owner (e.g. Please provide official fee structure)..." style="width: 100%; min-height: 80px; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; box-sizing: border-box; margin-bottom: 20px;"></textarea>
+    <div style="display: flex; gap: 12px; justify-content: center;">
+      <button type="button" onclick="closeRejectModal()" class="btn btn-outline-secondary" style="padding: 10px 22px; font-weight: 700; border-radius: 8px;">
+        Cancel
+      </button>
+      <button type="button" onclick="submitReject()" class="btn btn-danger" style="padding: 10px 24px; font-weight: 800; border-radius: 8px;">
+        Confirm Rejection
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function openApproveModal() {
+    document.getElementById('approveConfirmModal').style.display = 'flex';
+  }
+  function closeApproveModal() {
+    document.getElementById('approveConfirmModal').style.display = 'none';
+  }
+  function submitApprove() {
+    document.getElementById('decisionInput').value = 'approve';
+    document.getElementById('reviewActionForm').submit();
+  }
+
+  function openRejectModal() {
+    document.getElementById('rejectConfirmModal').style.display = 'flex';
+  }
+  function closeRejectModal() {
+    document.getElementById('rejectConfirmModal').style.display = 'none';
+  }
+  function submitReject() {
+    var reason = (document.getElementById('modalRejectReasonInput').value || '').trim();
+    document.getElementById('reasonInput').value = reason;
+    document.getElementById('decisionInput').value = 'reject';
+    document.getElementById('reviewActionForm').submit();
+  }
+</script>
+{% endblock %}

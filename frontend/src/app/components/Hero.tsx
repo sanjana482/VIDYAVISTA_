@@ -56,11 +56,13 @@ export default function Hero({ schools = [] }: { schools?: SearchSchool[] }) {
   }
 
   return (
-    <section className="relative isolate overflow-hidden bg-gradient-to-br from-[#DDEAF1] via-[#E6F0F8] to-[#F6DDE5]">
+    <section className="relative z-30 bg-gradient-to-br from-[#DDEAF1] via-[#E6F0F8] to-[#F6DDE5]">
       {/* Colourful decorative shapes */}
-      <div className="pointer-events-none absolute -right-24 -top-20 -z-10 h-96 w-96 rounded-full bg-[#FF9DBB]/50 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-24 -left-20 -z-10 h-96 w-96 rounded-full bg-[#56B5EC]/40 blur-3xl" />
-      <div className="pointer-events-none absolute left-1/2 top-1/3 -z-10 h-72 w-72 rounded-full bg-[#F5C5D5]/35 blur-3xl" />
+      <div className="pointer-events-none absolute inset-0 overflow-hidden -z-10">
+        <div className="absolute -right-24 -top-20 h-96 w-96 rounded-full bg-[#FF9DBB]/50 blur-3xl" />
+        <div className="absolute -bottom-24 -left-20 h-96 w-96 rounded-full bg-[#56B5EC]/40 blur-3xl" />
+        <div className="absolute left-1/2 top-1/3 h-72 w-72 rounded-full bg-[#F5C5D5]/35 blur-3xl" />
+      </div>
 
       <div className="mx-auto grid max-w-7xl items-center gap-12 px-5 py-14 sm:py-20 lg:grid-cols-2 lg:gap-16 lg:px-8">
         {/* Left side */}
@@ -83,7 +85,7 @@ export default function Hero({ schools = [] }: { schools?: SearchSchool[] }) {
           </p>
 
           {/* Search card */}
-          <div className="mt-8 rounded-3xl border border-white/90 bg-gradient-to-br from-white via-[#F9FBFD] to-[#E5EEF4] p-5 shadow-2xl shadow-[#0D4E74]/10 sm:p-6">
+          <div className="mt-8 rounded-3xl border border-white/90 bg-gradient-to-br from-white via-[#F9FBFD] to-[#E5EEF4] p-5 shadow-2xl shadow-[#0D4E74]/10 sm:p-6 relative z-30">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-extrabold text-[#12304A]">
                 Find your ideal school
@@ -145,7 +147,7 @@ export default function Hero({ schools = [] }: { schools?: SearchSchool[] }) {
             </button>
 
             {/* school-name search: a round icon that opens into a bar */}
-            <div className="mt-4">
+            <div className="mt-4 relative z-40">
               <SchoolSearchBar schools={schools} schoolType={schoolType} location={selectedLocation} />
             </div>
           </div>

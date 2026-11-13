@@ -17,16 +17,18 @@ export default function SchoolSearchBar({
   schoolType,
   location,
   className = "",
+  initialQuery = "",
 }: {
   schools?: SearchSchool[];
   schoolType: string;
   location: string;
   className?: string;
+  initialQuery?: string;
 }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
+  const [open, setOpen] = useState(Boolean(initialQuery));
+  const [name, setName] = useState(initialQuery);
   const [hint, setHint] = useState(0);
 
   const hints = useMemo(() => schools.slice(0, 5).map((s) => s.name), [schools]);
@@ -61,6 +63,14 @@ export default function SchoolSearchBar({
     if (!open) return; // pressing Enter on the closed icon must not search
     const q = name.trim();
     if (!location) {
+      if (typeof window !== "undefined" && window.location.pathname.startsWith("/schools")) {
+        const params = new URLSearchParams(window.location.search);
+        if (schoolType) params.set("type", schoolType);
+        if (q) params.set("q", q);
+        else params.delete("q");
+        router.push(`/schools?${params.toString()}`);
+        return;
+      }
       openLocationPicker(schoolType, q); // first visit: ask for the location, then open the listing
       return;
     }
@@ -72,14 +82,14 @@ export default function SchoolSearchBar({
   }
 
   return (
-    <form onSubmit={submit} role="search" className={`relative h-14 w-full ${className}`}>
+    <form onSubmit={submit} role="search" className={`relative h-14 w-full ${open ? "z-[100]" : "z-10"} ${className}`}>
       <div
         onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node) && !name.trim()) setOpen(false); }}
         onKeyDown={(e) => { if (e.key === "Escape") { setOpen(false); (e.target as HTMLElement).blur?.(); } }}
         className={`absolute left-0 top-0 h-14 rounded-full border bg-white transition-[width,box-shadow,border-color] duration-500 ease-[cubic-bezier(0.65,0,0.25,1)] ${
           open
-            ? "w-full border-[#0A7BBF] shadow-xl shadow-[#0A7BBF]/20 ring-4 ring-[#0A7BBF]/15"
-            : "w-14 border-[#0A5C91] shadow-lg shadow-[#0A5C91]/25"
+            ? "w-full border-[#0A7BBF] shadow-xl shadow-[#0A7BBF]/20 ring-4 ring-[#0A7BBF]/15 z-[100]"
+            : "w-14 border-[#0A5C91] shadow-lg shadow-[#0A5C91]/25 z-10"
         }`}
       >
         {/* 1. the round icon: only opens / closes the bar */}
@@ -130,7 +140,7 @@ export default function SchoolSearchBar({
 
         {/* name suggestions */}
         {hits.length > 0 && (
-          <ul className="vv-pop absolute left-2 right-2 top-full z-30 mt-2 overflow-hidden rounded-2xl border border-[#D9E0E8] bg-white py-1.5 shadow-xl">
+          <ul className="vv-pop absolute left-0 right-0 top-full z-[1000] mt-2 max-h-80 overflow-y-auto rounded-2xl border border-[#D9E0E8] bg-white py-2 shadow-2xl">
             {hits.map((s) => (
               <li key={s.id}>
                 <button

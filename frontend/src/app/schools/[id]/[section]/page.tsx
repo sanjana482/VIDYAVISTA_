@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import SchoolProfileView from '../SchoolProfileView'
-import { SECTIONS, type Section, schoolMetadata } from '@/app/lib/seo'
+import SchoolProfileView from "../SchoolProfileView";
+import { SECTIONS, type Section, schoolMetadata } from "@/app/lib/seo";
 
 type Props = { params: { id: string; section: string } };
 
-export const revalidate = 604800;
+export const revalidate = 86400;
 
-// section pages are created on first visit (keeps the build fast and independent of the backend)
 export async function generateStaticParams() {
   return [];
 }

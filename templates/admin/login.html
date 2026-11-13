@@ -1,0 +1,164 @@
+{% extends "admin/login.html" %}
+{% load i18n %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <style>
+    .vv-captcha-row {
+      margin-bottom: 1rem;
+    }
+    .vv-captcha-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 6px;
+    }
+    .vv-captcha-display {
+      background: #f0f4f8;
+      border: 2px solid #c8d6e5;
+      border-radius: 6px;
+      padding: 8px 18px;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 6px;
+      color: #0B2A47;
+      font-family: 'Courier New', monospace;
+      user-select: none;
+      min-width: 120px;
+      text-align: center;
+    }
+    .vv-captcha-input {
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 8px 12px;
+      font-size: 15px;
+      width: 110px;
+    }
+    .vv-captcha-refresh {
+      background: none;
+      border: 1px solid #aaa;
+      border-radius: 4px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #555;
+    }
+    .vv-captcha-refresh:hover { background: #eee; }
+    #id_captcha_answer { font-size: 15px; }
+    .pw-wrapper { position: relative; }
+    .pw-toggle {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #888;
+      font-size: 13px;
+      padding: 0;
+    }
+    .pw-toggle:hover { color: #0B2A47; }
+    #id_password { padding-right: 70px; }
+  </style>
+{% endblock %}
+
+{% block content %}
+  {{ block.super }}
+{% endblock %}
+
+{% block after_login_form %}
+  <script>
+    (function () {
+      /* ---- Show/Hide Password ---- */
+      var pwField = document.getElementById('id_password');
+      if (pwField) {
+        var wrapper = document.createElement('div');
+        wrapper.className = 'pw-wrapper';
+        pwField.parentNode.insertBefore(wrapper, pwField);
+        wrapper.appendChild(pwField);
+        var toggleBtn = document.createElement('button');
+        toggleBtn.type = 'button';
+        toggleBtn.className = 'pw-toggle';
+        toggleBtn.textContent = 'Show';
+        toggleBtn.addEventListener('click', function () {
+          if (pwField.type === 'password') {
+            pwField.type = 'text';
+            toggleBtn.textContent = 'Hide';
+          } else {
+            pwField.type = 'password';
+            toggleBtn.textContent = 'Show';
+          }
+        });
+        wrapper.appendChild(toggleBtn);
+      }
+
+      /* ---- CAPTCHA injection ---- */
+      var form = document.querySelector('#login-form') || document.querySelector('form');
+      if (!form) return;
+
+      /* Fetch captcha from API */
+      function loadCaptcha(callback) {
+        fetch('/api/portal/auth/captcha')
+          .then(function(r){ return r.json(); })
+          .then(function(data){
+            if (callback) callback(data);
+          })
+          .catch(function(){ /* silent */ });
+      }
+
+      var captchaData = { captchaToken: '', captchaCode: '----' };
+
+      /* Build captcha row */
+      var submitBtn = form.querySelector('[type=submit]') || form.querySelector('input[type=submit]');
+      if (!submitBtn) return;
+
+      var row = document.createElement('div');
+      row.className = 'form-row vv-captcha-row';
+      row.innerHTML =
+        '<label>Security Code *</label>' +
+        '<div class="vv-captcha-box">' +
+          '<span id="vv-cap-display" class="vv-captcha-display">----</span>' +
+          '<input id="vv-cap-answer" class="vv-captcha-input" type="text" maxlength="6" autocomplete="off" placeholder="Type code" />' +
+          '<button type="button" class="vv-captcha-refresh" id="vv-cap-refresh" title="Refresh">&#8635; New</button>' +
+        '</div>';
+
+      submitBtn.parentNode.insertBefore(row, submitBtn);
+
+      function refreshCaptcha() {
+        document.getElementById('vv-cap-display').textContent = '...';
+        loadCaptcha(function(data) {
+          captchaData = data;
+          document.getElementById('vv-cap-display').textContent = data.captchaCode || '----';
+          document.getElementById('vv-cap-answer').value = '';
+        });
+      }
+
+      document.getElementById('vv-cap-refresh').addEventListener('click', refreshCaptcha);
+      refreshCaptcha();
+
+      /* Inject hidden fields on submit */
+      form.addEventListener('submit', function(e) {
+        var answer = (document.getElementById('vv-cap-answer').value || '').trim();
+        if (!answer) {
+          e.preventDefault();
+          alert('Please enter the security code.');
+          return;
+        }
+        /* Inject token + answer as hidden fields */
+        var setHidden = function(name, val) {
+          var el = form.querySelector('input[name="' + name + '"]');
+          if (!el) {
+            el = document.createElement('input');
+            el.type = 'hidden';
+            el.name = name;
+            form.appendChild(el);
+          }
+          el.value = val;
+        };
+        setHidden('captcha_token', captchaData.captchaToken || '');
+        setHidden('captcha_answer', answer);
+      });
+    })();
+  </script>
+{% endblock %}

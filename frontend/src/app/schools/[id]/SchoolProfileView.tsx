@@ -108,7 +108,8 @@ export default async function SchoolProfileView({ param, section }: { param: str
 
   const p = getProfile(s);
   const range = feeRange(s);
-  const rangeText = `${lakh(range.min)} - ${lakh(range.max)}`;
+  const hasFee = (range.min > 0 || range.max > 0) && Number.isFinite(range.min);
+  const rangeText = hasFee ? `${lakh(range.min)} - ${lakh(range.max)}` : "Beginning Soon";
   const classes = classList(s);
   const lastCls = classes[classes.length - 1].cls;
   const slabs = { "2027-28": feeSlabs(s, "2027-28"), "2026-27": feeSlabs(s, "2026-27") };
@@ -121,7 +122,7 @@ export default async function SchoolProfileView({ param, section }: { param: str
     { label: "Classes", value: `${classes[0].cls} - ${lastCls}` },
     p.established ? { label: "Established", value: String(p.established) } : null,
     p.ratio ? { label: "Student : Teacher", value: `${p.ratio} : 1` } : null,
-    { label: "Annual fee", value: `${lakh(range.min).replace(".00", "")} - ${lakh(range.max)}` },
+    { label: "Annual fee", value: hasFee ? `${lakh(range.min).replace(".00", "")} - ${lakh(range.max)}` : "Beginning Soon" },
     p.students ? { label: "Students", value: p.students.toLocaleString("en-IN") } : null,
     p.campus ? { label: "Campus", value: p.campus } : null,
   ].filter((x): x is { label: string; value: string } => !!x);
@@ -234,6 +235,7 @@ export default async function SchoolProfileView({ param, section }: { param: str
         <div className="pb-10 pt-10 lg:pb-0">
           <EnquirySidebar
             schoolName={s.name}
+            schoolId={s.id}
             feeRange={rangeText}
             phone={p.contact.phone}
             phoneHref={p.contact.phoneHref}
@@ -292,6 +294,7 @@ export default async function SchoolProfileView({ param, section }: { param: str
 
       <ApplyModal
         schoolName={s.name}
+        schoolId={s.id}
         city={s.city}
         status={p.admission.status}
         classes={classes.map((c) => c.cls)}

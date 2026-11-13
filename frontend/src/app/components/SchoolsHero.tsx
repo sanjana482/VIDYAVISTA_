@@ -8,6 +8,8 @@ import { BOARDS, BOARD_LABEL, TYPES, citiesOf, stateFor, statesOf, type School }
 import { isBoardingType, normalizeType, readPreference, savePreference, toHeroType } from "../lib/preferences";
 import { resolveContent, type LocationContent } from "../lib/locationsApi";
 import HeroVisual from "./HeroVisual";
+import SchoolSearchBar from "./SchoolSearchBar";
+
 import { APPLIED_EVENT, headingFor, type AppliedInfo } from "./PlaceHeading";
 import { useActiveLocation, useLocationContent } from "../lib/useActiveLocation";
 import { useListingParams, type ListingInitial } from "../lib/useListingParams";
@@ -57,7 +59,7 @@ export default function SchoolsHero({
   }, [urlKey]);
 
   // ---- what the visitor selected (state / city) decides the title, text and photos ----
-    const initialLoc = initial?.city
+  const initialLoc = initial?.city
     ? { kind: "city" as const, name: initial.city }
     : initial?.state
     ? { kind: "state" as const, name: initial.state }
@@ -70,39 +72,67 @@ export default function SchoolsHero({
     window.addEventListener(APPLIED_EVENT, on);
     return () => window.removeEventListener(APPLIED_EVENT, on);
   }, []);
+
+  // What type and board are currently selected or active:
+  const activeType =
+    applied?.type ||
+    (params.get("type") ? normalizeType(params.get("type")!) : "") ||
+    normalizeType(initial?.type ?? "") ||
+    (heading?.includes("Boarding") ? "Boarding School" : heading?.includes("Day") ? "Day School" : heading?.includes("Play") ? "Play School" : "") ||
+    (readPreference()?.type ? toHeroType(readPreference()!.type) : "");
+
+  const activeBoard = applied?.board || params.get("board") || "";
+
   // the admin text of the page we landed on is shown only while that same place is selected
   const sameAsInitial = initialContent !== undefined && (!active || active.name === initialLoc?.name);
   const fetched = useLocationContent(sameAsInitial ? null : active);
   const content = sameAsInitial ? initialContent : fetched;
-  const placeSchools = active
-    ? schools.filter((s) => (active.kind === "state" ? stateFor(s) === active.name : s.city === active.name))
-    : schools;
+
+  // Filter placeSchools by BOTH location AND active school type/board
+  const placeSchools = schools.filter((s) => {
+    const locMatch = !active || (active.kind === "state" ? stateFor(s) === active.name : s.city === active.name);
+    const typeMatch = !activeType || s.type === activeType;
+    const boardMatch = !activeBoard || s.board === activeBoard;
+    return locMatch && typeMatch && boardMatch;
+  });
+
+  const typeNoun = activeType
+    ? activeType === "Boarding School"
+      ? "boarding schools"
+      : activeType === "Day School"
+      ? "day schools"
+      : "play schools"
+    : "schools";
+
+  const rawBoards = Array.from(new Set(placeSchools.map((x) => BOARD_LABEL[x.board] ?? x.board)));
+  const cleanBoards = Array.from(new Set(rawBoards.map((b) => (b === "No Board" ? "IB Board" : b)).filter((b) => b && b !== "No Board")));
+  if (!cleanBoards.includes("IB Board") && (rawBoards.includes("No Board") || rawBoards.includes("IB"))) {
+    cleanBoards.push("IB Board");
+  }
+
   const view = resolveContent(active, content, placeSchools.length);
   const adminPhotos = [content?.cover, ...(content?.photos ?? [])].filter((x): x is string => !!x);
-  // a school type and/or board was picked (e.g. from "Find schools by board"): title + text speak about exactly that
+
+  // a school type and/or board was picked: title + text speak about exactly that
   const picked = !heading && applied && (applied.type || applied.board) ? applied : null;
-  const pickedCount = picked
-    ? schools.filter(
-        (s) =>
-          (!picked.type || s.type === picked.type) &&
-          (!picked.board || s.board === picked.board) &&
-          (!picked.place || s.city === picked.place || stateFor(s) === picked.place)
-      ).length
-    : 0;
   const pickedTitle = picked ? `Best ${headingFor(picked)} 2027-28` : "";
-  const pickedDescription = (() => {
-    if (!picked) return "";
-    const noun = `${picked.board ? `${BOARD_LABEL[picked.board] ?? picked.board} ` : ""}${picked.type ? `${picked.type.toLowerCase()}s` : "schools"}`;
-    const where = picked.place ? `in ${picked.place}` : "across India";
-    const lead = pickedCount > 0 ? `Explore ${pickedCount} ${noun} ${where}` : `Explore ${noun} ${where}`;
-    const what =
-      picked.type === "Boarding School"
-        ? "residential facilities, annual fees and parent reviews"
-        : picked.type === "Play School"
-        ? "age groups, annual fees and parent reviews"
-        : "classes offered, annual fees and parent reviews";
-    return `${lead}. Compare ${what}, then enquire directly for 2027-28 admission on VidyaVista.`;
+
+  const heroDescription = (() => {
+    if (activeType || picked) {
+      const bName = activeBoard ? (BOARD_LABEL[activeBoard] ?? activeBoard) + " " : "";
+      const where = active ? `in ${active.name}` : "across India";
+      const lead = placeSchools.length > 0 ? `Explore ${placeSchools.length} ${bName}${typeNoun} ${where}` : `Explore ${bName}${typeNoun} ${where}`;
+      const what =
+        activeType === "Boarding School"
+          ? "residential facilities, annual fees and parent reviews"
+          : activeType === "Play School"
+          ? "age groups, annual fees and parent reviews"
+          : "classes offered, annual fees and parent reviews";
+      return `${lead}. Compare ${what}, then enquire directly for 2027-28 admission on VidyaVista.`;
+    }
+    return view.description;
   })();
+
   const titleText = picked
     ? pickedTitle
     : heading
@@ -114,9 +144,8 @@ export default function SchoolsHero({
   const titleParts = titleText.match(/^(.*?)\s*(20\d\d-\d\d)$/);
   const originalTitle = useRef("");
   useEffect(() => {
-    
     if (!originalTitle.current) originalTitle.current = document.title;
-        if (initial) return;
+    if (initial) return;
     document.title = picked ? `${pickedTitle} | VidyaVista` : active ? view.metaTitle : originalTitle.current;
   }, [active, view.metaTitle, picked, pickedTitle]);
 
@@ -125,16 +154,16 @@ export default function SchoolsHero({
     const total = rated.reduce((n, x) => n + x.reviews, 0);
     return { total, avg: total ? rated.reduce((n, x) => n + x.rating * x.reviews, 0) / total : 0 };
   })();
-  const boardCount = new Set(placeSchools.map((s) => s.board)).size;
+
   const stats: [number, string][] = [
-    [placeSchools.length, active ? `${placeSchools.length === 1 ? "school" : "schools"} in ${active.name}` : "schools listed"],
+    [placeSchools.length, active ? `${placeSchools.length === 1 ? typeNoun.slice(0, -1) : typeNoun} in ${active.name}` : `${typeNoun} listed`],
     active?.kind === "city"
       ? [new Set(placeSchools.map((s) => s.area)).size, "localities"]
       : [new Set(placeSchools.map((s) => s.city)).size, "cities"],
-    [boardCount, "boards"],
+    [cleanBoards.length, "boards"],
   ];
 
-    function onSearch(e: React.FormEvent) {
+  function onSearch(e: React.FormEvent) {
     e.preventDefault();
     const [kind, value] = loc.split(":");
     const placeKey = kind === "state" ? "state" : "city";
@@ -156,9 +185,11 @@ export default function SchoolsHero({
   const label = "mb-2 block text-[11px] font-extrabold uppercase tracking-wider text-[#5C6A7B]";
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-[#E6F4FC] via-white to-[#FDE8EF]">
-      <div className="pointer-events-none absolute -left-24 top-10 h-72 w-72 rounded-full bg-[#0795DC]/10 blur-3xl" />
-      <div className="pointer-events-none absolute -right-20 bottom-0 h-72 w-72 rounded-full bg-[#EC0E58]/10 blur-3xl" />
+    <section className="relative z-30 bg-gradient-to-br from-[#E6F4FC] via-white to-[#FDE8EF]">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -left-24 top-10 h-72 w-72 rounded-full bg-[#0795DC]/10 blur-3xl" />
+        <div className="absolute -right-20 bottom-0 h-72 w-72 rounded-full bg-[#EC0E58]/10 blur-3xl" />
+      </div>
 
       <div className="relative mx-auto max-w-7xl px-5 pb-10 pt-6 lg:px-8">
         <nav aria-label="Breadcrumb" className="text-sm text-[#5C6A7B]">
@@ -193,7 +224,7 @@ export default function SchoolsHero({
             </Title>
 
             <div className="mt-5">
-              <ListingDescription key={picked ? pickedDescription : view.description} description={picked ? pickedDescription : view.description} maxLength={180} />
+              <ListingDescription key={heroDescription} description={heroDescription} maxLength={180} />
             </div>
 
             <div className="mt-6 flex flex-wrap gap-3 text-sm text-[#4E5A68]">
@@ -210,8 +241,9 @@ export default function SchoolsHero({
 
           <HeroVisual
             place={active?.name ?? ""}
+            typeLabel={typeNoun}
             count={placeSchools.length}
-            boards={Array.from(new Set(placeSchools.map((x) => BOARD_LABEL[x.board] ?? x.board)))}
+            boards={cleanBoards}
             rating={Math.round(summary.avg * 10) / 10}
             reviews={summary.total}
             minFee={Math.min(...placeSchools.map((x) => x.fee).filter((f) => f > 0), Infinity) === Infinity ? 0 : Math.min(...placeSchools.map((x) => x.fee).filter((f) => f > 0))}
@@ -219,48 +251,17 @@ export default function SchoolsHero({
           />
         </div>
 
-        {/* Search bar */}
-        <form
-          onSubmit={onSearch}
-          className="mt-10 grid gap-4 rounded-3xl border border-[#E1E7EE] bg-white p-5 shadow-xl shadow-[#0B2A47]/5 md:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr_1fr_auto] lg:items-end"
-        >
-          <div>
-            <label htmlFor="hq" className={label}>Search schools</label>
-            <input id="hq" value={q} onChange={(e) => setQ(e.target.value)} placeholder="School name, location or keyword" className={field} />
+        {/* Search bar matching home page */}
+        <div className="mt-8 mx-auto max-w-2xl relative z-40">
+          <div className="rounded-3xl border border-[#D0DBE5] bg-white/95 p-3 shadow-lg shadow-[#0B2A47]/5 backdrop-blur-sm sm:p-4 relative z-40">
+            <SchoolSearchBar
+              schools={schools}
+              schoolType={activeType || type || "Day School"}
+              location={active?.name || (loc ? loc.split(":")[1] : "") || ""}
+              initialQuery={q}
+            />
           </div>
-          <div>
-            <label htmlFor="ht" className={label}>School type</label>
-            <select id="ht" value={type} onChange={(e) => setType(e.target.value)} className={field}>
-              <option value="">All types</option>
-              {TYPES.map((t) => <option key={t}>{t}</option>)}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="hb" className={label}>Board</label>
-            <select id="hb" value={board} onChange={(e) => setBoard(e.target.value)} className={field}>
-              <option value="">All boards</option>
-              {BOARDS.map((b) => <option key={b} value={b}>{BOARD_LABEL[b]}</option>)}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="hl" className={label}>Location</label>
-            <select id="hl" value={loc} onChange={(e) => setLoc(e.target.value)} className={field}>
-              <option value="">All locations</option>
-              <optgroup label="Cities">
-                {CITIES.map((c) => <option key={c} value={`city:${c}`}>{c}</option>)}
-              </optgroup>
-              <optgroup label="States">
-                {STATES.map((c) => <option key={c} value={`state:${c}`}>{c}</option>)}
-              </optgroup>
-            </select>
-          </div>
-          <button
-            type="submit"
-            className="h-12 rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-7 text-sm font-extrabold text-white shadow-lg shadow-[#0A5C91]/25 transition hover:-translate-y-0.5 md:col-span-2 lg:col-span-1"
-          >
-            ⌕ Search
-          </button>
-        </form>
+        </div>
       </div>
     </section>
   );

@@ -79,14 +79,14 @@ export default function FeeSection({ schoolName, slabs, updated, source }: Props
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-2xl bg-gradient-to-br from-[#0B2A47] to-[#0A5C91] p-5 text-white shadow-lg shadow-[#0A5C91]/20">
           <p className="text-[11px] font-extrabold uppercase tracking-wider text-white/75">Starting from</p>
-          <p className="mt-2 text-2xl font-extrabold">{rupee(min)}</p>
+          <p className="mt-2 text-2xl font-extrabold">{Number.isFinite(min) && min > 0 ? rupee(min) : "Beginning Soon"}</p>
           <p className="mt-1 text-xs text-white/75">
   per year · {first?.cls ?? "Class information unavailable"}
 </p>
         </div>
         <div className="rounded-2xl border border-[#E1E7EE] bg-[#F6FAFD] p-5">
           <p className="text-[11px] font-extrabold uppercase tracking-wider text-[#5C6A7B]">Highest</p>
-          <p className="mt-2 text-2xl font-extrabold text-[#0B2A47]">{rupee(max)}</p>
+          <p className="mt-2 text-2xl font-extrabold text-[#0B2A47]">{Number.isFinite(max) && max > 0 ? rupee(max) : "Beginning Soon"}</p>
           <p className="mt-1 text-xs text-[#707E8F]">
   per year · {hi?.cls ?? "Class information unavailable"}
 </p>
