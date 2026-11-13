@@ -1,18 +1,11 @@
 export default function SchoolSkeletonCard() {
   return (
     <div className="relative min-w-0 overflow-hidden rounded-3xl border border-[#E1E7EE] bg-white p-4 shadow-sm sm:p-5">
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-5 md:grid-cols-[280px_minmax(0,1fr)] xl:h-[220px] xl:grid-cols-[300px_minmax(0,1fr)_230px]">
-        {/* Photo Skeleton: 3-Image Layout */}
-        <div className="relative flex flex-col gap-1.5 overflow-hidden rounded-2xl md:h-[220px]">
-          <div className="relative h-36 w-full flex-1 overflow-hidden rounded-xl bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 animate-pulse">
-            <div className="absolute left-2.5 top-2.5 h-6 w-20 rounded-lg bg-slate-200/70" />
-            <div className="absolute right-2.5 top-2.5 h-5 w-14 rounded-md bg-slate-200/70" />
-          </div>
-          <div className="grid grid-cols-3 gap-1.5 h-14 shrink-0">
-            <div className="h-full w-full rounded-lg bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 animate-pulse" />
-            <div className="h-full w-full rounded-lg bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 animate-pulse" />
-            <div className="h-full w-full rounded-lg bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 animate-pulse" />
-          </div>
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-5 md:grid-cols-[260px_minmax(0,1fr)] xl:h-[220px] xl:grid-cols-[280px_minmax(0,1fr)_230px]">
+        {/* Photo Skeleton */}
+        <div className="relative h-52 w-full overflow-hidden rounded-2xl bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 animate-pulse md:h-[220px]">
+          <div className="absolute left-3 top-3 h-6 w-20 rounded-lg bg-slate-200/70" />
+          <div className="absolute bottom-3 right-3 h-6 w-20 rounded-lg bg-slate-200/70" />
         </div>
 
         {/* Details Skeleton */}
