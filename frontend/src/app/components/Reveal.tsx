@@ -1,25 +1,63 @@
 "use client";
-// Fades a section in (slides up a little) when it scrolls into view. Content is visible without JavaScript.
-import { useEffect, useRef } from "react";
 
-export default function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+import { useEffect, useRef, useState } from "react";
+
+export default function Reveal({
+  children,
+  delay = 0,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+}) {
   const ref = useRef<HTMLDivElement>(null);
+  const [shown, setShown] = useState(false);
+
   useEffect(() => {
     const el = ref.current;
-    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    if (el.getBoundingClientRect().top < window.innerHeight * 0.9) return; // already on screen: leave it
-    el.dataset.reveal = "hidden";
-    const io = new IntersectionObserver(
+    if (!el) return;
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setShown(true);
+      return;
+    }
+
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight * 0.95) {
+      setShown(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
       (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          window.setTimeout(() => { el.dataset.reveal = "shown"; }, delay);
-          io.disconnect();
-        }
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            if (delay > 0) {
+              setTimeout(() => setShown(true), delay);
+            } else {
+              setShown(true);
+            }
+            observer.unobserve(entry.target);
+          }
+        });
       },
-      { threshold: 0.08 }
+      {
+        threshold: 0.05,
+        rootMargin: "0px 0px -20px 0px",
+      }
     );
-    io.observe(el);
-    return () => io.disconnect();
+
+    observer.observe(el);
+    return () => observer.disconnect();
   }, [delay]);
-  return <div ref={ref} className="vv-reveal">{children}</div>;
+
+  return (
+    <div
+      ref={ref}
+      className={`transition-opacity duration-700 ease-out ${
+        shown ? "opacity-100" : "opacity-0"
+      }`}
+    >
+      {children}
+    </div>
+  );
 }

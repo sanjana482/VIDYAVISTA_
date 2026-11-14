@@ -63,7 +63,7 @@ export const mapSchool = (d: ApiSchool): School => ({
   admissionLastDate: d.admissionLastDate || undefined,
 });
 
-const REVALIDATE = 86400; // 24 hours (prevents Vercel ISR quota burn)
+const REVALIDATE = process.env.NODE_ENV === "development" ? 0 : 86400; // 0 in dev for fresh data; 24h in prod to prevent Vercel ISR quota burn
 const PAGE = 300; // schools per request
 
 async function get(path: string, customRevalidate?: number) {

@@ -603,9 +603,9 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
                 <span aria-hidden className="vv-card-ring" />
                 {/* 2. glowing pill on the left edge, grows from the centre */}
                 <span aria-hidden className="pointer-events-none absolute left-0 top-1/2 h-0 w-1.5 -translate-y-1/2 rounded-r-full bg-gradient-to-b from-[#EC0E58] to-[#0795DC] opacity-0 shadow-[0_0_14px_rgba(236,14,88,0.55)] transition-all duration-500 ease-out group-hover:h-3/5 group-hover:opacity-100" />
-                <div className="grid grid-cols-[minmax(0,1fr)] gap-5 md:grid-cols-[260px_minmax(0,1fr)] xl:h-[220px] xl:grid-cols-[280px_minmax(0,1fr)_230px]">
+                <div className="grid grid-cols-[minmax(0,1fr)] gap-5 md:grid-cols-[260px_minmax(0,1fr)] xl:min-h-[220px] xl:grid-cols-[280px_minmax(0,1fr)_230px]">
                   {/* Photo: Single Cover Image */}
-                  <div className="relative h-52 w-full overflow-hidden rounded-2xl bg-[#E6F4FC] md:h-[220px]">
+                  <div className="relative h-52 w-full overflow-hidden rounded-2xl bg-[#E6F4FC] md:h-full md:min-h-[220px]">
                     <img src={s.image} alt={`${s.name} campus`} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110" />
                     <Watermark />
                     {s.isFeatured && <CornerRibbon label="Featured" radius="1rem" />}
@@ -626,25 +626,23 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
                   </div>
 
                   {/* Details */}
-                  <div className="flex min-w-0 flex-col">
-                    <h3 className="line-clamp-2 text-2xl font-extrabold leading-tight text-[#0B2A47]">
-                      <Link href={schoolPath(s)} className="transition-colors duration-300 group-hover:text-[#0A7BBF]">{s.name}</Link>
-                    </h3>
-                    <p className="mt-2 line-clamp-2 text-sm text-[#707E8F]">
-                      <Icon name="mapPin" className="mr-1 inline h-4 w-4 text-[#EC0E58]" /> {s.area}, {s.city === "Delhi" ? "New Delhi" : s.city}
-                    </p>
-                    <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
-                      <span className="rounded-lg bg-[#E1F1FA] px-3 py-1.5 text-xs font-extrabold text-[#0A5C91]">{BOARD_LABEL[s.board] ?? (s.board === "No Board" || s.board === "IB" ? "IB Board" : s.board)}</span>
-                      <AdmissionBadge school={s} />
-                      {s.verified && (
-                        <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#E4F7EC] px-3 py-1.5 text-xs font-extrabold text-[#0F7A3D]">
-                          <span className="h-2 w-2 rounded-full bg-current" />
-                          Verified
-                        </span>
-                      )}
-                      <span className="text-[#5C6A7B]">{s.grades}</span>
+                  <div className="flex min-w-0 flex-col justify-between py-0.5">
+                    <div>
+                      <h3 className="text-lg font-extrabold leading-snug text-[#0B2A47] sm:text-xl" title={s.name}>
+                        <Link href={schoolPath(s)} className="transition-colors duration-300 group-hover:text-[#0A7BBF]">{s.name}</Link>
+                      </h3>
+                      <p className="mt-1.5 line-clamp-1 text-sm text-[#707E8F]">
+                        <Icon name="mapPin" className="mr-1 inline h-4 w-4 text-[#EC0E58]" /> {s.area}, {s.city === "Delhi" ? "New Delhi" : s.city}
+                      </p>
                     </div>
-                    <p className="mt-3 text-sm text-[#5C6A7B]">{s.type} · {s.gender}</p>
+                    <div className="mt-3">
+                      <div className="flex flex-wrap items-center gap-2.5 text-sm">
+                        <span className="rounded-lg bg-[#E1F1FA] px-3 py-1.5 text-xs font-extrabold text-[#0A5C91]">{BOARD_LABEL[s.board] ?? (s.board === "No Board" || s.board === "IB" ? "IB Board" : s.board)}</span>
+                        <AdmissionBadge school={s} />
+                        <span className="text-xs font-medium text-[#5C6A7B]">{s.grades}</span>
+                      </div>
+                      <p className="mt-2.5 text-xs font-medium text-[#5C6A7B]">{s.type} · {s.gender}</p>
+                    </div>
                   </div>
 
                   {/* Price + actions */}

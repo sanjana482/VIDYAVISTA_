@@ -152,7 +152,7 @@ export default function SchoolGuidance() {
       </div>
 
       {/* Bottom decorative background */}
-      <div className="-mt-12 h-24 bg-[#0B2A47]" />
+      
     </section>
   );
 }

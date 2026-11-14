@@ -20,6 +20,14 @@ const feeText = (s: School) => {
   return r.min > 0 ? `${lakh(r.min)} – ${lakh(r.max)}` : "Ask school";
 };
 
+function getMonogram(name: string): string {
+  const words = name.replace(/[^a-zA-Z\s]/g, "").trim().split(/\s+/).filter(Boolean);
+  if (words.length >= 2) {
+    return (words[0][0] + words[1][0]).toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+}
+
 const toCard = (s: School, i: number) => ({
   id: s.id,
   href: schoolPath(s),
@@ -31,6 +39,8 @@ const toCard = (s: School, i: number) => ({
   grades: s.grades || "-",
   fees: feeText(s),
   image: s.image,
+  logo: s.logo || s.logoUrl || s.logo_url,
+  monogram: getMonogram(s.name),
   color: BOARD_COLOR[i % BOARD_COLOR.length],
 });
 
@@ -221,7 +231,7 @@ export default function FeaturedSchools({ list }: { list: School[] }) {
                 </div>
 
                 {/* Details container */}
-                <div className="flex flex-1 flex-col justify-between p-4 sm:p-5 md:p-6">
+                <div className="flex flex-1 flex-col justify-between p-4 sm:p-5">
                   <div>
                     {/* Tags */}
                     <div className="flex flex-wrap items-center gap-1.5">
@@ -233,16 +243,27 @@ export default function FeaturedSchools({ list }: { list: School[] }) {
                       </span>
                     </div>
 
-                    {/* School Name */}
-                    <h3 className="mt-2.5 line-clamp-1 sm:line-clamp-2 text-base sm:text-lg md:text-xl font-extrabold text-[#0B2A47] transition group-hover:text-[#0A7BBF] leading-snug">
-                      {school.name}
-                    </h3>
-
-                    {/* Location */}
-                    <p className="mt-1 flex items-center gap-1.5 text-xs text-[#687789]">
-                      <Icon name="mapPin" className="h-3.5 w-3.5 shrink-0 text-[#0A7BBF]" />
-                      <span className="truncate">{school.location}</span>
-                    </p>
+                    {/* School Name with Logo Emblem */}
+                    <div className="mt-2.5 flex items-start gap-3">
+                      <div className="flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200/90 bg-white shadow-sm overflow-hidden p-0.5">
+                        {school.logo ? (
+                          <img src={school.logo} alt={school.name} className="h-full w-full object-contain" />
+                        ) : (
+                          <span className="flex h-full w-full items-center justify-center rounded-xl bg-gradient-to-br from-[#0B2A47] to-[#0A5C91] text-xs font-black tracking-wider text-white shadow-inner">
+                            {school.monogram}
+                          </span>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="line-clamp-1 sm:line-clamp-2 text-base sm:text-lg md:text-xl font-extrabold text-[#0B2A47] transition group-hover:text-[#0A7BBF] leading-snug">
+                          {school.name}
+                        </h3>
+                        <p className="mt-1 flex items-center gap-1.5 text-xs text-[#687789]">
+                          <Icon name="mapPin" className="h-3.5 w-3.5 shrink-0 text-[#0A7BBF]" />
+                          <span className="truncate">{school.location}</span>
+                        </p>
+                      </div>
+                    </div>
 
                     {/* Grades & Fees compact box */}
                     <div className="mt-3 grid grid-cols-2 gap-2 rounded-xl bg-[#F4F7F9] p-2.5 sm:p-3 border border-[#E8EFF4]">

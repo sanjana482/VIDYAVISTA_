@@ -1,8 +1,11 @@
 "use client";
 
+import Link from "next/link";
+
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
+  ArrowLeft,
   ArrowRight,
   Eye,
   EyeOff,
@@ -19,6 +22,7 @@ import {
   Search,
   ShieldCheck,
   Sparkles,
+  Star,
   UserRound,
 } from "lucide-react";
 import Navbar from "../components/Navbar";
@@ -33,6 +37,7 @@ function LoginPortalInner() {
 
   const [role, setRole] = useState<"parent" | "school">(initialRole);
   const [mode, setMode] = useState<"login" | "register" | "forgot">(initialMode);
+  const [mobileStep, setMobileStep] = useState<"showcase" | "form">(searchParams.get("step") === "form" || initialMode === "register" ? "form" : "showcase");
 
   // Forgot / Reset Password state
   const [forgotEmail, setForgotEmail] = useState("");
@@ -432,214 +437,337 @@ function LoginPortalInner() {
     }
   };
 
-  const renderCaptchaBox = () => (
-    <div className="rounded-xl border border-[#D6DDE5] bg-[#F8FAFC] p-3.5">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#4E5A68]">
-          <ShieldCheck className="h-4 w-4 text-[#0A5C91]" />
-          <span>Security Verification (CAPTCHA) *</span>
-        </label>
-        <button
-          type="button"
-          onClick={loadNewCaptcha}
-          disabled={captchaLoading}
-          className="inline-flex items-center gap-1 text-xs font-semibold text-[#0795DC] transition hover:text-[#0A5C91]"
-        >
-          <RefreshCw className={`h-3.5 w-3.5 ${captchaLoading ? "animate-spin" : ""}`} />
-          <span>Refresh Code</span>
-        </button>
-      </div>
-      <div className="mt-2.5 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div
-          aria-label="Security code display"
-          className="flex h-11 select-none items-center justify-center rounded-xl border border-[#CBD5E1] bg-gradient-to-r from-[#0B2A47] via-[#0A5C91] to-[#0B2A47] px-4 font-mono text-lg font-extrabold tracking-[0.35em] text-white shadow-inner"
-        >
-          {captchaCode}
-        </div>
-        <input
-          type="text"
-          required
-          maxLength={6}
-          value={captchaAnswer}
-          onChange={(e) => setCaptchaAnswer(e.target.value.toUpperCase())}
-          placeholder="Enter 5-character code"
-          className="h-11 w-full rounded-xl border border-[#CBD5E1] bg-white px-3.5 text-sm font-semibold uppercase tracking-wider text-[#0B2A47] focus:border-[#0795DC] focus:outline-none"
-        />
-      </div>
-    </div>
-  );
-
-  const renderEmailOtpSection = (emailVal: string, setEmailVal: (v: string) => void, placeholder: string) => (
-    <div className="space-y-3 rounded-xl border border-[#0795DC]/30 bg-[#F0F8FF]/70 p-4">
-      <div>
-        <label className="mb-1.5 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#0B2A47]">
-          <Mail className="h-3.5 w-3.5 text-[#0A5C91]" />
-          <span>Official Email Address (Verification Required) *</span>
-        </label>
-        <div className="flex flex-col gap-2.5 sm:flex-row">
-          <input
-            type="email"
-            required
-            value={emailVal}
-            onChange={(e) => {
-              setEmailVal(e.target.value);
-              setOtpVerified(false);
-            }}
-            placeholder={placeholder}
-            className="h-11 flex-1 rounded-xl border border-[#CBD5E1] bg-white px-3.5 text-sm text-[#0B2A47] focus:border-[#0795DC] focus:outline-none"
-          />
+  const renderCaptchaBox = () => {
+    const isParent = role === "parent";
+    return (
+      <div className={`space-y-1.5 rounded-xl border p-3.5 ${isParent ? "border-[#FEE2E8] bg-[#FFF8FA]" : "border-[#D6DDE5] bg-[#F8FAFC]"}`}>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#4E5A68]">
+            <ShieldCheck className={`h-4 w-4 ${isParent ? "text-[#F43F5E]" : "text-[#0A5C91]"}`} />
+            <span>Security Verification (CAPTCHA) *</span>
+          </label>
           <button
             type="button"
-            onClick={handleSendOtp}
-            disabled={otpSending || otpCountdown > 0}
-            className="vv-btn inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#0A5C91] px-4 text-xs font-bold text-white shadow-sm transition hover:bg-[#0795DC] disabled:opacity-60"
+            onClick={loadNewCaptcha}
+            disabled={captchaLoading}
+            className={`inline-flex items-center gap-1 text-xs font-semibold transition ${
+              isParent ? "text-[#F43F5E] hover:text-[#E11D48]" : "text-[#0795DC] hover:text-[#0A5C91]"
+            }`}
           >
-            <Mail className="h-4 w-4" />
-            <span>
-              {otpSending
-                ? "Sending OTP..."
-                : otpCountdown > 0
-                  ? `Resend in ${otpCountdown}s`
-                  : otpSent
-                    ? "Resend OTP"
-                    : "Send Email OTP"}
-            </span>
+            <RefreshCw className={`h-3.5 w-3.5 ${captchaLoading ? "animate-spin" : ""}`} />
+            <span>Refresh Code</span>
           </button>
         </div>
-        <p className="mt-1 text-xs text-[#4E5A68]">
-          First enter the security code (CAPTCHA) below, then click <strong>Send Email OTP</strong> to receive a 6-digit verification code.
-        </p>
+        <div className="mt-2.5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div
+            aria-label="Security code display"
+            className={`flex h-11 select-none items-center justify-center rounded-xl px-4 font-mono text-lg font-extrabold tracking-[0.35em] text-white shadow-inner ${
+              isParent
+                ? "bg-gradient-to-r from-[#F43F5E] via-[#FB7185] to-[#F43F5E] border border-[#FEE2E8]"
+                : "border border-[#CBD5E1] bg-gradient-to-r from-[#0B2A47] via-[#0A5C91] to-[#0B2A47]"
+            }`}
+          >
+            {captchaCode}
+          </div>
+          <input
+            type="text"
+            required
+            maxLength={6}
+            value={captchaAnswer}
+            onChange={(e) => setCaptchaAnswer(e.target.value.toUpperCase())}
+            placeholder="Enter 5-character code"
+            className={`h-11 w-full rounded-xl border bg-white px-3.5 text-sm font-semibold uppercase tracking-wider text-[#0B2A47] focus:outline-none ${
+              isParent ? "border-[#CBD5E1] focus:border-[#F43F5E]" : "border-[#CBD5E1] focus:border-[#0795DC]"
+            }`}
+          />
+        </div>
       </div>
+    );
+  };
 
-      {otpSent && (
-        <div className="vv-pop pt-1">
-          <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-[#0B2A47]">
-            Enter 6-Digit Email Verification Code *
+  const renderEmailOtpSection = (emailVal: string, setEmailVal: (v: string) => void, placeholder: string) => {
+    const isParent = role === "parent";
+    return (
+      <div className={`space-y-3 rounded-xl border p-4 ${isParent ? "border-[#FEE2E8] bg-[#FFF8FA]" : "border-[#0795DC]/30 bg-[#F0F8FF]/70"}`}>
+        <div>
+          <label className="mb-1.5 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#0B2A47]">
+            <Mail className={`h-3.5 w-3.5 ${isParent ? "text-[#F43F5E]" : "text-[#0A5C91]"}`} />
+            <span>Official Email Address (Verification Required) *</span>
           </label>
           <div className="flex flex-col gap-2.5 sm:flex-row">
             <input
-              type="text"
+              type="email"
               required
-              maxLength={6}
-              value={otpCode}
+              value={emailVal}
               onChange={(e) => {
-                setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6));
+                setEmailVal(e.target.value);
                 setOtpVerified(false);
               }}
-              placeholder="Enter 6-digit OTP"
-              className="h-11 flex-1 rounded-xl border border-[#0795DC] bg-white px-3.5 font-mono text-base font-bold tracking-[0.25em] text-[#0B2A47] focus:outline-none"
+              placeholder={placeholder}
+              className={`h-11 flex-1 rounded-xl border bg-white px-3.5 text-sm text-[#0B2A47] focus:outline-none ${
+                isParent ? "border-[#CBD5E1] focus:border-[#F43F5E]" : "border-[#CBD5E1] focus:border-[#0A5C91]"
+              }`}
             />
             <button
               type="button"
-              onClick={handleVerifyOtp}
-              disabled={otpVerifying || otpVerified}
-              className={`inline-flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl px-4 text-xs font-bold transition ${
-                otpVerified
-                  ? "bg-emerald-600 text-white"
-                  : "border border-[#0A5C91] bg-white text-[#0A5C91] hover:bg-[#0A5C91] hover:text-white"
+              onClick={handleSendOtp}
+              disabled={otpSending || otpCountdown > 0}
+              className={`vv-btn inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl px-4 text-xs font-bold text-white shadow-sm transition disabled:opacity-60 ${
+                isParent ? "bg-[#F43F5E] hover:bg-[#E11D48]" : "bg-[#0A5C91] hover:bg-[#0795DC]"
               }`}
             >
-              <CheckCircle2 className="h-4 w-4" />
-              <span>{otpVerified ? "Email Verified" : otpVerifying ? "Verifying..." : "Verify Code"}</span>
+              <Mail className="h-4 w-4" />
+              <span>
+                {otpSending
+                  ? "Sending OTP..."
+                  : otpCountdown > 0
+                    ? `Resend in ${otpCountdown}s`
+                    : otpSent
+                      ? "Resend OTP"
+                      : "Send Email OTP"}
+              </span>
             </button>
           </div>
+          <p className="mt-1 text-xs text-[#4E5A68]">
+            First enter the security code (CAPTCHA) above, then click <strong>Send Email OTP</strong> to receive a 6-digit verification code.
+          </p>
         </div>
-      )}
-    </div>
-  );
+
+        {otpSent && (
+          <div className="vv-pop pt-1">
+            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-[#0B2A47]">
+              Enter 6-Digit Email Verification Code *
+            </label>
+            <div className="flex flex-col gap-2.5 sm:flex-row">
+              <input
+                type="text"
+                required
+                maxLength={6}
+                value={otpCode}
+                onChange={(e) => {
+                  setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6));
+                  setOtpVerified(false);
+                }}
+                placeholder="Enter 6-digit OTP"
+                className={`h-11 flex-1 rounded-xl border bg-white px-3.5 font-mono text-base font-bold tracking-[0.25em] text-[#0B2A47] focus:outline-none ${
+                  isParent ? "border-[#F43F5E]" : "border-[#0795DC]"
+                }`}
+              />
+              <button
+                type="button"
+                onClick={handleVerifyOtp}
+                disabled={otpVerifying || otpVerified}
+                className={`inline-flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl px-4 text-xs font-bold transition ${
+                  otpVerified
+                    ? "bg-emerald-600 text-white"
+                    : isParent
+                      ? "border border-[#F43F5E] bg-white text-[#F43F5E] hover:bg-[#F43F5E] hover:text-white"
+                      : "border border-[#0A5C91] bg-white text-[#0A5C91] hover:bg-[#0A5C91] hover:text-white"
+                }`}
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                <span>{otpVerified ? "Email Verified" : otpVerifying ? "Verifying..." : "Verify Code"}</span>
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-[#F4F7FA] text-[#12304A]">
       <Navbar />
 
-      <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:py-14">
-        <div className="vv-rise grid gap-8 lg:grid-cols-12 lg:items-start">
-          {/* Left Column: Value Proposition */}
-          <div className="rounded-3xl bg-gradient-to-br from-[#0B2A47] via-[#0A5C91] to-[#0795DC] p-8 text-white shadow-xl lg:col-span-5 lg:p-9">
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider text-sky-100">
-              <Sparkles className="h-3.5 w-3.5" />
-              <span>{role === "school" ? "VidyaVista Institution Portal" : "VidyaVista Parent & Student Portal"}</span>
-            </span>
+      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:py-12">
+        <div className="vv-rise overflow-hidden rounded-[2rem] border border-[#E2E8F0] bg-white shadow-2xl shadow-[#0B2A47]/8 grid lg:grid-cols-2">
+          {/* Left Column: Clean Dribbble-Style Showcase */}
+          {/* On Mobile: Visible when mobileStep === 'showcase' */}
+          <div
+            className={`relative flex-col p-6 sm:p-8 lg:p-10 transition-colors duration-700 min-h-full ${
+              mobileStep === "showcase" ? "flex" : "hidden"
+            } lg:flex ${
+              role === "parent"
+                ? "bg-gradient-to-b from-[#FCFDFE] via-[#FFF8FA] to-[#FDF2F5]"
+                : "bg-gradient-to-b from-[#EBF5FB] via-[#F3F8FC] to-[#E6F0F8]"
+            }`}
+          >
+            {/* Sticky showcase container that stays pinned at the top regardless of form height */}
+            <div className="w-full flex flex-col items-center lg:sticky lg:top-8">
+              {/* Mobile Role Switcher (Shown on Mobile Showcase so user can toggle Parent vs School directly) */}
+              <div className="w-full grid grid-cols-2 gap-2 rounded-2xl bg-white/80 p-1.5 mb-5 shadow-sm border border-slate-200/60 lg:hidden">
+                <button
+                  type="button"
+                  onClick={() => { setRole("parent"); setError(""); setInfoMsg(""); }}
+                  className={`inline-flex h-10 items-center justify-center gap-2 rounded-xl px-3 text-xs font-extrabold transition-all duration-200 ${
+                    role === "parent"
+                      ? "bg-[#F43F5E] text-white shadow-sm"
+                      : "text-[#5C6A7B] hover:text-[#0B2A47]"
+                  }`}
+                >
+                  <UserRound className="h-4 w-4 shrink-0" />
+                  <span>Parent / Student</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setRole("school"); setError(""); setInfoMsg(""); }}
+                  className={`inline-flex h-10 items-center justify-center gap-2 rounded-xl px-3 text-xs font-extrabold transition-all duration-200 ${
+                    role === "school"
+                      ? "bg-[#0B2A47] text-white shadow-sm"
+                      : "text-[#5C6A7B] hover:text-[#0B2A47]"
+                  }`}
+                >
+                  <School className="h-4 w-4 shrink-0" />
+                  <span>School / Institution</span>
+                </button>
+              </div>
 
-            <h1 className="mt-4 text-2xl font-extrabold leading-tight sm:text-3xl">
-              {role === "school"
-                ? "Register Your Owner Profile, Claim or Add Your School & Receive Parent Leads"
-                : "Discover, Shortlist & Track School Admissions Across India"}
-            </h1>
+              {/* Top Portal Badge */}
+              <div className="w-full flex items-center justify-between mb-4 sm:mb-6">
+                <span
+                  className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-extrabold uppercase tracking-wider shadow-sm transition-colors duration-300 ${
+                    role === "parent"
+                      ? "bg-white text-[#F43F5E] border border-[#FEE2E8]"
+                      : "bg-white text-[#0A5C91] border border-[#CFE4F5]"
+                  }`}
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  <span>{role === "parent" ? "Parent & Student Portal" : "Institution Partner Portal"}</span>
+                </span>
+              </div>
 
-            <p className="mt-3 text-sm leading-relaxed text-sky-100/90">
-              {role === "school"
-                ? "Verified school owners can register their profile, claim an existing school from 10,000+ listed institutions or add a new school, manage their complete profile, and unlock verified parent admission enquiries."
-                : "Create your parent account to save your child's education preferences, shortlist top Day and Boarding schools, track admission enquiries, and chat directly with school admission teams."}
-            </p>
+              {/* Centered Illustration with Gentle Float Animation */}
+              <div className="w-full flex flex-col items-center text-center">
+                <div className="vv-float-soft relative mx-auto w-full max-w-[340px] sm:max-w-[380px] h-[210px] sm:h-[260px] flex items-center justify-center">
+                  {role === "parent" ? (
+                    <div className="relative h-full w-full overflow-hidden rounded-2xl transition-all duration-500 flex items-center justify-center">
+                      <img
+                        src="/images/auth-illustration.jpg"
+                        alt="Happy family walking to school"
+                        className="max-h-full max-w-full object-contain filter drop-shadow-md"
+                      />
+                    </div>
+                  ) : (
+                    <div className="relative h-full w-full overflow-hidden rounded-2xl transition-all duration-500 flex items-center justify-center">
+                      <img
+                        src="/images/institution-illustration.svg"
+                        alt="Modern school campus"
+                        className="max-h-full max-w-full object-contain filter drop-shadow-md"
+                      />
+                    </div>
+                  )}
+                </div>
 
-            <div className="mt-7 space-y-3.5">
-              {role === "school" ? (
-                <>
-                  <div className="flex items-start gap-3 rounded-2xl bg-white/10 p-4 backdrop-blur-sm">
-                    <UserRound className="mt-0.5 h-5 w-5 shrink-0 text-sky-200" />
-                    <div>
-                      <p className="text-sm font-bold">Step 1: Owner Profile Verification</p>
-                      <p className="mt-0.5 text-xs text-sky-100/85">
-                        Register your Owner Profile with Email OTP verification. Your profile is reviewed and approved by the VidyaVista Administrator.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 rounded-2xl bg-white/10 p-4 backdrop-blur-sm">
-                    <Building2 className="mt-0.5 h-5 w-5 shrink-0 text-sky-200" />
-                    <div>
-                      <p className="text-sm font-bold">Step 2: Claim Existing or Add New School</p>
-                      <p className="mt-0.5 text-xs text-sky-100/85">
-                        Once your Owner Profile is approved, claim your school from 10,000+ listings or submit a new school for administrator approval.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 rounded-2xl bg-white/10 p-4 backdrop-blur-sm">
-                    <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-sky-200" />
-                    <div>
-                      <p className="text-sm font-bold">Step 3: Reviewed Profile Updates & Verified Leads</p>
-                      <p className="mt-0.5 text-xs text-sky-100/85">
-                        All profile edits go through administrator approval before publishing live. Unlock parent contact details using 1-Year Plans or Lead Booster Packs.
-                      </p>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="flex items-start gap-3 rounded-2xl bg-white/10 p-4 backdrop-blur-sm">
-                    <GraduationCap className="mt-0.5 h-5 w-5 shrink-0 text-sky-200" />
-                    <div>
-                      <p className="text-sm font-bold">Child Education Preferences</p>
-                      <p className="mt-0.5 text-xs text-sky-100/85">
-                        Save your child&apos;s target class, preferred board (CBSE, ICSE, IB, Cambridge), city, and annual fee budget.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 rounded-2xl bg-white/10 p-4 backdrop-blur-sm">
-                    <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-sky-200" />
-                    <div>
-                      <p className="text-sm font-bold">Track Enquiries & Shortlisted Schools</p>
-                      <p className="mt-0.5 text-xs text-sky-100/85">
-                        View real-time status updates when schools accept your admission enquiry and communicate via Admission Chat.
-                      </p>
-                    </div>
-                  </div>
-                </>
-              )}
+                {/* Title & 1-line Subtitle */}
+                <h2 className="mt-4 sm:mt-5 text-2xl sm:text-3xl font-extrabold tracking-tight text-[#0B2A47]">
+                  {role === "parent" ? "Find the Right Fit" : "Campus & Partner Growth"}
+                </h2>
+                <p className="mt-2 max-w-sm text-xs sm:text-sm text-[#5C6A7B] leading-relaxed">
+                  {role === "parent"
+                    ? "Explore top-rated day & boarding schools for your child's bright future across India."
+                    : "Connect with verified parents, showcase your school & manage admissions effortlessly."}
+                </p>
+
+                {/* Dribbble Carousel Pagination Dots */}
+                <div className="mt-4 flex items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setRole("parent")}
+                    aria-label="Parent portal"
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      role === "parent" ? "w-6 bg-[#F43F5E]" : "w-2 bg-slate-300 hover:bg-slate-400"
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setRole("school")}
+                    aria-label="Institution portal"
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      role === "school" ? "w-6 bg-[#0A7BBF]" : "w-2 bg-slate-300 hover:bg-slate-400"
+                    }`}
+                  />
+                </div>
+
+                {/* Mobile Bottom Action Buttons (Shown on mobile as per user requirement) */}
+                <div className="w-full mt-6 pt-2 space-y-2.5 lg:hidden">
+                  {role === "parent" ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => { setMode("login"); setMobileStep("form"); }}
+                        className="vv-btn w-full h-12 rounded-xl bg-gradient-to-r from-[#F43F5E] to-[#FB7185] text-white font-extrabold shadow-lg shadow-[#F43F5E]/30 flex items-center justify-center gap-2 text-sm transition hover:brightness-105 active:scale-[0.98]"
+                      >
+                        <span>Continue to Parent Login</span>
+                        <ArrowRight className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setMode("register"); setMobileStep("form"); }}
+                        className="w-full py-2 text-center text-xs font-bold text-[#F43F5E] hover:underline"
+                      >
+                        New Parent? Create an Account &rarr;
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => { setMode("login"); setMobileStep("form"); }}
+                        className="vv-btn w-full h-12 rounded-xl bg-gradient-to-r from-[#0B2A47] to-[#0A5C91] text-white font-extrabold shadow-lg shadow-[#0B2A47]/30 flex items-center justify-center gap-2 text-sm transition hover:brightness-105 active:scale-[0.98]"
+                      >
+                        <span>Continue to Institution Login</span>
+                        <ArrowRight className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setMode("register"); setMobileStep("form"); }}
+                        className="w-full py-2 text-center text-xs font-bold text-[#0A5C91] hover:underline"
+                      >
+                        School Owner? Register Profile &rarr;
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {/* Desktop Subtle Trust Line */}
+                <div className="mt-6 w-full text-center text-[11px] font-semibold text-[#8896A6] hidden lg:block">
+                  Trusted by 10,000+ Schools & 5 Lakh+ Parents
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Right Column: Auth Card */}
-          <div className="rounded-3xl border border-[#D6DDE5] bg-white p-6 shadow-lg sm:p-8 lg:col-span-7">
-            {/* Role Switcher (Uniform Button Height & Style) */}
-            <div className="grid grid-cols-2 gap-3 rounded-2xl bg-[#F1F5F9] p-1.5">
+          {/* On Mobile: Visible when mobileStep === 'form' */}
+          <div
+            className={`flex-col justify-between p-6 sm:p-8 lg:p-10 bg-white ${
+              mobileStep === "form" ? "flex" : "hidden"
+            } lg:flex`}
+          >
+            {/* Mobile Back Button to Overview */}
+            <div className="mb-4 lg:hidden flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setMobileStep("showcase")}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-[#F8FAFC] px-3 py-1.5 text-xs font-bold text-[#5C6A7B] hover:text-[#0B2A47] transition active:scale-95"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                <span>Back to Overview</span>
+              </button>
+              <span className={`text-[11px] font-bold uppercase tracking-wider ${role === "parent" ? "text-[#F43F5E]" : "text-[#0A5C91]"}`}>
+                {role === "parent" ? "Parent Portal" : "Institution Portal"}
+              </span>
+            </div>
+
+            {/* Role Switcher */}
+            <div className="grid grid-cols-2 gap-2 rounded-2xl bg-[#F1F5F9] p-1.5 mb-6">
               <button
                 type="button"
                 onClick={() => { setRole("parent"); setError(""); setInfoMsg(""); }}
-                className={`inline-flex h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition ${
+                className={`inline-flex h-11 items-center justify-center gap-2 rounded-xl px-4 text-xs sm:text-sm font-extrabold transition-all duration-200 ${
                   role === "parent"
-                    ? "bg-[#0A5C91] text-white shadow-sm"
-                    : "text-[#4E5A68] hover:text-[#0B2A47]"
+                    ? "bg-[#F43F5E] text-white shadow-md shadow-[#F43F5E]/25 scale-[1.02]"
+                    : "text-[#5C6A7B] hover:text-[#0B2A47]"
                 }`}
               >
                 <UserRound className="h-4 w-4 shrink-0" />
@@ -648,10 +776,10 @@ function LoginPortalInner() {
               <button
                 type="button"
                 onClick={() => { setRole("school"); setError(""); setInfoMsg(""); }}
-                className={`inline-flex h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition ${
+                className={`inline-flex h-11 items-center justify-center gap-2 rounded-xl px-4 text-xs sm:text-sm font-extrabold transition-all duration-200 ${
                   role === "school"
-                    ? "bg-[#0A5C91] text-white shadow-sm"
-                    : "text-[#4E5A68] hover:text-[#0B2A47]"
+                    ? "bg-[#0B2A47] text-white shadow-md shadow-[#0B2A47]/25 scale-[1.02]"
+                    : "text-[#5C6A7B] hover:text-[#0B2A47]"
                 }`}
               >
                 <School className="h-4 w-4 shrink-0" />
@@ -660,13 +788,15 @@ function LoginPortalInner() {
             </div>
 
             {/* Mode Tabs: Sign In vs Register vs Forgot */}
-            <div className="mt-6 flex border-b border-[#E2E8F0]">
+            <div className="flex border-b border-[#E2E8F0]">
               <button
                 type="button"
                 onClick={() => { setMode("login"); setError(""); setInfoMsg(""); }}
                 className={`flex-1 border-b-2 pb-3 text-sm font-bold transition ${
                   mode === "login"
-                    ? "border-[#EC0E58] text-[#0A5C91]"
+                    ? role === "parent"
+                      ? "border-[#F43F5E] text-[#F43F5E]"
+                      : "border-[#0B2A47] text-[#0B2A47]"
                     : "border-transparent text-[#64748B] hover:text-[#0B2A47]"
                 }`}
               >
@@ -677,7 +807,9 @@ function LoginPortalInner() {
                 onClick={() => { setMode("register"); setError(""); setInfoMsg(""); }}
                 className={`flex-1 border-b-2 pb-3 text-sm font-bold transition ${
                   mode === "register"
-                    ? "border-[#EC0E58] text-[#0A5C91]"
+                    ? role === "parent"
+                      ? "border-[#F43F5E] text-[#F43F5E]"
+                      : "border-[#0B2A47] text-[#0B2A47]"
                     : "border-transparent text-[#64748B] hover:text-[#0B2A47]"
                 }`}
               >
@@ -686,7 +818,9 @@ function LoginPortalInner() {
               {mode === "forgot" && (
                 <button
                   type="button"
-                  className="flex-1 border-b-2 border-[#0795DC] pb-3 text-sm font-bold text-[#0A5C91]"
+                  className={`flex-1 border-b-2 pb-3 text-sm font-bold ${
+                    role === "parent" ? "border-[#F43F5E] text-[#F43F5E]" : "border-[#0A5C91] text-[#0A5C91]"
+                  }`}
                 >
                   Reset Password
                 </button>
@@ -710,7 +844,7 @@ function LoginPortalInner() {
               <form onSubmit={handleLogin} className="mt-6 space-y-4">
                 <div>
                   <label className="mb-1.5 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#4E5A68]">
-                    <Mail className="h-3.5 w-3.5 text-[#0A5C91]" />
+                    <Mail className={`h-3.5 w-3.5 ${role === "parent" ? "text-[#F43F5E]" : "text-[#0A5C91]"}`} />
                     <span>Registered Mobile Number or Email Address *</span>
                   </label>
                   <input
@@ -719,13 +853,13 @@ function LoginPortalInner() {
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
                     placeholder={role === "school" ? "e.g. 9876543210 or principal@school.edu.in" : "e.g. 9876543210 or parent@gmail.com"}
-                    className="h-11 w-full rounded-xl border border-[#CBD5E1] px-4 text-sm text-[#0B2A47] focus:border-[#0795DC] focus:outline-none"
+                    className={`h-11 w-full rounded-xl border border-[#CBD5E1] px-4 text-sm text-[#0B2A47] focus:outline-none ${role === "parent" ? "focus:border-[#F43F5E]" : "focus:border-[#0A5C91]"}`}
                   />
                 </div>
 
                 <div>
                   <label className="mb-1.5 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#4E5A68]">
-                    <Lock className="h-3.5 w-3.5 text-[#0A5C91]" />
+                    <Lock className={`h-3.5 w-3.5 ${role === "parent" ? "text-[#F43F5E]" : "text-[#0A5C91]"}`} />
                     <span>Password *</span>
                   </label>
                   <div className="relative">
@@ -758,7 +892,7 @@ function LoginPortalInner() {
                         setMode("forgot");
                         loadNewCaptcha();
                       }}
-                      className="text-xs font-bold text-[#0A5C91] hover:text-[#EC0E58] transition hover:underline"
+                      className={`text-xs font-bold transition hover:underline ${role === "parent" ? "text-[#F43F5E] hover:text-[#E11D48]" : "text-[#0A5C91] hover:text-[#0795DC]"}`}
                     >
                       Forgot Password?
                     </button>
@@ -770,7 +904,11 @@ function LoginPortalInner() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="vv-btn inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-6 text-sm font-bold text-white shadow-md transition disabled:opacity-60"
+                  className={`vv-btn inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl px-6 text-sm font-bold text-white shadow-md transition disabled:opacity-60 ${
+                    role === "parent"
+                      ? "bg-gradient-to-r from-[#F43F5E] to-[#FB7185] shadow-[#F43F5E]/25 hover:brightness-105"
+                      : "bg-gradient-to-r from-[#0B2A47] to-[#0A5C91] shadow-[#0B2A47]/25 hover:brightness-105"
+                  }`}
                 >
                   <span>{loading ? "Signing In..." : role === "school" ? "Sign In to Institution Portal" : "Sign In to Parent Portal"}</span>
                   <ArrowRight className="h-4 w-4" />
@@ -814,7 +952,11 @@ function LoginPortalInner() {
                     <button
                       type="submit"
                       disabled={forgotSendingOtp}
-                      className="vv-btn inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-6 text-sm font-bold text-white shadow-md transition disabled:opacity-60"
+                      className={`vv-btn inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl px-6 text-sm font-bold text-white shadow-md transition disabled:opacity-60 ${
+                        role === "parent"
+                          ? "bg-gradient-to-r from-[#F43F5E] to-[#FB7185] shadow-[#F43F5E]/25 hover:brightness-105"
+                          : "bg-gradient-to-r from-[#0B2A47] to-[#0A5C91] shadow-[#0B2A47]/25 hover:brightness-105"
+                      }`}
                     >
                       <Mail className="h-4 w-4" />
                       <span>{forgotSendingOtp ? "Sending Reset Code..." : "Send Reset Code (Email OTP)"}</span>
@@ -913,7 +1055,11 @@ function LoginPortalInner() {
                     <button
                       type="submit"
                       disabled={forgotResetting}
-                      className="vv-btn inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-6 text-sm font-bold text-white shadow-md transition disabled:opacity-60"
+                      className={`vv-btn inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl px-6 text-sm font-bold text-white shadow-md transition disabled:opacity-60 ${
+                        role === "parent"
+                          ? "bg-gradient-to-r from-[#F43F5E] to-[#FB7185] shadow-[#F43F5E]/25 hover:brightness-105"
+                          : "bg-gradient-to-r from-[#0B2A47] to-[#0A5C91] shadow-[#0B2A47]/25 hover:brightness-105"
+                      }`}
                     >
                       <span>{forgotResetting ? "Updating Password..." : "Reset & Update Password"}</span>
                       <ArrowRight className="h-4 w-4" />
@@ -975,7 +1121,7 @@ function LoginPortalInner() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label className="mb-1 flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-[#4E5A68]">
-                      <Phone className="h-3.5 w-3.5 text-[#0A5C91]" />
+                      <Phone className="h-3.5 w-3.5 text-[#F43F5E]" />
                       <span>10-Digit Mobile Number *</span>
                     </label>
                     <input
@@ -990,7 +1136,7 @@ function LoginPortalInner() {
                   </div>
                   <div>
                     <label className="mb-1 flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-[#4E5A68]">
-                      <KeyRound className="h-3.5 w-3.5 text-[#0A5C91]" />
+                      <KeyRound className="h-3.5 w-3.5 text-[#F43F5E]" />
                       <span>Create Password (Min 6 chars) *</span>
                     </label>
                     <div className="relative">
@@ -1076,7 +1222,7 @@ function LoginPortalInner() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="vv-btn inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-6 text-sm font-bold text-white shadow-md transition disabled:opacity-60"
+                  className="vv-btn inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#F43F5E] to-[#FB7185] px-6 text-sm font-bold text-white shadow-lg shadow-[#F43F5E]/25 transition hover:brightness-105 disabled:opacity-60"
                 >
                   <span>{loading ? "Creating Account..." : "Verify OTP & Create Parent Account"}</span>
                   <ArrowRight className="h-4 w-4" />
@@ -1141,7 +1287,7 @@ function LoginPortalInner() {
                         setSelectedSchoolId(null);
                         setInstitutionName("");
                       }}
-                      className="font-bold text-[#C8104F] hover:underline"
+                      className="font-bold text-[#E11D48] hover:underline"
                     >
                       Clear &amp; Search Again
                     </button>
@@ -1313,7 +1459,7 @@ function LoginPortalInner() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="vv-btn inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-6 text-sm font-bold text-white shadow-md transition disabled:opacity-60"
+                  className="vv-btn inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0B2A47] to-[#0A5C91] px-6 text-sm font-bold text-white shadow-lg shadow-[#0B2A47]/25 transition hover:brightness-105 disabled:opacity-60"
                 >
                   <span>{loading ? "Submitting Owner Profile..." : "Verify OTP & Submit Owner Profile for Approval"}</span>
                   <ArrowRight className="h-4 w-4" />
@@ -1324,7 +1470,15 @@ function LoginPortalInner() {
         </div>
       </main>
 
-      <Footer />
+            {/* Sleek Short 1-Line Footer (removes huge footer as requested) */}
+      <footer className="py-6 text-center text-xs font-semibold text-slate-500">
+        <p>
+          &copy; {new Date().getFullYear()} VidyaVista. All rights reserved. &middot;{" "}
+          <Link href="/about" className="hover:underline hover:text-slate-700">About Us</Link> &middot;{" "}
+          <Link href="/schools" className="hover:underline hover:text-slate-700">Explore Schools</Link> &middot;{" "}
+          <Link href="/compare" className="hover:underline hover:text-slate-700">Compare</Link>
+        </p>
+      </footer>
     </div>
   );
 }

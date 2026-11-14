@@ -28,11 +28,14 @@ export const metadata: Metadata = {
 
 export default async function Home() {
   const schools = await fetchAllSchoolsSafe();
-  const featured = schools.filter((s) => s.isFeatured);
-  const recommended = schools.filter((s) => s.isRecommended);
+  const rawFeatured = schools.filter((s) => s.isFeatured);
+  const featured = rawFeatured.length >= 3 ? rawFeatured : [...rawFeatured, ...schools.slice(0, 6 - rawFeatured.length)];
+
+  const rawRecommended = schools.filter((s) => s.isRecommended);
+  const recommended = rawRecommended.length >= 3 ? rawRecommended : [...rawRecommended, ...schools.slice(6, 12 - rawRecommended.length)];
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen bg-white">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

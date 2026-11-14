@@ -12,6 +12,11 @@ const config: Config = {
         background: "var(--background)",
         foreground: "var(--foreground)",
       },
+      fontFamily: {
+        sans: ["var(--font-inter)", "Inter", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
+        serif: ["var(--font-merriweather)", "Merriweather", "Georgia", "serif"],
+        heading: ["var(--font-merriweather)", "Merriweather", "Georgia", "serif"],
+      },
     },
   },
   plugins: [],
