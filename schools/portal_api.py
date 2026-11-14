@@ -959,6 +959,7 @@ def approve_school_link(sa: SchoolAccount, admin_user=None):
                 email=(nd.get("email") or sa.email),
                 affiliation_no=(nd.get("affiliationNo") or sa.claim_proof or "")[:60],
                 isActive=True,
+                verified=True,
             )
             sa.school = target
             sa.institution_name = target.name

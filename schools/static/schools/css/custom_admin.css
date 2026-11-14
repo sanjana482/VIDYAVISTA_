@@ -3,7 +3,7 @@
    Font: Plus Jakarta Sans | Brand: Deep Navy #0B2A47 & Sky #0795DC & Pink #EC0E58
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&display=swap');
 
 :root {
   --vv-navy: #0B2A47;
@@ -20,6 +20,13 @@
 }
 
 /* 1. Global Typography & Reset */
+h1, h2, h3, h4, h5, h6,
+.content-header h1,
+.card-title,
+.brand-link,
+.main-sidebar .brand-text {
+  font-family: 'Merriweather', Georgia, serif !important;
+}
 body, 
 .main-sidebar, 
 .card, 
@@ -30,7 +37,7 @@ select,
 textarea,
 .content-wrapper,
 .main-header {
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   -webkit-font-smoothing: antialiased;
 }
 

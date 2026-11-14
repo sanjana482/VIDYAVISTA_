@@ -665,7 +665,9 @@ class SchoolAccount(models.Model):
             )
             SchoolAccount.objects.filter(pk=self.pk).update(owner_record=ow)
             self.owner_record = ow
-        if self.school_id and self.owner_record_id:
+        if self.school_id and self.owner_record_id and self.school_link_status == 'approved':
+            School.objects.filter(pk=self.school_id).update(owner_id=self.owner_record_id, verified=True)
+        elif self.school_id and self.owner_record_id:
             School.objects.filter(pk=self.school_id).update(owner_id=self.owner_record_id)
 
     def save(self, *args, **kwargs):

@@ -505,7 +505,8 @@ class SchoolAccountAdmin(admin.ModelAdmin):
         if not owner:
             owner = sa.sync_owner_record()
         claim.school.owner = owner
-        claim.school.save(update_fields=['owner'])
+        claim.school.verified = True
+        claim.school.save(update_fields=['owner', 'verified'])
         claim.status = 'approved'
         claim.reviewed_at = timezone.now()
         claim.save(update_fields=['status', 'reviewed_at'])
