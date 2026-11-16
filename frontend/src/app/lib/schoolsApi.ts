@@ -90,8 +90,7 @@ export async function fetchAllSchools(): Promise<School[]> {
     const first = await get(`/schools/?limit=${PAGE}&page=1`);
     if (!first.ok) throw new Error(`Schools API failed (${first.status})`);
     const j1 = await first.json();
-    const maxPages = process.env.NODE_ENV === "development" ? 2 : 15;
-    const totalPages = Math.min(j1.meta?.pages ?? 1, maxPages);
+    const totalPages = Math.min(j1.meta?.pages ?? 1, 40);
 
     // Fetch in small batches of 3 requests at a time to prevent server socket saturation
     const rest: ApiSchool[][] = [];
