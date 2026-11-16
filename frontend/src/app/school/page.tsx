@@ -720,10 +720,61 @@ export default function SchoolPortalPage() {
           </div>
         </div>
 
+        {/* Mobile Horizontal Tabs Navigation (Sticky / Horizontal Scroll) */}
+        <div className="mt-6 lg:hidden">
+          <div className="flex gap-2 overflow-x-auto pb-2 pt-1 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+            {(
+              [
+                { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+                {
+                  key: "school_setup",
+                  label: schoolApproved ? "Linked School" : "Claim School",
+                  icon: Building2,
+                  badge: account?.schoolLinkStatus === "pending_claim" || account?.schoolLinkStatus === "pending_new" ? "Pending" : undefined,
+                },
+                { key: "leads", label: `Admission Leads (${stats?.totalLeads ?? 0})`, icon: Inbox },
+                {
+                  key: "wizard",
+                  label: "Edit Profile",
+                  icon: FileEdit,
+                  badge: account?.editApprovalStatus === "pending" ? "In Review" : undefined,
+                },
+                { key: "plans", label: "Plans", icon: CreditCard },
+                { key: "invoices", label: `Invoices (${invoices.length})`, icon: FileText },
+                { key: "reviews", label: `Reviews (${school?.reviews?.length ?? 0})`, icon: Star },
+                { key: "password", label: "Password", icon: KeyRound },
+              ] as const
+            ).map((item) => {
+              const IconComp = item.icon;
+              const isActive = tab === item.key;
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => setTab(item.key)}
+                  className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition whitespace-nowrap shrink-0 ${
+                    isActive
+                      ? "bg-[#0A5C91] text-white shadow-sm ring-2 ring-[#0A5C91]/30"
+                      : "bg-white border border-[#D6DDE5] text-[#4E5A68] hover:bg-[#F1F5F9]"
+                  }`}
+                >
+                  <IconComp className="h-3.5 w-3.5" />
+                  <span>{item.label}</span>
+                  {"badge" in item && item.badge && (
+                    <span className="rounded-full bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.2">
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Main Grid: Sidebar + Active View */}
-        <div className="mt-8 grid gap-6 lg:grid-cols-12">
-          {/* Sidebar Menu */}
-          <aside className="lg:col-span-3">
+        <div className="mt-4 lg:mt-8 grid gap-6 lg:grid-cols-12">
+          {/* Sidebar Menu (Desktop) */}
+          <aside className="hidden lg:block lg:col-span-3">
             <div className="rounded-3xl border border-[#D6DDE5] bg-white p-4 shadow-sm">
               <div className="mb-4 rounded-2xl bg-[#F0F8FF] p-4">
                 <div className="flex items-center justify-between text-xs font-bold text-[#0A5C91]">
@@ -1573,8 +1624,9 @@ export default function SchoolPortalPage() {
                                   <span>Admission Confirmed (Seat Offered)</span>
                                 </span>
                               ) : lead.schoolStatus === "rejected" || lead.status === "closed" ? (
-                                <span className="inline-flex h-9 items-center justify-center rounded-xl bg-rose-50 px-3.5 text-xs font-bold text-rose-700 border border-rose-200">
-                                  Application Concluded / Seats Full
+                                <span className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-rose-100 px-3.5 text-xs font-extrabold text-rose-800 border border-rose-300">
+                                  <X className="h-4 w-4 text-rose-600 stroke-[3]" />
+                                  <span>You have rejected this application</span>
                                 </span>
                               ) : (
                                 <>
@@ -1595,17 +1647,6 @@ export default function SchoolPortalPage() {
                                     Reject / Seats Full
                                   </button>
                                 </>
-                              )}
-
-                              {lead.schoolStatus !== "review_requested" && lead.schoolStatus !== "refunded" && lead.adminStatus !== "converted" && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleLeadAction(lead.id, "request_review", "Invalid number / Parent unreachable")}
-                                  className="inline-flex h-9 items-center justify-center rounded-xl border border-amber-200 bg-amber-50 px-2.5 text-xs font-semibold text-amber-800 hover:bg-amber-100 transition"
-                                  title="Report fake or unreachable number to VidyaVista desk"
-                                >
-                                  Report Invalid Number
-                                </button>
                               )}
                             </>
                           )}

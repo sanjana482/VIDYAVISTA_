@@ -60,7 +60,7 @@ interface TrackerStage {
   step: number;
   label: string;
   sublabel: string;
-  status: "completed" | "current" | "upcoming";
+  status: "completed" | "current" | "upcoming" | "rejected";
 }
 
 function getApplicationTracker(e: any, profile: any) {
@@ -73,21 +73,21 @@ function getApplicationTracker(e: any, profile: any) {
       })
     : "Submitted";
 
-  const isRejected = e.schoolStatus === "rejected";
-  const isConverted = e.adminStatus === "converted" || e.status === "Converted";
+  const isRejected = e.schoolStatus === "rejected" || e.status === "closed" || e.status === "Rejected";
+  const isConverted = e.adminStatus === "converted" || e.status === "Converted" || e.status === "converted";
   const isContactedOrUnlocked =
     Boolean(e.isUnlocked) ||
     e.adminStatus === "contacted" ||
     e.status === "Accepted by School" ||
     e.status === "Contacted";
 
-  let stage2Status: "completed" | "current" | "upcoming" = "current";
+  let stage2Status: "completed" | "current" | "upcoming" | "rejected" = "current";
   let stage2Sub = "In Progress";
 
-  let stage3Status: "completed" | "current" | "upcoming" = "upcoming";
+  let stage3Status: "completed" | "current" | "upcoming" | "rejected" = "upcoming";
   let stage3Sub = "Pending";
 
-  let stage4Status: "completed" | "current" | "upcoming" = "upcoming";
+  let stage4Status: "completed" | "current" | "upcoming" | "rejected" = "upcoming";
   let stage4Sub = "Pending";
 
   let statusNote =
@@ -96,12 +96,12 @@ function getApplicationTracker(e: any, profile: any) {
   if (isRejected) {
     stage2Status = "completed";
     stage2Sub = "Verified";
-    stage3Status = "completed";
-    stage3Sub = "Concluded";
-    stage4Status = "completed";
-    stage4Sub = "Seats Full";
+    stage3Status = "rejected";
+    stage3Sub = "Rejected by School";
+    stage4Status = "rejected";
+    stage4Sub = "Application Closed";
     statusNote =
-      "Admission process concluded for the selected batch. Connect with your assigned VidyaVista counselor for verified alternative schools.";
+      "The school has reviewed and rejected this application (seats are full or criteria not met). You cannot take admission through this application. Please connect with your assigned VidyaVista counselor for verified alternative premier schools.";
   } else if (isConverted) {
     stage2Status = "completed";
     stage2Sub = "Verified";
@@ -299,8 +299,42 @@ export default function ParentPortalPage() {
 
       {/* Main Container */}
       <div className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-12 lg:px-8">
-        {/* Left Sidebar */}
-        <aside className="space-y-4 lg:col-span-3">
+        {/* Mobile Horizontal Tabs Navigation */}
+        <div className="lg:hidden col-span-12 -mt-2 mb-2">
+          <div className="flex gap-2 overflow-x-auto pb-2 pt-1 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+            {(
+              [
+                { id: "dashboard", label: "My Dashboard", icon: LayoutDashboard },
+                { id: "enquiries", label: `Applications (${enquiries.length})`, icon: Bookmark },
+                { id: "shortlisted", label: `Shortlisted (${shortlisted.length})`, icon: Heart },
+                { id: "reviews", label: `Reviews (${reviews.length})`, icon: Star },
+                { id: "preferences", label: "Preferences", icon: SlidersHorizontal },
+                { id: "password", label: "Password", icon: KeyRound },
+              ] as const
+            ).map((item) => {
+              const IconComp = item.icon;
+              const isActive = tab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => handleTabChange(item.id)}
+                  className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition whitespace-nowrap shrink-0 ${
+                    isActive
+                      ? "bg-[#0A5C91] text-white shadow-sm ring-2 ring-[#0A5C91]/30"
+                      : "bg-white border border-[#D6DDE5] text-[#4E5A68] hover:bg-[#F1F5F9]"
+                  }`}
+                >
+                  <IconComp className="h-3.5 w-3.5" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Left Sidebar (Desktop) */}
+        <aside className="hidden lg:block space-y-4 lg:col-span-3">
           {/* Profile Card with Completion Bar */}
           <div className="rounded-2xl border border-[#E1E7EE] bg-white p-5 shadow-sm">
             <div className="flex items-center gap-3">
@@ -658,10 +692,17 @@ export default function ParentPortalPage() {
                           </div>
 
                           <div className="flex flex-wrap items-center gap-2.5">
-                            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#D0E2FF] bg-[#EDF5FF] px-3 py-1 text-xs font-bold text-[#0A5C91]">
-                              <span className="h-2 w-2 rounded-full bg-[#0795DC] animate-pulse" />
-                              Application ID: #{trk.appId}
-                            </span>
+                            {trk.isRejected ? (
+                              <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-300 bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700">
+                                <span className="h-2 w-2 rounded-full bg-rose-600" />
+                                Application Rejected (#{trk.appId})
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 rounded-full border border-[#D0E2FF] bg-[#EDF5FF] px-3 py-1 text-xs font-bold text-[#0A5C91]">
+                                <span className="h-2 w-2 rounded-full bg-[#0795DC] animate-pulse" />
+                                Application ID: #{trk.appId}
+                              </span>
+                            )}
                             <span className="text-xs text-[#8896A6]">
                               Submitted: {trk.submittedDate}
                             </span>
@@ -675,15 +716,18 @@ export default function ParentPortalPage() {
                               {trk.stages.map((st, idx) => {
                                 const isDone = st.status === "completed";
                                 const isCurrent = st.status === "current";
+                                const isStageRejected = st.status === "rejected";
                                 return (
                                   <div key={st.step} className="relative flex flex-col items-center text-center">
                                     {/* Desktop Connecting Line */}
                                     {idx < trk.stages.length - 1 && (
                                       <div
                                         className={`hidden sm:block absolute top-4 left-1/2 w-full h-1 -z-0 ${
-                                          trk.stages[idx + 1].status === "completed" || trk.stages[idx + 1].status === "current"
-                                            ? "bg-emerald-500"
-                                            : "bg-slate-200"
+                                          trk.stages[idx + 1].status === "rejected"
+                                            ? "bg-rose-400"
+                                            : trk.stages[idx + 1].status === "completed" || trk.stages[idx + 1].status === "current"
+                                              ? "bg-emerald-500"
+                                              : "bg-slate-200"
                                         }`}
                                       />
                                     )}
@@ -691,14 +735,18 @@ export default function ParentPortalPage() {
                                     {/* Circle Icon */}
                                     <div
                                       className={`relative z-10 flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition ${
-                                        isDone
-                                          ? "bg-emerald-500 text-white shadow-sm ring-4 ring-emerald-100"
-                                          : isCurrent
-                                            ? "bg-[#0A5C91] text-white shadow-md ring-4 ring-sky-200 animate-pulse"
-                                            : "border-2 border-slate-300 bg-white text-slate-400"
+                                        isStageRejected
+                                          ? "bg-rose-600 text-white shadow-md ring-4 ring-rose-200"
+                                          : isDone
+                                            ? "bg-emerald-500 text-white shadow-sm ring-4 ring-emerald-100"
+                                            : isCurrent
+                                              ? "bg-[#0A5C91] text-white shadow-md ring-4 ring-sky-200 animate-pulse"
+                                              : "border-2 border-slate-300 bg-white text-slate-400"
                                       }`}
                                     >
-                                      {isDone ? (
+                                      {isStageRejected ? (
+                                        <X className="h-4 w-4 stroke-[3]" />
+                                      ) : isDone ? (
                                         <Check className="h-4 w-4 stroke-[3]" />
                                       ) : isCurrent ? (
                                         <span className="h-2.5 w-2.5 rounded-full bg-white" />
@@ -710,18 +758,26 @@ export default function ParentPortalPage() {
                                     {/* Labels */}
                                     <p
                                       className={`mt-2 text-xs font-extrabold ${
-                                        isCurrent ? "text-[#0A5C91]" : isDone ? "text-[#0B2A47]" : "text-slate-400"
+                                        isStageRejected
+                                          ? "text-rose-700"
+                                          : isCurrent
+                                            ? "text-[#0A5C91]"
+                                            : isDone
+                                              ? "text-[#0B2A47]"
+                                              : "text-slate-400"
                                       }`}
                                     >
                                       {st.label}
                                     </p>
                                     <span
                                       className={`mt-0.5 text-[11px] font-semibold ${
-                                        isCurrent
-                                          ? "rounded-full bg-amber-100 px-2.5 py-0.5 text-amber-800"
-                                          : isDone
-                                            ? "text-emerald-700 font-medium"
-                                            : "text-slate-400"
+                                        isStageRejected
+                                          ? "rounded-full bg-rose-100 px-2.5 py-0.5 text-rose-800 font-bold"
+                                          : isCurrent
+                                            ? "rounded-full bg-amber-100 px-2.5 py-0.5 text-amber-800"
+                                            : isDone
+                                              ? "text-emerald-700 font-medium"
+                                              : "text-slate-400"
                                       }`}
                                     >
                                       {st.sublabel}
@@ -732,14 +788,24 @@ export default function ParentPortalPage() {
                             </div>
                           </div>
 
-                          {/* 3. Status Note Banner (Professional English) */}
-                          <div className="mt-6 flex items-start gap-2.5 rounded-xl border border-sky-200 bg-[#F4F9FD] p-3.5 text-xs text-[#0B2A47]">
-                            <Info className="h-4 w-4 shrink-0 text-[#0795DC] mt-0.5" />
-                            <div>
-                              <span className="font-extrabold text-[#0A5C91]">Status Note: </span>
-                              <span className="font-medium text-[#2C3E50]">{trk.statusNote}</span>
+                          {/* 3. Status Note Banner (Red on Rejection, Blue on Normal) */}
+                          {trk.isRejected ? (
+                            <div className="mt-6 flex items-start gap-2.5 rounded-xl border border-rose-300 bg-rose-50 p-3.5 text-xs text-rose-950">
+                              <X className="h-4 w-4 shrink-0 text-rose-600 mt-0.5 stroke-[2.5]" />
+                              <div>
+                                <span className="font-extrabold text-rose-700">Application Status: </span>
+                                <span className="font-medium text-rose-900">{trk.statusNote}</span>
+                              </div>
                             </div>
-                          </div>
+                          ) : (
+                            <div className="mt-6 flex items-start gap-2.5 rounded-xl border border-sky-200 bg-[#F4F9FD] p-3.5 text-xs text-[#0B2A47]">
+                              <Info className="h-4 w-4 shrink-0 text-[#0795DC] mt-0.5" />
+                              <div>
+                                <span className="font-extrabold text-[#0A5C91]">Status Note: </span>
+                                <span className="font-medium text-[#2C3E50]">{trk.statusNote}</span>
+                              </div>
+                            </div>
+                          )}
 
                           {/* 4. Expandable Application Details */}
                           {isExpanded && (
