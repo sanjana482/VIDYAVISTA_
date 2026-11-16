@@ -420,7 +420,7 @@ class SchoolAccountAdmin(admin.ModelAdmin):
             # Plan info
             m = sc.memberships.filter(status='active').first()
             if m:
-                plan_html = f'<span style="background:#dcfce7; color:#15803d; padding:2px 7px; border-radius:6px; font-weight:700; font-size:11px;">{m.plan_name[:16]} ({m.days_remaining}d) &bull; {sc.leads_quota_remaining} Credits</span>'
+                plan_html = f'<span style="background:#dcfce7; color:#15803d; padding:2px 7px; border-radius:6px; font-weight:700; font-size:11px;">{m.plan_name[:16]} ({m.days_remaining}d) &bull; {m.leads_remaining} Credits</span>'
             else:
                 plan_html = '<span style="color:#94a3b8; font-size:11px;">No Paid Plan &bull; 0 Credits</span>'
 
@@ -1094,7 +1094,7 @@ class SchoolAccountAdmin(admin.ModelAdmin):
             if m:
                 plan_badge = (
                     f'<span style="background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; padding:1px 6px; border-radius:4px; font-size:10px; font-weight:700;" title="{m.plan_name}">'
-                    f'<i class="fas fa-award"></i> {m.plan_name[:16]} ({m.days_remaining}d) &bull; {sc.leads_quota_remaining} Credits</span>'
+                    f'<i class="fas fa-award"></i> {m.plan_name[:16]} ({m.days_remaining}d) &bull; {m.leads_remaining} Credits</span>'
                 )
             else:
                 plan_badge = '<span style="color:#94a3b8; font-size:10px;">No Paid Plan &bull; 0 Credits</span>'
