@@ -46,6 +46,14 @@ const CLASSES = [
   "Class 7", "Class 8", "Class 9", "Class 10", "Class 11", "Class 12",
 ];
 
+// ============================================================================
+// VIDYAVISTA ADMISSION HELPDESK CONTACT (MANAGER / COUNSELOR)
+// Yahan aap apna WhatsApp aur Calling number change kar sakte hain:
+// ============================================================================
+export const ADMISSION_HELPLINE_NUMBER = "9172393083"; // WhatsApp & Calling (e.g. 919876543210 bina '+' ke)
+export const ADMISSION_HELPLINE_DISPLAY = "+91 91723 93083"; // Display format on website
+// ============================================================================
+
 type Tab = "dashboard" | "enquiries" | "shortlisted" | "reviews" | "preferences" | "password";
 
 interface TrackerStage {
@@ -1125,7 +1133,7 @@ export default function ParentPortalPage() {
 
             <div className="mt-5 space-y-2.5">
               <a
-                href={`https://wa.me/919172393083?text=${encodeURIComponent(
+                href={`https://wa.me/${ADMISSION_HELPLINE_NUMBER}?text=${encodeURIComponent(
                   `Hello VidyaVista Admission Desk, I need assistance regarding my application #${supportModal.applicationNumber || `VV-${String(supportModal.id || 1000).padStart(4, "0")}`} for ${supportModal.schoolName} (Student: ${supportModal.childName || profile?.studentName || "Child"}).`
                 )}`}
                 target="_blank"
@@ -1137,11 +1145,11 @@ export default function ParentPortalPage() {
               </a>
 
               <a
-                href="tel:+919172393083"
+                href={`tel:+${ADMISSION_HELPLINE_NUMBER}`}
                 className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#0A5C91] bg-white py-2.5 text-xs font-bold text-[#0A5C91] hover:bg-sky-50 transition"
               >
                 <Phone className="h-4 w-4" />
-                <span>Call Admission Helpline (+91 91723 93083)</span>
+                <span>Call Admission Helpline ({ADMISSION_HELPLINE_DISPLAY})</span>
               </a>
 
               <button
