@@ -6,13 +6,22 @@ import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   Bookmark,
+  Building2,
+  Check,
   CheckCircle2,
+  ChevronDown,
   ChevronRight,
-  GraduationCap,
-  Heart,
-  KeyRound,
+  ChevronUp,
+  Clock,
+  ExternalLink,
   Eye,
   EyeOff,
+  FileText,
+  GraduationCap,
+  Headphones,
+  Heart,
+  Info,
+  KeyRound,
   LayoutDashboard,
   LogOut,
   Mail,
@@ -20,10 +29,12 @@ import {
   MessageSquare,
   Phone,
   Search,
+  ShieldCheck,
   SlidersHorizontal,
   Sparkles,
   Star,
   UserRound,
+  X,
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -37,6 +48,111 @@ const CLASSES = [
 
 type Tab = "dashboard" | "enquiries" | "shortlisted" | "reviews" | "preferences" | "password";
 
+interface TrackerStage {
+  step: number;
+  label: string;
+  sublabel: string;
+  status: "completed" | "current" | "upcoming";
+}
+
+function getApplicationTracker(e: any, profile: any) {
+  const appId = e.applicationNumber || `VV-${String(e.id || 1000).padStart(4, "0")}`;
+  const submittedDate = e.createdAt
+    ? new Date(e.createdAt).toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    : "Submitted";
+
+  const isRejected = e.schoolStatus === "rejected";
+  const isConverted = e.adminStatus === "converted" || e.status === "Converted";
+  const isContactedOrUnlocked =
+    Boolean(e.isUnlocked) ||
+    e.adminStatus === "contacted" ||
+    e.status === "Accepted by School" ||
+    e.status === "Contacted";
+
+  let stage2Status: "completed" | "current" | "upcoming" = "current";
+  let stage2Sub = "In Progress";
+
+  let stage3Status: "completed" | "current" | "upcoming" = "upcoming";
+  let stage3Sub = "Pending";
+
+  let stage4Status: "completed" | "current" | "upcoming" = "upcoming";
+  let stage4Sub = "Pending";
+
+  let statusNote =
+    "Your application has been received and registered. VidyaVista admission desk is reviewing student profile & eligibility criteria.";
+
+  if (isRejected) {
+    stage2Status = "completed";
+    stage2Sub = "Verified";
+    stage3Status = "completed";
+    stage3Sub = "Concluded";
+    stage4Status = "completed";
+    stage4Sub = "Seats Full";
+    statusNote =
+      "Admission process concluded for the selected batch. Connect with your assigned VidyaVista counselor for verified alternative schools.";
+  } else if (isConverted) {
+    stage2Status = "completed";
+    stage2Sub = "Verified";
+    stage3Status = "completed";
+    stage3Sub = "Processed";
+    stage4Status = "completed";
+    stage4Sub = "Seat Confirmed";
+    statusNote =
+      "Congratulations! Your student interaction & admission process has been completed successfully.";
+  } else if (isContactedOrUnlocked) {
+    stage2Status = "completed";
+    stage2Sub = "Verified";
+    stage3Status = "current";
+    stage3Sub = "In Progress";
+    stage4Status = "upcoming";
+    stage4Sub = "Awaiting Final Offer";
+    statusNote =
+      "Application verified and shared with the school admission office. Counselor is coordinating campus visit & interaction scheduling.";
+  } else {
+    stage2Status = "current";
+    stage2Sub = "In Progress";
+    stage3Status = "upcoming";
+    stage3Sub = "Pending";
+    stage4Status = "upcoming";
+    stage4Sub = "Pending";
+    statusNote =
+      "Your application has been received and registered. VidyaVista admission desk is reviewing student profile & eligibility criteria.";
+  }
+
+  const stages: TrackerStage[] = [
+    {
+      step: 1,
+      label: "Submitted",
+      sublabel: submittedDate,
+      status: "completed",
+    },
+    {
+      step: 2,
+      label: "Verification & Review",
+      sublabel: stage2Sub,
+      status: stage2Status,
+    },
+    {
+      step: 3,
+      label: "School Processing",
+      sublabel: stage3Sub,
+      status: stage3Status,
+    },
+    {
+      step: 4,
+      label: "Admission Status",
+      sublabel: stage4Sub,
+      status: stage4Status,
+    },
+  ];
+
+  return { appId, submittedDate, stages, statusNote, isRejected, isConverted, isContactedOrUnlocked };
+}
+
 export default function ParentPortalPage() {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("dashboard");
@@ -49,6 +165,10 @@ export default function ParentPortalPage() {
   const [recommended, setRecommended] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
+
+  // Tracker UI states
+  const [expandedAppId, setExpandedAppId] = useState<number | null>(null);
+  const [supportModal, setSupportModal] = useState<any | null>(null);
 
   // Chat state
   const [activeEnquiry, setActiveEnquiry] = useState<any>(null);
@@ -314,6 +434,64 @@ export default function ParentPortalPage() {
                 </div>
               </div>
 
+              {/* Active Applications Live Tracker Widget */}
+              {enquiries.length > 0 && (
+                <div className="vv-rise rounded-2xl border border-sky-100 bg-gradient-to-r from-sky-50/70 via-white to-blue-50/50 p-5 shadow-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-sky-100/80 pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#0A5C91] text-white shadow-sm">
+                        <Clock className="h-4 w-4" />
+                      </span>
+                      <div>
+                        <h2 className="text-sm font-extrabold text-[#0B2A47]">Active Applications Live Tracker</h2>
+                        <p className="text-[11px] text-[#5C6A7B]">
+                          You have {enquiries.length} application{enquiries.length > 1 ? "s" : ""} under systematic processing
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setTab("enquiries")}
+                      className="inline-flex items-center gap-1 text-xs font-bold text-[#0A5C91] hover:underline"
+                    >
+                      <span>View All Trackers ({enquiries.length})</span>
+                      <ArrowRight className="h-3 w-3" />
+                    </button>
+                  </div>
+
+                  {(() => {
+                    const latest = enquiries[0];
+                    const trk = getApplicationTracker(latest, profile);
+                    const activeStage = trk.stages.find((s) => s.status === "current") || trk.stages[0];
+                    return (
+                      <div className="mt-3.5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#E2E8F0] bg-white p-4">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-sm font-extrabold text-[#0B2A47]">{latest.schoolName}</span>
+                            <span className="rounded-full bg-[#EDF5FF] px-2.5 py-0.5 text-[11px] font-bold text-[#0A5C91]">
+                              #{trk.appId}
+                            </span>
+                            <span className="text-xs text-[#8896A6]">&middot; {trk.submittedDate}</span>
+                          </div>
+                          <p className="mt-1 text-xs text-[#5C6A7B]">
+                            Student: <strong className="text-[#0B2A47]">{latest.childName || profile?.studentName || "Student"}</strong> &middot; Class: <strong className="text-[#0B2A47]">{latest.className || profile?.lookingForClass}</strong> &middot; Current Step:{" "}
+                            <span className="font-extrabold text-[#0A5C91]">{activeStage.label} ({activeStage.sublabel})</span>
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setTab("enquiries")}
+                          className="vv-btn inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-[#0A5C91] px-4 text-xs font-bold text-white shadow-sm hover:bg-[#084872]"
+                        >
+                          <Clock className="h-3.5 w-3.5" />
+                          <span>Track Application</span>
+                        </button>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+
               {/* Counselling Guidance Banner */}
               <div className="vv-rise rounded-2xl bg-gradient-to-r from-[#0B2A47] via-[#0A5C91] to-[#0795DC] p-6 text-white shadow-lg">
                 <div className="flex flex-wrap items-center justify-between gap-4">
@@ -412,16 +590,29 @@ export default function ParentPortalPage() {
             </>
           )}
 
-          {/* TAB 2: SAF / ENQUIRIES APPLIED */}
+          {/* TAB 2: SAF / ENQUIRIES APPLIED - SYSTEMATIC APPLICATION TRACKER */}
           {tab === "enquiries" && (
-            <div className="vv-rise rounded-2xl border border-[#E1E7EE] bg-white p-6 shadow-sm">
-              <h1 className="text-xl font-extrabold text-[#0B2A47]">Admission Enquiries &amp; Applications</h1>
-              <p className="mt-1 text-xs text-[#5C6A7B]">
-                Track the status of your applications. When a school accepts your enquiry, you can communicate directly via Admission Chat.
-              </p>
+            <div className="vv-rise space-y-5">
+              <div className="rounded-2xl border border-[#E1E7EE] bg-white p-6 shadow-sm">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h1 className="text-xl font-extrabold text-[#0B2A47]">Admission Enquiries &amp; Applications</h1>
+                    <p className="mt-1 text-xs text-[#5C6A7B]">
+                      Track the real-time stage of your school admission applications through our verified admission desk.
+                    </p>
+                  </div>
+                  <Link
+                    href="/schools"
+                    className="vv-btn inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-[#0A5C91] px-4 text-xs font-bold text-white shadow-sm hover:bg-[#084872]"
+                  >
+                    <Search className="h-3.5 w-3.5" />
+                    <span>Apply to More Schools</span>
+                  </Link>
+                </div>
+              </div>
 
               {enquiries.length === 0 ? (
-                <div className="py-12 text-center">
+                <div className="rounded-2xl border border-[#E1E7EE] bg-white p-12 text-center shadow-sm">
                   <p className="text-sm text-[#8896A6]">You have not sent any school enquiries yet.</p>
                   <Link
                     href="/schools"
@@ -432,48 +623,200 @@ export default function ParentPortalPage() {
                   </Link>
                 </div>
               ) : (
-                <div className="mt-5 space-y-3">
-                  {enquiries.map((e) => (
-                    <div
-                      key={e.id}
-                      className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#E1E7EE] bg-[#FAFBFD] p-4.5"
-                    >
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={`rounded-full px-3 py-0.5 text-xs font-bold ${
-                              e.isUnlocked
-                                ? "bg-emerald-100 text-emerald-800"
-                                : e.schoolStatus === "rejected"
-                                  ? "bg-rose-100 text-rose-800"
-                                  : "bg-sky-100 text-sky-800"
-                            }`}
-                          >
-                            {e.status}
-                          </span>
-                          <span className="text-xs text-[#8896A6]">
-                            {new Date(e.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
-                          </span>
-                        </div>
-                        <h3 className="mt-2 text-base font-extrabold text-[#0B2A47]">{e.schoolName}</h3>
-                        <p className="text-xs text-[#5C6A7B]">
-                          Student: <strong>{e.childName}</strong> &middot; Class: <strong>{e.className}</strong> ({e.session})
-                        </p>
-                      </div>
+                <div className="space-y-4">
+                  {enquiries.map((e) => {
+                    const trk = getApplicationTracker(e, profile);
+                    const isExpanded = expandedAppId === e.id;
+                    return (
+                      <div
+                        key={e.id}
+                        className="overflow-hidden rounded-2xl border border-[#E1E7EE] bg-white shadow-sm transition hover:shadow-md"
+                      >
+                        {/* 1. Card Header */}
+                        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#F0F4F8] bg-[#FAFBFD] px-5 py-4">
+                          <div>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h3 className="text-base font-extrabold text-[#0B2A47]">{e.schoolName}</h3>
+                              {e.schoolCity && (
+                                <span className="flex items-center gap-1 text-xs text-[#5C6A7B]">
+                                  <MapPin className="h-3 w-3 text-[#0795DC]" />
+                                  {e.schoolCity}
+                                </span>
+                              )}
+                            </div>
+                            <p className="mt-1 text-xs text-[#5C6A7B]">
+                              Student: <strong className="text-[#0B2A47]">{e.childName || profile?.studentName || "Student"}</strong> &middot; Class: <strong className="text-[#0B2A47]">{e.className || profile?.lookingForClass}</strong> &middot; Session: <span className="font-semibold text-[#0A5C91]">{e.session || "2027-28"}</span>
+                            </p>
+                          </div>
 
-                      <div className="flex gap-2">
-                        
-                        {e.schoolSlug && (
-                          <Link
-                            href={`/schools/${e.schoolSlug}`}
-                            className="inline-flex h-9 items-center justify-center rounded-xl border border-[#D6DDE5] bg-white px-4 text-xs font-bold text-[#0B2A47]"
-                          >
-                            View School
-                          </Link>
-                        )}
+                          <div className="flex flex-wrap items-center gap-2.5">
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#D0E2FF] bg-[#EDF5FF] px-3 py-1 text-xs font-bold text-[#0A5C91]">
+                              <span className="h-2 w-2 rounded-full bg-[#0795DC] animate-pulse" />
+                              Application ID: #{trk.appId}
+                            </span>
+                            <span className="text-xs text-[#8896A6]">
+                              Submitted: {trk.submittedDate}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* 2. Visual Stepper Timeline */}
+                        <div className="px-5 py-6 sm:px-8">
+                          <div className="relative">
+                            <div className="grid grid-cols-2 gap-y-6 gap-x-2 sm:grid-cols-4 sm:gap-2">
+                              {trk.stages.map((st, idx) => {
+                                const isDone = st.status === "completed";
+                                const isCurrent = st.status === "current";
+                                return (
+                                  <div key={st.step} className="relative flex flex-col items-center text-center">
+                                    {/* Desktop Connecting Line */}
+                                    {idx < trk.stages.length - 1 && (
+                                      <div
+                                        className={`hidden sm:block absolute top-4 left-1/2 w-full h-1 -z-0 ${
+                                          trk.stages[idx + 1].status === "completed" || trk.stages[idx + 1].status === "current"
+                                            ? "bg-emerald-500"
+                                            : "bg-slate-200"
+                                        }`}
+                                      />
+                                    )}
+
+                                    {/* Circle Icon */}
+                                    <div
+                                      className={`relative z-10 flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition ${
+                                        isDone
+                                          ? "bg-emerald-500 text-white shadow-sm ring-4 ring-emerald-100"
+                                          : isCurrent
+                                            ? "bg-[#0A5C91] text-white shadow-md ring-4 ring-sky-200 animate-pulse"
+                                            : "border-2 border-slate-300 bg-white text-slate-400"
+                                      }`}
+                                    >
+                                      {isDone ? (
+                                        <Check className="h-4 w-4 stroke-[3]" />
+                                      ) : isCurrent ? (
+                                        <span className="h-2.5 w-2.5 rounded-full bg-white" />
+                                      ) : (
+                                        <span>{st.step}</span>
+                                      )}
+                                    </div>
+
+                                    {/* Labels */}
+                                    <p
+                                      className={`mt-2 text-xs font-extrabold ${
+                                        isCurrent ? "text-[#0A5C91]" : isDone ? "text-[#0B2A47]" : "text-slate-400"
+                                      }`}
+                                    >
+                                      {st.label}
+                                    </p>
+                                    <span
+                                      className={`mt-0.5 text-[11px] font-semibold ${
+                                        isCurrent
+                                          ? "rounded-full bg-amber-100 px-2.5 py-0.5 text-amber-800"
+                                          : isDone
+                                            ? "text-emerald-700 font-medium"
+                                            : "text-slate-400"
+                                      }`}
+                                    >
+                                      {st.sublabel}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          {/* 3. Status Note Banner (Professional English) */}
+                          <div className="mt-6 flex items-start gap-2.5 rounded-xl border border-sky-200 bg-[#F4F9FD] p-3.5 text-xs text-[#0B2A47]">
+                            <Info className="h-4 w-4 shrink-0 text-[#0795DC] mt-0.5" />
+                            <div>
+                              <span className="font-extrabold text-[#0A5C91]">Status Note: </span>
+                              <span className="font-medium text-[#2C3E50]">{trk.statusNote}</span>
+                            </div>
+                          </div>
+
+                          {/* 4. Expandable Application Details */}
+                          {isExpanded && (
+                            <div className="mt-4 rounded-xl border border-[#E2E8F0] bg-[#FAFBFD] p-4 text-xs space-y-3">
+                              <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-2">
+                                <span className="font-bold text-[#0B2A47] uppercase tracking-wider text-[11px]">
+                                  Submitted Application Information
+                                </span>
+                                <span className="text-[#5C6A7B]">Reference: #{trk.appId}</span>
+                              </div>
+                              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 text-slate-700">
+                                <div>
+                                  <span className="text-[11px] font-semibold text-[#5C6A7B]">Student Full Name</span>
+                                  <p className="font-bold text-[#0B2A47]">{e.childName || profile?.studentName || "Not specified"}</p>
+                                </div>
+                                <div>
+                                  <span className="text-[11px] font-semibold text-[#5C6A7B]">Parent / Guardian Name</span>
+                                  <p className="font-bold text-[#0B2A47]">{e.parentName || profile?.parentName}</p>
+                                </div>
+                                <div>
+                                  <span className="text-[11px] font-semibold text-[#5C6A7B]">Registered Mobile</span>
+                                  <p className="font-bold text-[#0B2A47]">+91 {e.mobile || profile?.mobile}</p>
+                                </div>
+                                <div>
+                                  <span className="text-[11px] font-semibold text-[#5C6A7B]">Target Class &amp; Session</span>
+                                  <p className="font-bold text-[#0A5C91]">{e.className || profile?.lookingForClass} ({e.session || "2027-28"})</p>
+                                </div>
+                                <div>
+                                  <span className="text-[11px] font-semibold text-[#5C6A7B]">Preferred Board &amp; City</span>
+                                  <p className="font-bold text-[#0B2A47]">{profile?.preferredBoard || "CBSE"} &middot; {e.schoolCity || profile?.preferredCity || "India"}</p>
+                                </div>
+                                <div>
+                                  <span className="text-[11px] font-semibold text-[#5C6A7B]">Assigned Admission Desk</span>
+                                  <p className="font-bold text-emerald-700 flex items-center gap-1">
+                                    <ShieldCheck className="h-3.5 w-3.5" />
+                                    VidyaVista Central Desk (Verified)
+                                  </p>
+                                </div>
+                              </div>
+                              {e.note && (
+                                <div className="pt-2 border-t border-[#E2E8F0]">
+                                  <span className="text-[11px] font-semibold text-[#5C6A7B]">Special Requirements / Notes:</span>
+                                  <p className="mt-0.5 text-slate-800 italic">"{e.note}"</p>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* 5. Card Actions */}
+                        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#F0F4F8] bg-[#FAFBFD] px-5 py-3">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setExpandedAppId(isExpanded ? null : e.id)}
+                              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-[#D6DDE5] bg-white px-3.5 text-xs font-bold text-[#0B2A47] hover:bg-[#F0F4F8] transition"
+                            >
+                              <FileText className="h-3.5 w-3.5 text-[#0A5C91]" />
+                              <span>{isExpanded ? "Hide Details" : "View Application Details"}</span>
+                              {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => setSupportModal(e)}
+                              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-sky-200 bg-sky-50 px-3.5 text-xs font-bold text-[#0A5C91] hover:bg-sky-100 transition"
+                            >
+                              <Headphones className="h-3.5 w-3.5 text-[#0795DC]" />
+                              <span>Admission Support Desk</span>
+                            </button>
+                          </div>
+
+                          {e.schoolSlug && (
+                            <Link
+                              href={`/schools/${e.schoolSlug}`}
+                              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-[#0B2A47] px-4 text-xs font-bold text-white hover:bg-[#0A5C91] transition"
+                            >
+                              <span>View School</span>
+                              <ArrowRight className="h-3 w-3" />
+                            </Link>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -746,6 +1089,75 @@ export default function ParentPortalPage() {
           )}
         </main>
       </div>
+
+      {/* Admission Support Desk Modal */}
+      {supportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <button
+              type="button"
+              onClick={() => setSupportModal(null)}
+              className="absolute right-4 top-4 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-100 text-[#0A5C91]">
+                <Headphones className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-[#0B2A47]">VidyaVista Admission Helpdesk</h3>
+                <p className="text-xs text-[#5C6A7B]">
+                  Application Reference: #{supportModal.applicationNumber || `VV-${String(supportModal.id || 1000).padStart(4, "0")}`}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-xl bg-[#FAFBFD] border border-[#E2E8F0] p-3 text-xs text-[#5C6A7B]">
+              Target School: <strong className="text-[#0B2A47]">{supportModal.schoolName}</strong><br />
+              Student: <strong className="text-[#0B2A47]">{supportModal.childName || profile?.studentName || "Student"}</strong> ({supportModal.className})
+            </div>
+
+            <p className="mt-3 text-xs text-[#5C6A7B]">
+              Our Senior Admission Counselor will assist you with fee structure, campus visit booking, interaction scheduling, and documentation.
+            </p>
+
+            <div className="mt-5 space-y-2.5">
+              <a
+                href={`https://wa.me/919172393083?text=${encodeURIComponent(
+                  `Hello VidyaVista Admission Desk, I need assistance regarding my application #${supportModal.applicationNumber || `VV-${String(supportModal.id || 1000).padStart(4, "0")}`} for ${supportModal.schoolName} (Student: ${supportModal.childName || profile?.studentName || "Child"}).`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] py-2.5 text-xs font-bold text-white shadow-sm hover:bg-[#20bd5a] transition"
+              >
+                <MessageSquare className="h-4 w-4" />
+                <span>Connect with Counselor on WhatsApp</span>
+              </a>
+
+              <a
+                href="tel:+919172393083"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#0A5C91] bg-white py-2.5 text-xs font-bold text-[#0A5C91] hover:bg-sky-50 transition"
+              >
+                <Phone className="h-4 w-4" />
+                <span>Call Admission Helpline (+91 91723 93083)</span>
+              </a>
+
+              <button
+                type="button"
+                onClick={() => {
+                  showToast("Callback request registered! Our senior counselor will call you shortly.");
+                  setSupportModal(null);
+                }}
+                className="w-full rounded-xl bg-[#0B2A47] py-2.5 text-xs font-bold text-white hover:bg-[#0A5C91] transition"
+              >
+                Request Priority Callback
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

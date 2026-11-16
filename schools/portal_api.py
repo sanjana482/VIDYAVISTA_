@@ -1905,18 +1905,25 @@ def parent_dashboard(request):
         "enquiries": [
             {
                 "id": e.pk,
+                "applicationNumber": f"VV-{e.pk:04d}",
                 "schoolId": e.schoolId or (e.school.school_id if e.school else None),
                 "schoolSlug": e.school.slug if e.school else "",
                 "schoolName": e.schoolName,
-                "schoolCity": e.school.city if e.school else e.city,
+                "schoolCity": e.school.city if e.school else (e.city or "India"),
                 "childName": e.childName or pp.student_name,
                 "className": e.className or pp.looking_for_class,
                 "session": e.session or "2027-28",
+                "parentName": e.parentName or pp.parent_name,
+                "mobile": e.mobile or pp.mobile,
+                "email": e.email or pp.email or request.user.email,
+                "city": e.city or pp.preferred_city or "",
+                "adminStatus": e.status,
                 "status": "Accepted by School" if e.is_unlocked else ("Rejected" if e.school_status == "rejected" else "Sent to School"),
                 "schoolStatus": e.school_status,
                 "isUnlocked": e.is_unlocked,
                 "note": e.note,
                 "createdAt": e.created_at.isoformat(),
+                "updatedAt": e.updated_at.isoformat() if getattr(e, "updated_at", None) else e.created_at.isoformat(),
                 "messagesCount": e.messages.count(),
             }
             for e in enquiries[:50]
