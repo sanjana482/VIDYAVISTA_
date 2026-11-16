@@ -24,7 +24,11 @@ def _approved(obj, limit):
     """Approved reviews. Uses the prefetched list if the view provided it (no extra query)."""
     rows = getattr(obj, 'approved_reviews', None)
     if rows is None:
-        rows = list(obj.review_items.filter(is_approved=True)[:limit])
+        reviews = getattr(obj, '_prefetched_objects_cache', {}).get('review_items')
+        if reviews is not None:
+            rows = [r for r in reviews if getattr(r, 'is_approved', False)]
+        else:
+            return []
     return [
         {'name': r.name, 'role': r.role, 'rating': r.rating, 'text': r.text, 'date': r.created_at.date().isoformat()}
         for r in rows[:limit]
@@ -64,12 +68,13 @@ class SchoolSerializer(serializers.ModelSerializer):
         if not logo_val and isinstance(obj.profile, dict):
             logo_val = obj.profile.get('logo_url') or obj.profile.get('logo') or ''
         if not logo_val and hasattr(obj, 'school_accounts'):
-            sa_with_logo = obj.school_accounts.exclude(logo_file='').first()
+            sa_list = list(obj.school_accounts.all())
+            sa_with_logo = next((x for x in sa_list if getattr(x, 'logo_file', None)), None)
             if sa_with_logo:
                 logo_val = file_or_url(req, sa_with_logo.logo_file, '')
-            else:
-                sa = obj.school_accounts.first()
-                if sa and isinstance(sa.pending_edit_data, dict):
+            elif sa_list:
+                sa = sa_list[0]
+                if isinstance(sa.pending_edit_data, dict):
                     logo_val = sa.pending_edit_data.get('logoUrl') or ''
         if logo_val and str(logo_val).startswith('/media/') and req:
             logo_val = req.build_absolute_uri(logo_val)
@@ -176,10 +181,11 @@ class SchoolListSerializer(serializers.ModelSerializer):
         data['logoUrl'] = logo_val
         data['logo_url'] = logo_val
         data['photos'] = getattr(obj, 'photo_count', 0) or obj.photos
+        sa_list = list(obj.school_accounts.all()) if hasattr(obj, 'school_accounts') else []
         is_ver = (
             getattr(obj, 'verified', False)
             or (obj.owner is not None and getattr(obj.owner, 'approval_status', '') == 'approved')
-            or (hasattr(obj, 'school_accounts') and obj.school_accounts.filter(status='approved', school_link_status='approved').exists())
+            or any(getattr(sa, 'status', '') == 'approved' and getattr(sa, 'school_link_status', '') == 'approved' for sa in sa_list)
         )
         data['verified'] = bool(is_ver)
         data['reviewList'] = _approved(obj, 3)

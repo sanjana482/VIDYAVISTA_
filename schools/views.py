@@ -33,21 +33,12 @@ class SchoolViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if self.action == 'list':
-            approved = Prefetch(
-                'review_items',
-                queryset=Review.objects.filter(is_approved=True)
-                .only('school_id', 'name', 'role', 'rating', 'text', 'created_at')
-                .order_by('-created_at')[:3],
-                to_attr='approved_reviews'
+            qs = School.objects.select_related('owner').prefetch_related(
+                'school_accounts'
             )
-
-            qs = School.objects.annotate(
-                photo_count=Count('photo_items')
-            ).prefetch_related(approved)
-
         else:
             qs = School.objects.select_related('owner').prefetch_related(
-                'fee_components', 'highlight_items', 'faq_items', 'photo_items'
+                'fee_components', 'highlight_items', 'faq_items', 'photo_items', 'school_accounts', 'review_items'
             )
 
         if self.action in self.PUBLIC:

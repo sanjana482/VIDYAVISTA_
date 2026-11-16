@@ -63,13 +63,13 @@ export const mapSchool = (d: ApiSchool): School => ({
   admissionLastDate: d.admissionLastDate || undefined,
 });
 
-const REVALIDATE = process.env.NODE_ENV === "development" ? 0 : 86400; // 0 in dev for fresh data; 24h in prod to prevent Vercel ISR quota burn
+const REVALIDATE = process.env.NODE_ENV === "development" ? 60 : 86400; // 60s in dev for smooth reloads; 24h in prod to prevent Vercel ISR quota burn
 const PAGE = 300; // schools per request
 
 async function get(path: string, customRevalidate?: number) {
   let lastErr: unknown;
   const reval = customRevalidate !== undefined ? customRevalidate : REVALIDATE;
-  for (let attempt = 0; attempt < 5; attempt++) {
+  for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const res = await fetch(`${API_URL}${path}`, {
         next: { revalidate: reval },
@@ -79,25 +79,46 @@ async function get(path: string, customRevalidate?: number) {
     } catch (e) {
       lastErr = e;
     }
-    await new Promise((r) => setTimeout(r, 3000 * (attempt + 1)));
+    await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
   }
   throw new Error(`Cannot reach the API at ${API_URL} (${lastErr instanceof Error ? lastErr.message : lastErr}). Is the backend running? (set NEXT_PUBLIC_API_URL)`);
 }
 
-/** every active school (light data, 300 per request, remaining pages are fetched in parallel) */
+/** every active school (light data, 300 per request, remaining pages are fetched in controlled batches) */
 export async function fetchAllSchools(): Promise<School[]> {
-  const first = await get(`/schools/?limit=${PAGE}&page=1`);
-  if (!first.ok) throw new Error(`Schools API failed (${first.status})`);
-  const j1 = await first.json();
-  const pages = Math.min(j1.meta?.pages ?? 1, 40);
-  const rest = await Promise.all(
-    Array.from({ length: pages - 1 }, async (_, i) => {
-      const res = await get(`/schools/?limit=${PAGE}&page=${i + 2}`);
-      if (!res.ok) throw new Error(`Schools API failed (${res.status})`);
-      return (await res.json()).data as ApiSchool[];
-    })
-  );
-  return ([] as ApiSchool[]).concat(j1.data as ApiSchool[], ...rest).map(mapSchool);
+  try {
+    const first = await get(`/schools/?limit=${PAGE}&page=1`);
+    if (!first.ok) throw new Error(`Schools API failed (${first.status})`);
+    const j1 = await first.json();
+    const maxPages = process.env.NODE_ENV === "development" ? 2 : 15;
+    const totalPages = Math.min(j1.meta?.pages ?? 1, maxPages);
+
+    // Fetch in small batches of 3 requests at a time to prevent server socket saturation
+    const rest: ApiSchool[][] = [];
+    for (let i = 2; i <= totalPages; i += 3) {
+      const batchIndices: number[] = [];
+      for (let b = 0; b < 3 && i + b <= totalPages; b++) {
+        batchIndices.push(i + b);
+      }
+      const batchRes = await Promise.all(
+        batchIndices.map(async (pageNum) => {
+          try {
+            const res = await get(`/schools/?limit=${PAGE}&page=${pageNum}`);
+            if (!res.ok) return [];
+            return ((await res.json()).data as ApiSchool[]) || [];
+          } catch (e) {
+            console.warn(`[schools] Failed to fetch page ${pageNum}:`, e);
+            return [];
+          }
+        })
+      );
+      rest.push(...batchRes);
+    }
+    return ([] as ApiSchool[]).concat(j1.data as ApiSchool[], ...rest.flat()).map(mapSchool);
+  } catch (err) {
+    console.warn("[schools] fetchAllSchools graceful fallback:", err);
+    return [];
+  }
 }
 
 /** same as above but never throws - for generateStaticParams / sitemap during a build without backend */
