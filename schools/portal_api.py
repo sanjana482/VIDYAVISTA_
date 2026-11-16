@@ -1606,9 +1606,14 @@ def school_update_lead(request, lead_id):
 
     d = request.data
     action = d.get("action")
-    if action == "reject":
+    if action in ("convert", "admitted"):
+        lead.status = "converted"
+        lead.school_status = "accepted"
+        lead.is_unlocked = True
+    elif action == "reject":
         lead.school_status = "rejected"
-        lead.rejection_reason = str(d.get("reason") or "Seat not available / Not matching criteria")[:300]
+        lead.status = "closed"
+        lead.rejection_reason = str(d.get("reason") or "Seat not available / Application closed")[:300]
     elif action == "request_review":
         if not lead.is_unlocked:
             return _err("Only unlocked leads can be submitted for credit refund review.")

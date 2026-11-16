@@ -9,6 +9,7 @@ import {
   Award,
   Building2,
   CheckCircle2,
+  GraduationCap,
   ChevronDown,
   Clock,
   CreditCard,
@@ -1477,7 +1478,15 @@ export default function SchoolPortalPage() {
 
                           {/* Masked vs Unlocked Contact Box */}
                           <div className="min-w-[250px] rounded-2xl border border-[#D6DDE5] bg-[#F8FAFC] p-3.5 text-xs">
-                            <p className="font-bold uppercase tracking-wider text-[#64748B]">Parent Contact Details</p>
+                            <div className="flex items-center justify-between gap-1">
+                              <p className="font-bold uppercase tracking-wider text-[#64748B]">Parent Contact Details</p>
+                              {lead.isUnlocked && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-extrabold text-emerald-800 border border-emerald-200">
+                                  <CheckCircle2 className="h-3 w-3" />
+                                  <span>Verified Lead</span>
+                                </span>
+                              )}
+                            </div>
                             <p className="mt-1.5 flex items-center gap-1.5 font-semibold">
                               <Phone className="h-3.5 w-3.5 text-[#0A5C91]" />
                               <span>Mobile:</span>{" "}
@@ -1534,7 +1543,7 @@ export default function SchoolPortalPage() {
                             <>
                               <a
                                 href={`tel:${lead.mobile}`}
-                                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-4 text-xs font-bold text-white shadow-sm"
+                                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 transition"
                               >
                                 <Phone className="h-3.5 w-3.5" />
                                 <span>Call {lead.mobile}</span>
@@ -1543,25 +1552,59 @@ export default function SchoolPortalPage() {
                                 href={`https://wa.me/91${lead.mobile}?text=${encodeURIComponent(`Hello ${lead.parentName}, greetings from ${school?.name || "our school"} regarding admission enquiry for ${lead.childName} (${lead.className}).`)}`}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="inline-flex h-9 items-center justify-center rounded-xl bg-[#25D366] px-4 text-xs font-bold text-white shadow-sm"
+                                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-[#25D366] px-3.5 text-xs font-bold text-white shadow-sm hover:bg-[#20bd5a] transition"
                               >
-                                WhatsApp Parent
+                                <MessageSquare className="h-3.5 w-3.5" />
+                                <span>WhatsApp Parent</span>
                               </a>
                               
                               <button
                                 type="button"
                                 onClick={() => setSelectedLead(lead)}
-                                className="inline-flex h-9 items-center justify-center rounded-xl border border-[#CBD5E1] px-3.5 text-xs font-bold text-[#4E5A68]"
+                                className="inline-flex h-9 items-center justify-center rounded-xl border border-[#CBD5E1] bg-white px-3 text-xs font-bold text-[#4E5A68] hover:bg-[#F8FAFC]"
                               >
-                                Add Follow-up Note
+                                Add Note
                               </button>
-                              {lead.schoolStatus !== "review_requested" && lead.schoolStatus !== "refunded" && (
+
+                              {/* Lead Outcome Actions (Confirm Admission or Conclude/Reject) */}
+                              {lead.adminStatus === "converted" || lead.status === "converted" ? (
+                                <span className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-emerald-100 px-3.5 text-xs font-extrabold text-emerald-800 border border-emerald-200">
+                                  <GraduationCap className="h-4 w-4 text-emerald-600" />
+                                  <span>Admission Confirmed (Seat Offered)</span>
+                                </span>
+                              ) : lead.schoolStatus === "rejected" || lead.status === "closed" ? (
+                                <span className="inline-flex h-9 items-center justify-center rounded-xl bg-rose-50 px-3.5 text-xs font-bold text-rose-700 border border-rose-200">
+                                  Application Concluded / Seats Full
+                                </span>
+                              ) : (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleLeadAction(lead.id, "convert")}
+                                    className="vv-btn inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 transition"
+                                  >
+                                    <GraduationCap className="h-3.5 w-3.5" />
+                                    <span>Confirm Admission</span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => handleLeadAction(lead.id, "reject", "Seat not available / Criteria not met")}
+                                    className="inline-flex h-9 items-center justify-center rounded-xl border border-rose-200 bg-white px-3 text-xs font-bold text-rose-600 hover:bg-rose-50 transition"
+                                  >
+                                    Reject / Seats Full
+                                  </button>
+                                </>
+                              )}
+
+                              {lead.schoolStatus !== "review_requested" && lead.schoolStatus !== "refunded" && lead.adminStatus !== "converted" && (
                                 <button
                                   type="button"
                                   onClick={() => handleLeadAction(lead.id, "request_review", "Invalid number / Parent unreachable")}
-                                  className="inline-flex h-9 items-center justify-center rounded-xl border border-amber-300 bg-amber-50 px-3.5 text-xs font-bold text-amber-800"
+                                  className="inline-flex h-9 items-center justify-center rounded-xl border border-amber-200 bg-amber-50 px-2.5 text-xs font-semibold text-amber-800 hover:bg-amber-100 transition"
+                                  title="Report fake or unreachable number to VidyaVista desk"
                                 >
-                                  Request Credit Refund Review
+                                  Report Invalid Number
                                 </button>
                               )}
                             </>

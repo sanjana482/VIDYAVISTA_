@@ -105,6 +105,8 @@ export type SchoolLead = {
   institutionType: string;
   note: string;
   leadSourceTag: string;
+  status?: string;
+  adminStatus?: string;
   schoolStatus: "pending" | "accepted" | "rejected" | "review_requested" | "refunded";
   schoolNote: string;
   rejectionReason: string;

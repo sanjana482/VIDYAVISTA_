@@ -50,8 +50,8 @@ const CLASSES = [
 // VIDYAVISTA ADMISSION HELPDESK CONTACT (MANAGER / COUNSELOR)
 // Yahan aap apna WhatsApp aur Calling number change kar sakte hain:
 // ============================================================================
-export const ADMISSION_HELPLINE_NUMBER = "9172393083"; // WhatsApp & Calling (e.g. 919876543210 bina '+' ke)
-export const ADMISSION_HELPLINE_DISPLAY = "+91 91723 93083"; // Display format on website
+const ADMISSION_HELPLINE_NUMBER = "9172393083"; // WhatsApp & Calling (e.g. 919876543210 bina '+' ke)
+const ADMISSION_HELPLINE_DISPLAY = "+91 91723 93083"; // Display format on website
 // ============================================================================
 
 type Tab = "dashboard" | "enquiries" | "shortlisted" | "reviews" | "preferences" | "password";
