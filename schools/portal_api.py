@@ -329,6 +329,7 @@ def _user_role_payload(user):
             "status": sa.status,
             "schoolLinkStatus": sa.school_link_status,
             "editApprovalStatus": sa.edit_approval_status,
+            "hasClaimedFreeTrial": has_claimed_free_trial,
             "leadsRemaining": sa.total_leads_remaining(),
         }
     if hasattr(user, "parent_profile"):
@@ -1440,6 +1441,14 @@ def school_dashboard(request):
                 "createdAt": bc.created_at.date().isoformat() if bc.created_at else "",
             })
 
+    one_year_ago = timezone.localdate() - timedelta(days=365)
+    has_claimed_free_trial = SchoolMembership.objects.filter(
+        school=s,
+        created_at__date__gte=one_year_ago
+    ).filter(
+        Q(amount=0) | Q(plan__price=0) | Q(plan_name__icontains="trial") | Q(plan_name__icontains="free")
+    ).exists() if s else False
+
     all_memberships = [membership_json(m) for m in (s.memberships.all() if s else [])]
     all_invoices = [invoice_json(inv) for inv in (s.invoices.all() if s else [])]
 
@@ -1710,6 +1719,19 @@ def school_subscribe_plan(request):
     plan = Plan.objects.filter(pk=plan_id, is_active=True).first()
     if not plan:
         return _err("Selected plan not found.")
+
+    is_free_trial = (plan.price == 0) or (getattr(plan, "slug", "") == "free-starter") or (plan.name and "trial" in plan.name.lower())
+    if is_free_trial:
+        one_year_ago = timezone.localdate() - timedelta(days=365)
+        claimed = SchoolMembership.objects.filter(
+            school=sa.school,
+            created_at__date__gte=one_year_ago
+        ).filter(Q(amount=0) | Q(plan__price=0) | Q(plan_name__icontains="trial") | Q(plan_name__icontains="free")).exists()
+        if claimed:
+            return _err("Free Starter Listing (Trial) has already been claimed for this school for this academic year. Each school is eligible for 2 complimentary trial leads once per year. To get more leads, please choose a Membership Plan or Lead Booster Pack.", status=400)
+        payment_mode = "free"
+        payment_note = "Complimentary School Trial - 2 Free Leads (Once per year)"
+        discount = 0
 
     discount = 0
     if coupon_code:

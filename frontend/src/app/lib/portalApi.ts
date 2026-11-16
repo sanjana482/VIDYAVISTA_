@@ -18,6 +18,7 @@ export type PortalUser = {
   status?: string;
   schoolLinkStatus?: "none" | "pending_claim" | "pending_new" | "approved" | "rejected";
   editApprovalStatus?: "none" | "pending" | "approved" | "rejected";
+  hasClaimedFreeTrial?: boolean;
   leadsRemaining?: number;
   profileCompletion?: number;
 };

@@ -298,40 +298,8 @@ export default function ParentPortalPage() {
       )}
 
       {/* Main Container */}
-      <div className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-12 lg:px-8">
-        {/* Mobile Horizontal Tabs Navigation */}
-        <div className="lg:hidden col-span-12 -mt-2 mb-2">
-          <div className="flex gap-2 overflow-x-auto pb-2 pt-1 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
-            {(
-              [
-                { id: "dashboard", label: "My Dashboard", icon: LayoutDashboard },
-                { id: "enquiries", label: `Applications (${enquiries.length})`, icon: Bookmark },
-                { id: "shortlisted", label: `Shortlisted (${shortlisted.length})`, icon: Heart },
-                { id: "reviews", label: `Reviews (${reviews.length})`, icon: Star },
-                { id: "preferences", label: "Preferences", icon: SlidersHorizontal },
-                { id: "password", label: "Password", icon: KeyRound },
-              ] as const
-            ).map((item) => {
-              const IconComp = item.icon;
-              const isActive = tab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => handleTabChange(item.id)}
-                  className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition whitespace-nowrap shrink-0 ${
-                    isActive
-                      ? "bg-[#0A5C91] text-white shadow-sm ring-2 ring-[#0A5C91]/30"
-                      : "bg-white border border-[#D6DDE5] text-[#4E5A68] hover:bg-[#F1F5F9]"
-                  }`}
-                >
-                  <IconComp className="h-3.5 w-3.5" />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+      <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:py-8 sm:px-6 lg:grid-cols-12 lg:px-8 pb-28 lg:pb-8">
+
 
         {/* Left Sidebar (Desktop) */}
         <aside className="hidden lg:block space-y-4 lg:col-span-3">
@@ -1232,6 +1200,74 @@ export default function ParentPortalPage() {
           </div>
         </div>
       )}
+
+      {/* Fixed Mobile Bottom Navigation Bar (Image 4 App-style design) */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-[#D6DDE5] bg-white/95 py-2 px-1 backdrop-blur-md shadow-lg lg:hidden">
+        <button
+          type="button"
+          onClick={() => handleTabChange("dashboard")}
+          className={`flex flex-col items-center gap-0.5 text-[10px] font-bold transition ${
+            tab === "dashboard" ? "text-[#0A5C91]" : "text-[#64748B]"
+          }`}
+        >
+          <LayoutDashboard className={`h-5 w-5 ${tab === "dashboard" ? "stroke-[2.5]" : ""}`} />
+          <span>Home</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleTabChange("enquiries")}
+          className={`relative flex flex-col items-center gap-0.5 text-[10px] font-bold transition ${
+            tab === "enquiries" ? "text-[#0A5C91]" : "text-[#64748B]"
+          }`}
+        >
+          <Bookmark className={`h-5 w-5 ${tab === "enquiries" ? "stroke-[2.5]" : ""}`} />
+          <span>Tracker</span>
+          {enquiries.length > 0 && (
+            <span className="absolute -top-1 right-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#EC0E58] px-1 text-[9px] font-extrabold text-white">
+              {enquiries.length}
+            </span>
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleTabChange("shortlisted")}
+          className={`relative flex flex-col items-center gap-0.5 text-[10px] font-bold transition ${
+            tab === "shortlisted" ? "text-[#0A5C91]" : "text-[#64748B]"
+          }`}
+        >
+          <Heart className={`h-5 w-5 ${tab === "shortlisted" ? "stroke-[2.5]" : ""}`} />
+          <span>Shortlist</span>
+          {shortlisted.length > 0 && (
+            <span className="absolute -top-1 right-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#0A5C91] px-1 text-[9px] font-extrabold text-white">
+              {shortlisted.length}
+            </span>
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleTabChange("reviews")}
+          className={`flex flex-col items-center gap-0.5 text-[10px] font-bold transition ${
+            tab === "reviews" ? "text-[#0A5C91]" : "text-[#64748B]"
+          }`}
+        >
+          <Star className={`h-5 w-5 ${tab === "reviews" ? "stroke-[2.5]" : ""}`} />
+          <span>Reviews</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleTabChange("preferences")}
+          className={`flex flex-col items-center gap-0.5 text-[10px] font-bold transition ${
+            tab === "preferences" || tab === "password" ? "text-[#0A5C91]" : "text-[#64748B]"
+          }`}
+        >
+          <SlidersHorizontal className={`h-5 w-5 ${tab === "preferences" ? "stroke-[2.5]" : ""}`} />
+          <span>Profile</span>
+        </button>
+      </nav>
 
       <Footer />
     </div>

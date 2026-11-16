@@ -893,7 +893,7 @@ class SchoolMembership(models.Model):
                 School.objects.filter(pk=self.school.pk).update(**updates)
 
         # Automatically generate GST Invoice if not created yet
-        if not hasattr(self, 'invoice'):
+        if not hasattr(self, 'invoice') and (self.total_paid > 0 or self.amount > 0) and self.payment_mode != 'free':
             year = timezone.localdate().year
             count = Invoice.objects.filter(invoice_number__startswith=f'INV-{year}-').count() + 1
             inv_no = f'INV-{year}-{count:06d}'

@@ -33,6 +33,7 @@ import {
   Search,
   ShieldCheck,
   Sparkles,
+  SlidersHorizontal,
   Star,
   Trash2,
   Unlock,
@@ -609,167 +610,135 @@ export default function SchoolPortalPage() {
         </div>
       )}
 
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Top Institution Header Bar */}
-        <div className="vv-rise flex flex-wrap items-center justify-between gap-4 rounded-3xl bg-gradient-to-r from-[#0B2A47] via-[#0A5C91] to-[#0795DC] p-6 text-white shadow-lg sm:p-8">
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-bold uppercase tracking-wider">
-                <Building2 className="h-3.5 w-3.5" />
-                <span>Institution Portal</span>
-              </span>
-              <span
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold uppercase ${
-                  ownerApproved ? "bg-emerald-400/20 text-emerald-200" : "bg-amber-400/25 text-amber-100"
-                }`}
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:py-8 sm:px-6 lg:px-8 pb-28 lg:pb-8">
+        {/* Top Institution Header Bar (Compact & Mobile-Optimized) */}
+        <div className="vv-rise rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#0B2A47] via-[#0A5C91] to-[#0795DC] p-4 sm:p-6 lg:p-7 text-white shadow-lg">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              {/* Badges row */}
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-0.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider">
+                  <Building2 className="h-3 w-3" />
+                  <span>Institution Portal</span>
+                </span>
+                <span
+                  className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] sm:text-xs font-bold uppercase ${
+                    ownerApproved ? "bg-emerald-400/20 text-emerald-200" : "bg-amber-400/25 text-amber-100"
+                  }`}
+                >
+                  {ownerApproved ? <CheckCircle2 className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+                  <span>{ownerApproved ? "Profile Approved" : "Pending Approval"}</span>
+                </span>
+                {account?.schoolLinkStatus === "approved" && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-sky-400/25 px-2.5 py-0.5 text-[10px] sm:text-xs font-bold uppercase text-sky-100">
+                    <ShieldCheck className="h-3 w-3" />
+                    <span>School Linked &amp; Live</span>
+                  </span>
+                )}
+              </div>
+
+              {/* School Account Switcher Button */}
+              <div className="mt-2.5">
+                <button
+                  type="button"
+                  onClick={() => setShowAccountSwitcher(true)}
+                  className="group flex items-center gap-2.5 sm:gap-3 rounded-2xl bg-white/15 p-2 sm:px-4 sm:py-2.5 text-left transition hover:bg-white/25 border border-white/25 backdrop-blur-sm shadow-sm max-w-full"
+                  title="Click to switch school or link another branch"
+                >
+                  <div className="flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl bg-white/20 text-white font-bold overflow-hidden border border-white/30 shadow-inner">
+                    {school?.image ? (
+                      <img src={school.image} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <Building2 className="h-5 w-5 sm:h-6 sm:w-6" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="truncate text-base font-extrabold text-white sm:text-xl group-hover:text-sky-100 transition">
+                        {school?.name || account?.institutionName || "School Owner Account"}
+                      </span>
+                      <ChevronDown className="h-4 w-4 shrink-0 text-sky-200 transition group-hover:translate-y-0.5" />
+                    </div>
+                    <p className="truncate text-[11px] sm:text-xs text-sky-100 font-medium">
+                      {school?.city ? `${school.city} • ` : ""}
+                      {managedSchools.length} {managedSchools.length <= 1 ? "School" : "Branches"} &middot; <span className="underline font-bold text-white">Switch School</span>
+                    </p>
+                  </div>
+                </button>
+              </div>
+
+              <p className="mt-1.5 text-xs text-sky-100 truncate">
+                {account?.contactPerson} ({account?.designation}) &middot; +91 {account?.mobile}
+              </p>
+            </div>
+
+            {/* Desktop Credits & Buttons (Hidden on mobile) */}
+            <div className="hidden sm:flex flex-wrap items-center gap-3">
+              <div className="rounded-2xl bg-white/10 px-4 py-2.5 backdrop-blur-sm text-center">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-sky-200">Lead Credits</p>
+                <p className="text-xl font-extrabold">
+                  {credits?.leadsRemaining ?? 0}{" "}
+                  <span className="text-xs font-normal text-sky-200">/ {credits?.leadsTotal ?? 0}</span>
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setTab("plans")}
+                className="vv-btn inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-[#EC0E58] px-4 text-xs font-bold text-white shadow-md hover:bg-[#d60b4e]"
               >
-                {ownerApproved ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Clock className="h-3.5 w-3.5" />}
-                <span>{ownerApproved ? "Owner Profile Approved" : "Owner Profile Pending Approval"}</span>
-              </span>
-              {account?.schoolLinkStatus === "approved" && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-400/25 px-3 py-1 text-xs font-bold uppercase text-sky-100">
-                  <ShieldCheck className="h-3.5 w-3.5" />
-                  <span>School Linked & Live</span>
-                </span>
-              )}
-              {account?.editApprovalStatus === "pending" && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-400/30 px-3 py-1 text-xs font-bold uppercase text-rose-100">
-                  <Clock className="h-3.5 w-3.5" />
-                  <span>Profile Edits Pending Admin Review</span>
-                </span>
+                <PlusCircle className="h-3.5 w-3.5" />
+                <span>Add Lead Credits</span>
+              </button>
+              {school?.slug && schoolApproved && (
+                <Link
+                  href={`/schools/${school.slug}`}
+                  target="_blank"
+                  className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-white/30 bg-white/10 px-3.5 text-xs font-semibold text-white transition hover:bg-white/20"
+                >
+                  <span>View Public Page</span>
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </Link>
               )}
             </div>
-            {/* Instagram-style School Account Switcher Button */}
-            <div className="mt-3">
+          </div>
+
+          {/* Mobile Quick Action Row (Compact - Image 2 Fix) */}
+          <div className="mt-3 flex sm:hidden items-center justify-between gap-2 border-t border-white/15 pt-2.5 text-xs">
+            <div className="flex items-center gap-1.5 rounded-xl bg-white/15 px-3 py-1.5 font-bold">
+              <CreditCard className="h-3.5 w-3.5 text-sky-200" />
+              <span>{credits?.leadsRemaining ?? 0} Leads</span>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setTab("plans")}
+                className="rounded-xl bg-[#EC0E58] px-3 py-1.5 font-bold text-white shadow-sm"
+              >
+                + Add Credits
+              </button>
               <button
                 type="button"
                 onClick={() => setShowAccountSwitcher(true)}
-                className="group flex items-center gap-3 rounded-2xl bg-white/15 px-4 py-2.5 text-left transition hover:bg-white/25 border border-white/25 backdrop-blur-sm shadow-sm"
-                title="Click to switch school or link another branch"
+                className="rounded-xl bg-white/20 px-2.5 py-1.5 font-bold text-white"
               >
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/20 text-white font-bold overflow-hidden border border-white/30 shadow-inner">
-                  {school?.image ? (
-                    <img src={school.image} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    <Building2 className="h-6 w-6" />
-                  )}
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xl font-extrabold text-white sm:text-2xl group-hover:text-sky-100 transition">
-                      {school?.name || account?.institutionName || "School Owner Account"}
-                    </span>
-                    <ChevronDown className="h-5 w-5 text-sky-200 transition group-hover:translate-y-0.5" />
-                  </div>
-                  <p className="text-xs text-sky-100 font-medium">
-                    {school?.city ? `${school.city} • ` : ""}
-                    {managedSchools.length} {managedSchools.length <= 1 ? "School Linked" : "Schools / Branches"} &middot; <span className="underline font-bold text-white">Switch School</span>
-                  </p>
-                </div>
+                Switch
               </button>
-            </div>
-            <p className="mt-2 text-sm text-sky-100">
-              {account?.contactPerson} ({account?.designation}) &middot; {account?.mobile} &middot; {account?.email}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="rounded-2xl bg-white/10 px-5 py-3 backdrop-blur-sm">
-              <p className="text-xs font-semibold uppercase tracking-wider text-sky-200">Lead Credits Balance</p>
-              <p className="mt-0.5 text-2xl font-extrabold">
-                {credits?.leadsRemaining ?? 0}{" "}
-                <span className="text-sm font-normal text-sky-200">/ {credits?.leadsTotal ?? 0} Credits</span>
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowAccountSwitcher(true)}
-              className="vv-btn inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-white/20 px-4 text-xs font-bold text-white backdrop-blur-sm transition hover:bg-white/30"
-              title="Switch active school"
-            >
-              <Building2 className="h-4 w-4" />
-              <span>Switch School ({managedSchools.length})</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowBranchModal(true)}
-              className="vv-btn inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-white/20 px-4 text-xs font-bold text-white backdrop-blur-sm transition hover:bg-white/30"
-              title="Link or add another branch"
-            >
-              <PlusCircle className="h-4 w-4" />
-              <span>+ Link Another Branch</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setTab("plans")}
-              className="vv-btn inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#EC0E58] px-5 text-sm font-bold text-white shadow-md"
-            >
-              <PlusCircle className="h-4 w-4" />
-              <span>{(credits?.leadsRemaining ?? 0) === 0 ? "Buy Plan / +100 Leads" : "Add Lead Credits"}</span>
-            </button>
-            {school?.slug && schoolApproved && (
-              <Link
-                href={`/schools/${school.slug}`}
-                target="_blank"
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/10 px-4 text-sm font-semibold text-white transition hover:bg-white/20"
-              >
-                <span>View Public Page</span>
-                <ExternalLink className="h-4 w-4" />
-              </Link>
-            )}
-          </div>
-        </div>
-
-        {/* Mobile Horizontal Tabs Navigation (Sticky / Horizontal Scroll) */}
-        <div className="mt-6 lg:hidden">
-          <div className="flex gap-2 overflow-x-auto pb-2 pt-1 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
-            {(
-              [
-                { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-                {
-                  key: "school_setup",
-                  label: schoolApproved ? "Linked School" : "Claim School",
-                  icon: Building2,
-                  badge: account?.schoolLinkStatus === "pending_claim" || account?.schoolLinkStatus === "pending_new" ? "Pending" : undefined,
-                },
-                { key: "leads", label: `Admission Leads (${stats?.totalLeads ?? 0})`, icon: Inbox },
-                {
-                  key: "wizard",
-                  label: "Edit Profile",
-                  icon: FileEdit,
-                  badge: account?.editApprovalStatus === "pending" ? "In Review" : undefined,
-                },
-                { key: "plans", label: "Plans", icon: CreditCard },
-                { key: "invoices", label: `Invoices (${invoices.length})`, icon: FileText },
-                { key: "reviews", label: `Reviews (${school?.reviews?.length ?? 0})`, icon: Star },
-                { key: "password", label: "Password", icon: KeyRound },
-              ] as const
-            ).map((item) => {
-              const IconComp = item.icon;
-              const isActive = tab === item.key;
-              return (
-                <button
-                  key={item.key}
-                  type="button"
-                  onClick={() => setTab(item.key)}
-                  className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition whitespace-nowrap shrink-0 ${
-                    isActive
-                      ? "bg-[#0A5C91] text-white shadow-sm ring-2 ring-[#0A5C91]/30"
-                      : "bg-white border border-[#D6DDE5] text-[#4E5A68] hover:bg-[#F1F5F9]"
-                  }`}
+              {school?.slug && schoolApproved && (
+                <Link
+                  href={`/schools/${school.slug}`}
+                  target="_blank"
+                  className="rounded-xl bg-white/20 px-2 py-1.5 text-white"
+                  title="View Public Page"
                 >
-                  <IconComp className="h-3.5 w-3.5" />
-                  <span>{item.label}</span>
-                  {"badge" in item && item.badge && (
-                    <span className="rounded-full bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.2">
-                      {item.badge}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </Link>
+              )}
+            </div>
           </div>
         </div>
+
+
 
         {/* Main Grid: Sidebar + Active View */}
         <div className="mt-4 lg:mt-8 grid gap-6 lg:grid-cols-12">
@@ -858,7 +827,8 @@ export default function SchoolPortalPage() {
 
           {/* Main Content Area */}
           <section className="space-y-6 lg:col-span-9">
-            {/* 3-STAGE APPROVAL STATUS TRACKER BANNER (Always visible for clarity) */}
+            {/* 3-STAGE APPROVAL STATUS TRACKER BANNER (Only on Dashboard once approved) */}
+            {(!ownerApproved || !schoolApproved || tab === "dashboard") && (
             <div className="vv-rise rounded-3xl border border-[#D6DDE5] bg-white p-6 shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#E2E8F0] pb-4">
                 <div>
@@ -979,6 +949,7 @@ export default function SchoolPortalPage() {
                 </div>
               </div>
             </div>
+            )}
 
             {/* TAB 1: DASHBOARD */}
             {tab === "dashboard" && (
@@ -3494,6 +3465,71 @@ export default function SchoolPortalPage() {
           </div>
         </div>
       )}
+
+      {/* Fixed Mobile Bottom Navigation Bar (Image 4 App-style design) */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-[#D6DDE5] bg-white/95 py-2 px-1 backdrop-blur-md shadow-lg lg:hidden">
+        <button
+          type="button"
+          onClick={() => setTab("dashboard")}
+          className={`flex flex-col items-center gap-0.5 text-[10px] font-bold transition ${
+            tab === "dashboard" ? "text-[#0A5C91]" : "text-[#64748B]"
+          }`}
+        >
+          <LayoutDashboard className={`h-5 w-5 ${tab === "dashboard" ? "stroke-[2.5]" : ""}`} />
+          <span>Home</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setTab("leads")}
+          className={`relative flex flex-col items-center gap-0.5 text-[10px] font-bold transition ${
+            tab === "leads" ? "text-[#0A5C91]" : "text-[#64748B]"
+          }`}
+        >
+          <Inbox className={`h-5 w-5 ${tab === "leads" ? "stroke-[2.5]" : ""}`} />
+          <span>Leads</span>
+          {(stats?.totalLeads ?? 0) > 0 && (
+            <span className="absolute -top-1 right-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#EC0E58] px-1 text-[9px] font-extrabold text-white">
+              {stats?.totalLeads}
+            </span>
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setTab("school_setup")}
+          className={`flex flex-col items-center gap-0.5 text-[10px] font-bold transition ${
+            tab === "school_setup" ? "text-[#0A5C91]" : "text-[#64748B]"
+          }`}
+        >
+          <Building2 className={`h-5 w-5 ${tab === "school_setup" ? "stroke-[2.5]" : ""}`} />
+          <span>School</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setTab("plans")}
+          className={`flex flex-col items-center gap-0.5 text-[10px] font-bold transition ${
+            tab === "plans" ? "text-[#0A5C91]" : "text-[#64748B]"
+          }`}
+        >
+          <CreditCard className={`h-5 w-5 ${tab === "plans" ? "stroke-[2.5]" : ""}`} />
+          <span>Plans</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setTab("wizard")}
+          className={`flex flex-col items-center gap-0.5 text-[10px] font-bold transition ${
+            tab === "wizard" || tab === "invoices" || tab === "reviews" || tab === "password"
+              ? "text-[#0A5C91]"
+              : "text-[#64748B]"
+          }`}
+        >
+          <SlidersHorizontal className={`h-5 w-5 ${tab === "wizard" ? "stroke-[2.5]" : ""}`} />
+          <span>Profile</span>
+        </button>
+      </nav>
 
       <Footer />
     </div>
