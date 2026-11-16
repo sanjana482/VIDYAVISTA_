@@ -317,6 +317,15 @@ def lead_for_school_json(e: Enquiry):
 def _user_role_payload(user):
     if hasattr(user, "school_account"):
         sa = user.school_account
+        has_claimed_free_trial = False
+        if sa.school:
+            one_year_ago = timezone.localdate() - timedelta(days=365)
+            has_claimed_free_trial = SchoolMembership.objects.filter(
+                school=sa.school,
+                created_at__date__gte=one_year_ago
+            ).filter(
+                Q(amount=0) | Q(plan__price=0) | Q(plan_name__icontains="trial") | Q(plan_name__icontains="free")
+            ).exists()
         return {
             "role": "school",
             "id": user.pk,
