@@ -322,18 +322,32 @@ class SchoolVideo(models.Model):
 
 class Review(models.Model):
     """Review by a parent / student. It counts towards the school's rating only after approval."""
-    ROLES = [('Parent', 'Parent'), ('Student', 'Student'), ('Alumni', 'Alumni'), ('Staff', 'Staff')]
+    ROLES = [('Parent', 'Parent'), ('Student', 'Student'), ('Alumni', 'Alumni'), ('Guardian', 'Guardian'), ('Staff', 'Staff')]
     school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='review_items')
     parent_user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='reviews_written')
     name = models.CharField(max_length=120)
     role = models.CharField(max_length=20, choices=ROLES, default='Parent')
     mobile = models.CharField(max_length=10, blank=True, default='')
     email = models.EmailField(blank=True, default='')
-    rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
-    text = models.TextField()
-    is_approved = models.BooleanField('Approved', default=True)
+    rating = models.PositiveSmallIntegerField('Overall Rating', validators=[MinValueValidator(1), MaxValueValidator(5)])
+    
+    # Specific parameter ratings (1 to 5)
+    rating_sports = models.PositiveSmallIntegerField('Sports Rating', default=4, validators=[MinValueValidator(1), MaxValueValidator(5)], blank=True, null=True)
+    rating_extracurricular = models.PositiveSmallIntegerField('Extracurriculars Rating', default=4, validators=[MinValueValidator(1), MaxValueValidator(5)], blank=True, null=True)
+    rating_value = models.PositiveSmallIntegerField('Value for Money Rating', default=4, validators=[MinValueValidator(1), MaxValueValidator(5)], blank=True, null=True)
+    rating_academics = models.PositiveSmallIntegerField('Academics Rating', default=4, validators=[MinValueValidator(1), MaxValueValidator(5)], blank=True, null=True)
+    rating_infrastructure = models.PositiveSmallIntegerField('Infrastructure Rating', default=4, validators=[MinValueValidator(1), MaxValueValidator(5)], blank=True, null=True)
+
+    text = models.TextField('Review Content')
+    photos = models.JSONField('Attached Photos', default=list, blank=True)
+
+    is_approved = models.BooleanField('Approved by Admin', default=False)
+    
+    # School Official Reply
     school_reply = models.TextField('School Official Reply', blank=True, default='')
-    reply_approved = models.BooleanField('Reply Approved', default=True)
+    school_reply_at = models.DateTimeField('School Reply Date', null=True, blank=True)
+    reply_approved = models.BooleanField('Reply Approved by Admin', default=False)
+    
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

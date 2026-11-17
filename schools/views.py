@@ -119,27 +119,93 @@ class ReviewViewSet(viewsets.GenericViewSet):
     def list(self, request, *args, **kwargs):
         school_id = request.query_params.get('schoolId') or request.query_params.get('school')
         if not school_id:
-            return Response({'ok': True, 'data': []})
+            return Response({'ok': True, 'data': [], 'breakdown': {}, 'parameters': {}})
         school = School.objects.filter(Q(school_id=school_id) | Q(pk=school_id)).first()
         if not school:
-            return Response({'ok': True, 'data': []})
-        qs = school.review_items.filter(is_approved=True).order_by('-created_at')
-        data = [
-            {
+            return Response({'ok': True, 'data': [], 'breakdown': {}, 'parameters': {}})
+
+        qs = list(school.review_items.filter(is_approved=True).order_by('-created_at'))
+        total_count = len(qs)
+
+        # Star breakdown (5★ to 1★)
+        counts = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0}
+        sports_scores = []
+        extra_scores = []
+        value_scores = []
+        acad_scores = []
+        infra_scores = []
+
+        data = []
+        for r in qs:
+            counts[r.rating] = counts.get(r.rating, 0) + 1
+            if r.rating_sports: sports_scores.append(r.rating_sports)
+            if r.rating_extracurricular: extra_scores.append(r.rating_extracurricular)
+            if r.rating_value: value_scores.append(r.rating_value)
+            if r.rating_academics: acad_scores.append(r.rating_academics)
+            if r.rating_infrastructure: infra_scores.append(r.rating_infrastructure)
+
+            data.append({
                 'id': r.pk,
                 'name': r.name,
-                'role': r.role,
+                'role': r.role or 'Parent',
                 'rating': r.rating,
                 'text': r.text,
-                'date': r.created_at.date().isoformat(),
-            }
-            for r in qs
-        ]
+                'date': r.created_at.date().isoformat() if r.created_at else '',
+                'ratingSports': r.rating_sports,
+                'ratingExtracurricular': r.rating_extracurricular,
+                'ratingValue': r.rating_value,
+                'ratingAcademics': r.rating_academics,
+                'ratingInfrastructure': r.rating_infrastructure,
+                'photos': r.photos if isinstance(r.photos, list) else [],
+                'isVerified': True,  # All approved reviews get the verified user badge
+                'schoolReply': r.school_reply if r.reply_approved else '',
+                'replyDate': r.school_reply_at.date().isoformat() if (r.school_reply_at and r.reply_approved) else '',
+                'schoolName': school.name,
+            })
+
+        breakdown = {}
+        for star in (5, 4, 3, 2, 1):
+            c = counts[star]
+            pct = round((c / total_count * 100), 1) if total_count > 0 else 0
+            breakdown[star] = {'count': c, 'pct': pct}
+
+        def _avg(lst, fallback=4.0):
+            return round(sum(lst) / len(lst), 1) if lst else fallback
+
+        avg_sports = _avg(sports_scores)
+        avg_extra = _avg(extra_scores)
+        avg_value = _avg(value_scores)
+        avg_acad = _avg(acad_scores)
+        avg_infra = _avg(infra_scores)
+
+        param_map = {
+            'Sports': avg_sports,
+            'Extracurriculars': avg_extra,
+            'Value for Money': avg_value,
+            'Academics': avg_acad,
+            'Infrastructure': avg_infra,
+        }
+        highest_rated = max(param_map, key=param_map.get)
+
+        parameters = {
+            'sports': avg_sports,
+            'extracurricular': avg_extra,
+            'valueForMoney': avg_value,
+            'academics': avg_acad,
+            'infrastructure': avg_infra,
+            'highestRated': highest_rated,
+        }
+
+        overall_rating = round(float(school.rating or (sum(param_map.values()) / len(param_map) if total_count else 4.0)), 1)
+
         return Response({
             'ok': True,
             'data': data,
-            'rating': round(float(school.rating or 0), 1),
-            'count': school.reviews,
+            'rating': overall_rating,
+            'count': total_count,
+            'breakdown': breakdown,
+            'parameters': parameters,
+            'schoolName': school.name,
         })
 
     def create(self, request, *args, **kwargs):
@@ -148,15 +214,40 @@ class ReviewViewSet(viewsets.GenericViewSet):
         obj = s.save()
         return Response({
             'ok': True,
+            'message': 'Your review has been submitted for verification. It will appear with a Verified User badge once approved by the VidyaVista moderation team.',
             'review': {
                 'id': obj.pk,
                 'name': obj.name,
                 'role': obj.role,
                 'rating': obj.rating,
                 'text': obj.text,
-                'date': obj.created_at.date().isoformat(),
+                'date': obj.created_at.date().isoformat() if obj.created_at else '',
+                'isApproved': False,
             }
         }, status=201)
+
+    @action(detail=False, methods=['post'], url_path='upload')
+    def upload_photo(self, request):
+        """Allows parents to attach up to 5 campus/event photos with their review."""
+        f = request.FILES.get('file') or request.FILES.get('photo') or request.FILES.get('image')
+        if not f:
+            return Response({'ok': False, 'message': 'No image file provided.'}, status=400)
+        ext = (f.name.rsplit('.', 1)[-1] if '.' in f.name else '').lower()
+        if ext not in ('jpg', 'jpeg', 'png', 'webp'):
+            return Response({'ok': False, 'message': 'Only JPG, PNG, and WEBP images are allowed.'}, status=400)
+        if f.size > 8 * 1024 * 1024:
+            return Response({'ok': False, 'message': 'Image size cannot exceed 8 MB.'}, status=400)
+
+        from django.core.files.storage import default_storage
+        from django.utils import timezone
+        from django.utils.text import slugify
+        safe_stem = slugify(f.name.rsplit('.', 1)[0])[:40] or 'review_photo'
+        ts = int(timezone.now().timestamp())
+        filename = f"reviews/{safe_stem}_{ts}.{ext}"
+        saved_name = default_storage.save(filename, f)
+        url = default_storage.url(saved_name)
+        full_url = request.build_absolute_uri(url) if url.startswith('/') else url
+        return Response({'ok': True, 'url': full_url})
 
 
 from django.utils.text import slugify as _slugify

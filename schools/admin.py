@@ -1564,29 +1564,6 @@ class CouponAdmin(admin.ModelAdmin):
     search_fields = ('code',)
 
 
-@admin.register(Review)
-class ReviewAdmin(admin.ModelAdmin):
-    list_display = ('school', 'name', 'role', 'rating', 'is_approved', 'has_school_reply', 'created_at')
-    list_filter = ('is_approved', 'rating', 'role')
-    search_fields = ('school__name', 'name', 'text', 'school_reply')
-    list_editable = ('is_approved',)
-    actions = ['approve', 'unapprove']
-
-    @admin.display(boolean=True, description='School Replied')
-    def has_school_reply(self, obj):
-        return bool(obj.school_reply)
-
-    @admin.action(description='Approve selected reviews')
-    def approve(self, request, queryset):
-        for r in queryset:
-            r.is_approved = True
-            r.save()
-
-    @admin.action(description='Unapprove selected reviews')
-    def unapprove(self, request, queryset):
-        for r in queryset:
-            r.is_approved = False
-            r.save()
 
 
 @admin.register(Enquiry)
@@ -1734,3 +1711,162 @@ class BranchClaimAdmin(admin.ModelAdmin):
             claim.save(update_fields=['status', 'reviewed_at'])
             cnt += 1
         messages.success(request, f"Approved {cnt} branch claims and linked them to their respective owners.")
+
+
+# ============================================================================
+# REVIEW & PARENT FEEDBACK MODERATION ADMIN
+# ============================================================================
+@admin.register(Review)
+class ReviewAdmin(admin.ModelAdmin):
+    """
+    Moderation Desk for Parent / Student Reviews & School Replies.
+    - Verified reviews display publicly on school profiles and in Schema.org rich search snippets.
+    - Full approval, rejection, and deletion access for Administrators.
+    """
+    list_display = (
+        'id', 'school_col', 'reviewer_col', 'rating_stars_col',
+        'parameters_col', 'content_col', 'photos_col',
+        'status_col', 'school_reply_col', 'created_at',
+    )
+    list_display_links = ('id', 'reviewer_col')
+    list_filter = ('is_approved', 'reply_approved', 'rating', 'role', 'created_at')
+    search_fields = ('name', 'mobile', 'email', 'text', 'school__name', 'school_reply')
+    ordering = ('-created_at',)
+    readonly_fields = ('created_at', 'school_reply_at')
+    actions = [
+        'approve_selected_reviews',
+        'unapprove_selected_reviews',
+        'approve_selected_school_replies',
+        'delete_selected',
+    ]
+
+    fieldsets = (
+        ('1. School & Reviewer Details', {
+            'fields': (('school', 'name'), ('role', 'parent_user'), ('mobile', 'email'))
+        }),
+        ('2. Ratings & Parameter Breakdown (1 to 5 Stars)', {
+            'fields': (
+                'rating',
+                ('rating_sports', 'rating_extracurricular'),
+                ('rating_value', 'rating_academics'),
+                'rating_infrastructure',
+            )
+        }),
+        ('3. Review Content & Attached Photos', {
+            'fields': ('text', 'photos', 'is_approved')
+        }),
+        ('4. School Official Reply Moderation', {
+            'fields': ('school_reply', 'school_reply_at', 'reply_approved'),
+            'description': 'When school owners reply via their Institution Portal, the reply appears here for Administrator approval before publishing live.'
+        }),
+        ('5. Timestamps', {
+            'fields': ('created_at',),
+            'classes': ('collapse',)
+        }),
+    )
+
+    @admin.display(description='School')
+    def school_col(self, obj):
+        if not obj.school: return "-"
+        url = reverse('admin:schools_school_change', args=[obj.school.pk])
+        return format_html(
+            '<a href="{}" style="font-weight:700;color:#0A5C91;">{}</a><br>'
+            '<span style="font-size:11px;color:#64748B;">{}, {}</span>',
+            url, obj.school.name, obj.school.area or '', obj.school.city or ''
+        )
+
+    @admin.display(description='Reviewer')
+    def reviewer_col(self, obj):
+        return format_html(
+            '<strong>{}</strong> <span style="background:#e0f2fe;color:#0369a1;padding:1px 6px;border-radius:6px;font-size:10px;font-weight:700;">{}</span><br>'
+            '<span style="font-size:11px;color:#64748B;">{} &bull; {}</span>',
+            obj.name, obj.role or 'Parent', obj.mobile or 'No phone', obj.email or 'No email'
+        )
+
+    @admin.display(description='Overall Rating')
+    def rating_stars_col(self, obj):
+        stars = '★' * obj.rating + '☆' * (5 - obj.rating)
+        color = '#16a34a' if obj.rating >= 4 else ('#eab308' if obj.rating == 3 else '#dc2626')
+        return format_html(
+            '<span style="color:{};font-size:14px;font-weight:800;letter-spacing:1px;">{}</span> '
+            '<strong style="color:#0B2A47;font-size:12px;">{}.0</strong>',
+            color, stars, obj.rating
+        )
+
+    @admin.display(description='Parameters')
+    def parameters_col(self, obj):
+        return format_html(
+            '<div style="font-size:11px;line-height:1.4;color:#475569;">'
+            '🏆 Sports: <strong>{}★</strong><br>'
+            '🎵 Extra: <strong>{}★</strong><br>'
+            '₹ Value: <strong>{}★</strong><br>'
+            '🎓 Acad: <strong>{}★</strong>'
+            '</div>',
+            obj.rating_sports or '-', obj.rating_extracurricular or '-',
+            obj.rating_value or '-', obj.rating_academics or '-'
+        )
+
+    @admin.display(description='Review Content')
+    def content_col(self, obj):
+        snippet = obj.text[:120] + ('...' if len(obj.text) > 120 else '')
+        return format_html('<p style="max-width:320px;margin:0;font-size:12px;color:#1e293b;line-height:1.4;">{}</p>', snippet)
+
+    @admin.display(description='Photos')
+    def photos_col(self, obj):
+        if not obj.photos or not isinstance(obj.photos, list):
+            return format_html('<span style="color:#94a3b8;font-size:11px;">None</span>')
+        imgs = []
+        for p in obj.photos[:3]:
+            imgs.append(f'<img src="{p}" style="height:32px;width:32px;object-fit:cover;border-radius:6px;border:1px solid #cbd5e1;margin-right:3px;" />')
+        extra = f'<span style="font-size:10px;color:#64748B;">+{len(obj.photos)-3}</span>' if len(obj.photos) > 3 else ''
+        return format_html(''.join(imgs) + extra)
+
+    @admin.display(description='Approval Status')
+    def status_col(self, obj):
+        if obj.is_approved:
+            return format_html(
+                '<span style="background:#16a34a;color:#fff;padding:3px 10px;border-radius:12px;font-weight:700;font-size:11px;display:inline-flex;align-items:center;gap:4px;">'
+                '✔ Approved & Live</span>'
+            )
+        return format_html(
+            '<span style="background:#f59e0b;color:#fff;padding:3px 10px;border-radius:12px;font-weight:700;font-size:11px;display:inline-flex;align-items:center;gap:4px;">'
+            '⏳ Pending Approval</span>'
+        )
+
+    @admin.display(description='School Reply')
+    def school_reply_col(self, obj):
+        if not obj.school_reply:
+            return format_html('<span style="color:#94a3b8;font-size:11px;">No reply</span>')
+        status_tag = (
+            '<span style="background:#16a34a;color:#fff;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;">Reply Live</span>'
+            if obj.reply_approved else
+            '<span style="background:#f59e0b;color:#fff;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;">Reply Pending</span>'
+        )
+        return format_html(
+            '<div style="max-width:220px;font-size:11px;color:#334155;">{}<br><em style="color:#475569;">"{}"</em></div>',
+            status_tag, obj.school_reply[:80] + ('...' if len(obj.school_reply) > 80 else '')
+        )
+
+    @admin.action(description='✔ Approve Selected Reviews (Publish Live & Update Ratings)')
+    def approve_selected_reviews(self, request, queryset):
+        cnt = 0
+        for r in queryset:
+            r.is_approved = True
+            r.save()
+            cnt += 1
+        messages.success(request, f"Approved {cnt} review(s). School ratings have been updated automatically.")
+
+    @admin.action(description='⏳ Mark Selected Reviews as Pending / Unapproved')
+    def unapprove_selected_reviews(self, request, queryset):
+        cnt = 0
+        for r in queryset:
+            r.is_approved = False
+            r.save()
+            cnt += 1
+        messages.warning(request, f"Unapproved {cnt} review(s). They are now hidden from public view.")
+
+    @admin.action(description='🏫 Approve Selected School Official Replies')
+    def approve_selected_school_replies(self, request, queryset):
+        n = queryset.filter(school_reply__gt='').update(reply_approved=True)
+        messages.success(request, f"Approved {n} school official reply/replies.")
+

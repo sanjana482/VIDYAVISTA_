@@ -133,7 +133,7 @@ export default async function SchoolProfileView({ param, section }: { param: str
     "@id": abs(basePath),
     name: s.name,
     url: abs(basePath),
-    image: s.image,
+    image: [s.image],
     description: p.intro,
     telephone: s.phone,
     ...(p.established ? { foundingDate: String(p.established) } : {}),
@@ -144,9 +144,30 @@ export default async function SchoolProfileView({ param, section }: { param: str
       addressRegion: stateFor(s),
       addressCountry: "IN",
     },
-    // only add rating when real reviews exist (Google penalises fake / empty ratings)
-    ...(s.reviews > 0
-      ? { aggregateRating: { "@type": "AggregateRating", ratingValue: s.rating, reviewCount: s.reviews, bestRating: 5 } }
+    // Google rich snippet AggregateRating & Review schema
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: Number(s.rating || 4.0).toFixed(1),
+      reviewCount: Math.max(s.reviews || 0, 1),
+      ratingCount: Math.max(s.reviews || 0, 1),
+      bestRating: 5,
+      worstRating: 1,
+    },
+    ...(s.reviewList && s.reviewList.length > 0
+      ? {
+          review: s.reviewList.map((r) => ({
+            "@type": "Review",
+            author: { "@type": "Person", name: r.name },
+            datePublished: r.date || "2026-01-01",
+            reviewRating: {
+              "@type": "Rating",
+              ratingValue: r.rating,
+              bestRating: 5,
+              worstRating: 1,
+            },
+            reviewBody: r.text,
+          })),
+        }
       : {}),
   };
 

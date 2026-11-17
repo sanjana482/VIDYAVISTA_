@@ -1356,12 +1356,20 @@ def school_dashboard(request):
                     "name": rv.name,
                     "role": rv.role,
                     "rating": rv.rating,
+                    "ratingSports": rv.rating_sports,
+                    "ratingExtracurricular": rv.rating_extracurricular,
+                    "ratingValue": rv.rating_value,
+                    "ratingAcademics": rv.rating_academics,
+                    "ratingInfrastructure": rv.rating_infrastructure,
                     "text": rv.text,
+                    "photos": rv.photos if isinstance(rv.photos, list) else [],
                     "isApproved": rv.is_approved,
                     "schoolReply": rv.school_reply,
+                    "replyApproved": rv.reply_approved,
+                    "replyDate": rv.school_reply_at.date().isoformat() if rv.school_reply_at else "",
                     "createdAt": rv.created_at.date().isoformat(),
                 }
-                for rv in (preview_s.review_items.all()[:30] if preview_s else [])
+                for rv in (preview_s.review_items.all()[:50] if preview_s else [])
             ],
         }
         # Overlay any staged/pending edits ONLY if the draft was submitted for THIS active school!
@@ -1791,8 +1799,15 @@ def school_reply_review(request, review_id):
     if not reply:
         return _err("Please write a reply.")
     rv.school_reply = reply[:1000]
+    rv.school_reply_at = timezone.now()
+    rv.reply_approved = False  # School reply must be approved by admin before appearing publicly
     rv.save()
-    return Response({"ok": True, "message": "Reply published!"})
+    return Response({
+        "ok": True,
+        "message": "Your official response has been submitted and is pending administrator verification.",
+        "reply": rv.school_reply,
+        "replyApproved": False,
+    })
 
 
 @api_view(["POST"])
@@ -1973,12 +1988,19 @@ def parent_dashboard(request):
                 "schoolName": r.school.name,
                 "schoolSlug": r.school.slug,
                 "rating": r.rating,
+                "ratingSports": r.rating_sports,
+                "ratingExtracurricular": r.rating_extracurricular,
+                "ratingValue": r.rating_value,
+                "ratingAcademics": r.rating_academics,
+                "ratingInfrastructure": r.rating_infrastructure,
                 "text": r.text,
+                "photos": r.photos if isinstance(r.photos, list) else [],
                 "isApproved": r.is_approved,
-                "schoolReply": r.school_reply,
+                "schoolReply": r.school_reply if r.reply_approved else "",
+                "replyApproved": r.reply_approved,
                 "createdAt": r.created_at.date().isoformat(),
             }
-            for r in my_reviews[:25]
+            for r in my_reviews[:30]
         ],
     })
 

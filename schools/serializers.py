@@ -195,10 +195,20 @@ class SchoolListSerializer(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     schoolId = serializers.IntegerField(write_only=True)
+    ratingSports = serializers.IntegerField(source='rating_sports', required=False, min_value=1, max_value=5, default=4)
+    ratingExtracurricular = serializers.IntegerField(source='rating_extracurricular', required=False, min_value=1, max_value=5, default=4)
+    ratingValue = serializers.IntegerField(source='rating_value', required=False, min_value=1, max_value=5, default=4)
+    ratingAcademics = serializers.IntegerField(source='rating_academics', required=False, min_value=1, max_value=5, default=4)
+    ratingInfrastructure = serializers.IntegerField(source='rating_infrastructure', required=False, min_value=1, max_value=5, default=4)
+    photos = serializers.ListField(child=serializers.CharField(), required=False, default=list)
 
     class Meta:
         model = Review
-        fields = ('schoolId', 'name', 'role', 'mobile', 'email', 'rating', 'text')
+        fields = (
+            'schoolId', 'name', 'role', 'mobile', 'email', 'rating',
+            'ratingSports', 'ratingExtracurricular', 'ratingValue',
+            'ratingAcademics', 'ratingInfrastructure', 'text', 'photos',
+        )
 
     def validate_mobile(self, v):
         if v and not (len(v) == 10 and v.isdigit() and v[0] in '6789'):
@@ -206,9 +216,15 @@ class ReviewSerializer(serializers.ModelSerializer):
         return v
 
     def validate_text(self, v):
-        if not v or not v.strip():
-            raise serializers.ValidationError('Please write a review.')
-        return v.strip()
+        clean = (v or '').strip()
+        if len(clean) < 20:
+            raise serializers.ValidationError('Please write at least 20 characters in your review.')
+        return clean
+
+    def validate_photos(self, v):
+        if len(v) > 5:
+            return v[:5]
+        return v
 
     def create(self, validated):
         sid = validated.pop('schoolId')
@@ -224,7 +240,8 @@ class ReviewSerializer(serializers.ModelSerializer):
         if user:
             extra['parent_user'] = user
 
-        return Review.objects.create(school=school, is_approved=True, **extra, **validated)
+        # Submitted reviews must be approved by the admin before appearing publicly
+        return Review.objects.create(school=school, is_approved=False, **extra, **validated)
 
 
 class EnquirySerializer(serializers.ModelSerializer):

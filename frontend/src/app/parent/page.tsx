@@ -917,15 +917,39 @@ export default function ParentPortalPage() {
                 </p>
               ) : (
                 <div className="mt-4 space-y-3">
-                  {reviews.map((r) => (
-                    <div key={r.id} className="rounded-2xl border border-[#E1E7EE] p-4">
-                      <div className="flex justify-between">
-                        <p className="font-extrabold text-[#0B2A47]">{r.schoolName}</p>
-                        <span className="font-bold text-amber-500">{"★".repeat(r.rating)}</span>
+                  {reviews.map((r: any) => (
+                    <div key={r.id} className="rounded-2xl border border-[#E1E7EE] p-4 bg-white shadow-xs">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <p className="font-extrabold text-[#0B2A47] text-sm">{r.schoolName}</p>
+                          <div className="mt-1 flex items-center gap-2">
+                            <span className="font-bold text-amber-500 text-xs">{"★".repeat(r.rating || 5)}</span>
+                            {r.isApproved ? (
+                              <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200">
+                                ✔ Verified &amp; Published
+                              </span>
+                            ) : (
+                              <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 border border-amber-200">
+                                ⏳ Pending Moderation
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {r.createdAt && <span className="text-xs text-[#8896A6]">{r.createdAt}</span>}
                       </div>
-                      <p className="mt-1 text-xs text-[#4E5A68]">{r.text}</p>
+
+                      <p className="mt-2 text-xs leading-relaxed text-[#334155]">{r.text}</p>
+
+                      {r.photos && r.photos.length > 0 && (
+                        <div className="mt-2.5 flex flex-wrap gap-2">
+                          {r.photos.map((pUrl: string, pI: number) => (
+                            <img key={pI} src={pUrl} alt="" className="h-12 w-12 rounded-xl object-cover border border-slate-200" />
+                          ))}
+                        </div>
+                      )}
+
                       {r.schoolReply && (
-                        <div className="mt-2 rounded-xl bg-[#F0F8FF] p-2.5 text-xs text-[#0A5C91]">
+                        <div className="mt-3 rounded-xl border border-sky-100 bg-[#F0F8FF] p-3 text-xs text-[#0A5C91]">
                           <strong>Official School Reply:</strong> {r.schoolReply}
                         </div>
                       )}

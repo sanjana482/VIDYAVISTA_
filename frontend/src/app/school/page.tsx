@@ -2748,29 +2748,111 @@ export default function SchoolPortalPage() {
             {/* TAB 7: PARENT REVIEWS */}
             {tab === "reviews" && (
               <div className="vv-rise rounded-3xl border border-[#D6DDE5] bg-white p-6 shadow-sm">
-                <h2 className="text-xl font-extrabold text-[#0B2A47]">Parent &amp; Student Reviews</h2>
-                <p className="mt-1 text-xs text-[#64748B]">
-                  Respond to parent reviews with an official reply from your school.
-                </p>
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E2E8F0] pb-4">
+                  <div>
+                    <h2 className="text-xl font-extrabold text-[#0B2A47]">Parent &amp; Student Reviews</h2>
+                    <p className="mt-1 text-xs text-[#64748B]">
+                      Verified reviews posted by parents and students. Official replies are verified by VidyaVista moderation before going live.
+                    </p>
+                  </div>
+                </div>
+
                 {!school?.reviews?.length ? (
-                  <div className="py-12 text-center text-sm text-[#64748B]">No reviews posted yet.</div>
+                  <div className="py-12 text-center text-sm text-[#64748B]">
+                    No parent reviews received yet for this school.
+                  </div>
                 ) : (
-                  <div className="mt-4 space-y-4">
+                  <div className="mt-5 space-y-4">
                     {school.reviews.map((rv: any) => (
-                      <div key={rv.id} className="rounded-2xl border border-[#E2E8F0] p-4">
-                        <div className="flex items-center justify-between">
-                          <p className="font-bold text-[#0B2A47]">
-                            {rv.name} <span className="text-xs font-normal text-[#64748B]">({rv.role})</span>
-                          </p>
-                          <span className="inline-flex items-center gap-1 text-sm font-bold text-amber-500">
-                            <Star className="h-4 w-4 fill-amber-500" />
+                      <div key={rv.id} className="rounded-2xl border border-[#E2E8F0] bg-white p-5 shadow-xs">
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-extrabold text-[#0B2A47] text-sm">{rv.name}</span>
+                              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
+                                {rv.role || "Parent"}
+                              </span>
+                              {rv.isApproved ? (
+                                <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200">
+                                  ✔ Approved &amp; Live
+                                </span>
+                              ) : (
+                                <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 border border-amber-200">
+                                  ⏳ Pending Admin Verification
+                                </span>
+                              )}
+                            </div>
+                            {rv.createdAt && (
+                              <p className="mt-0.5 text-[11px] text-[#64748B]">Reviewed {rv.createdAt}</p>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-1.5 rounded-xl bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700 border border-amber-200">
+                            <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
                             <span>{rv.rating} / 5</span>
-                          </span>
+                          </div>
                         </div>
-                        <p className="mt-2 text-sm text-[#334155]">{rv.text}</p>
+
+                        {/* Parameter Ratings */}
+                        {(rv.ratingSports || rv.ratingAcademics) && (
+                          <div className="mt-2.5 flex flex-wrap gap-2 text-[11px]">
+                            {rv.ratingSports && (
+                              <span className="rounded-lg bg-blue-50 px-2 py-0.5 text-[#0A5C91] font-semibold">
+                                🏆 Sports: {rv.ratingSports}★
+                              </span>
+                            )}
+                            {rv.ratingExtracurricular && (
+                              <span className="rounded-lg bg-purple-50 px-2 py-0.5 text-purple-700 font-semibold">
+                                🎵 Extra: {rv.ratingExtracurricular}★
+                              </span>
+                            )}
+                            {rv.ratingValue && (
+                              <span className="rounded-lg bg-emerald-50 px-2 py-0.5 text-emerald-700 font-semibold">
+                                ₹ Value: {rv.ratingValue}★
+                              </span>
+                            )}
+                            {rv.ratingAcademics && (
+                              <span className="rounded-lg bg-amber-50 px-2 py-0.5 text-amber-800 font-semibold">
+                                🎓 Acad: {rv.ratingAcademics}★
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        <p className="mt-3 text-xs leading-relaxed text-[#334155]">{rv.text}</p>
+
+                        {/* Photos */}
+                        {rv.photos && rv.photos.length > 0 && (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {rv.photos.map((pUrl: string, pI: number) => (
+                              <img
+                                key={pI}
+                                src={pUrl}
+                                alt=""
+                                className="h-12 w-12 rounded-xl object-cover border border-slate-200"
+                              />
+                            ))}
+                          </div>
+                        )}
+
+                        {/* School Official Reply */}
                         {rv.schoolReply ? (
-                          <div className="mt-3 rounded-xl bg-[#F0F8FF] p-3 text-xs text-[#0A5C91]">
-                            <strong>Your Official Reply:</strong> {rv.schoolReply}
+                          <div className="mt-3 rounded-xl border border-sky-100 bg-[#F0F8FF] p-3.5 text-xs">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-extrabold text-[#0A5C91]">
+                                🏫 Your Official School Reply:
+                              </span>
+                              {rv.replyApproved ? (
+                                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-bold text-emerald-800">
+                                  ✔ Approved &amp; Live on Profile
+                                </span>
+                              ) : (
+                                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-bold text-amber-800">
+                                  ⏳ Under Admin Review (Not Public Yet)
+                                </span>
+                              )}
+                            </div>
+                            <p className="mt-1 text-slate-700">{rv.schoolReply}</p>
                           </div>
                         ) : (
                           <form
@@ -2782,20 +2864,23 @@ export default function SchoolPortalPage() {
                                 method: "POST",
                                 body: JSON.stringify({ reply }),
                               });
-                              showToast("Official reply saved.");
+                              showToast("Official reply submitted. It will be verified by admin before going live.");
                               loadDashboard();
                             }}
-                            className="mt-3 flex gap-2"
+                            className="mt-3 flex flex-col sm:flex-row gap-2"
                           >
                             <input
                               name="reply"
                               type="text"
                               required
-                              placeholder="Write official school response..."
-                              className="h-10 flex-1 rounded-lg border border-[#CBD5E1] px-3 text-xs"
+                              placeholder="Write school's official response to this review..."
+                              className="h-10 flex-1 rounded-xl border border-[#CBD5E1] px-3.5 text-xs text-[#0B2A47] outline-none focus:border-[#0A5C91]"
                             />
-                            <button type="submit" className="h-10 rounded-lg bg-[#0A5C91] px-4 text-xs font-bold text-white">
-                              Post Reply
+                            <button
+                              type="submit"
+                              className="h-10 rounded-xl bg-[#0A5C91] px-5 text-xs font-bold text-white hover:bg-[#084872] transition"
+                            >
+                              Submit Reply for Approval
                             </button>
                           </form>
                         )}
