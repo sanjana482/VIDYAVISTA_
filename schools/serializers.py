@@ -195,11 +195,12 @@ class SchoolListSerializer(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     schoolId = serializers.IntegerField(write_only=True)
-    ratingSports = serializers.IntegerField(source='rating_sports', required=False, min_value=1, max_value=5, default=4)
-    ratingExtracurricular = serializers.IntegerField(source='rating_extracurricular', required=False, min_value=1, max_value=5, default=4)
-    ratingValue = serializers.IntegerField(source='rating_value', required=False, min_value=1, max_value=5, default=4)
-    ratingAcademics = serializers.IntegerField(source='rating_academics', required=False, min_value=1, max_value=5, default=4)
-    ratingInfrastructure = serializers.IntegerField(source='rating_infrastructure', required=False, min_value=1, max_value=5, default=4)
+    ratingSports = serializers.IntegerField(source='rating_sports', required=False, min_value=1, max_value=5, default=None, allow_null=True)
+    ratingExtracurricular = serializers.IntegerField(source='rating_extracurricular', required=False, min_value=1, max_value=5, default=None, allow_null=True)
+    ratingValue = serializers.IntegerField(source='rating_value', required=False, min_value=1, max_value=5, default=None, allow_null=True)
+    ratingAcademics = serializers.IntegerField(source='rating_academics', required=False, min_value=1, max_value=5, default=None, allow_null=True)
+    ratingInfrastructure = serializers.IntegerField(source='rating_infrastructure', required=False, min_value=1, max_value=5, default=None, allow_null=True)
+    ratingSafety = serializers.IntegerField(source='rating_safety', required=False, min_value=1, max_value=5, default=None, allow_null=True)
     photos = serializers.ListField(child=serializers.CharField(), required=False, default=list)
 
     class Meta:
@@ -207,7 +208,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         fields = (
             'schoolId', 'name', 'role', 'mobile', 'email', 'rating',
             'ratingSports', 'ratingExtracurricular', 'ratingValue',
-            'ratingAcademics', 'ratingInfrastructure', 'text', 'photos',
+            'ratingAcademics', 'ratingInfrastructure', 'ratingSafety', 'text', 'photos',
         )
 
     def validate_mobile(self, v):

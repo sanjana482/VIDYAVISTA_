@@ -113,8 +113,7 @@ class ReviewViewSet(viewsets.GenericViewSet):
     queryset = Review.objects.none()
     serializer_class = ReviewSerializer
     permission_classes = [AllowAny]
-    throttle_classes = [ScopedRateThrottle]
-    throttle_scope = 'reviews'
+    throttle_classes = []
 
     def list(self, request, *args, **kwargs):
         school_id = request.query_params.get('schoolId') or request.query_params.get('school')
@@ -134,6 +133,7 @@ class ReviewViewSet(viewsets.GenericViewSet):
         value_scores = []
         acad_scores = []
         infra_scores = []
+        safety_scores = []
 
         data = []
         for r in qs:
@@ -143,6 +143,7 @@ class ReviewViewSet(viewsets.GenericViewSet):
             if r.rating_value: value_scores.append(r.rating_value)
             if r.rating_academics: acad_scores.append(r.rating_academics)
             if r.rating_infrastructure: infra_scores.append(r.rating_infrastructure)
+            if r.rating_safety: safety_scores.append(r.rating_safety)
 
             data.append({
                 'id': r.pk,
@@ -156,6 +157,7 @@ class ReviewViewSet(viewsets.GenericViewSet):
                 'ratingValue': r.rating_value,
                 'ratingAcademics': r.rating_academics,
                 'ratingInfrastructure': r.rating_infrastructure,
+                'ratingSafety': r.rating_safety,
                 'photos': r.photos if isinstance(r.photos, list) else [],
                 'isVerified': True,  # All approved reviews get the verified user badge
                 'schoolReply': r.school_reply if r.reply_approved else '',
@@ -169,34 +171,44 @@ class ReviewViewSet(viewsets.GenericViewSet):
             pct = round((c / total_count * 100), 1) if total_count > 0 else 0
             breakdown[star] = {'count': c, 'pct': pct}
 
-        def _avg(lst, fallback=4.0):
-            return round(sum(lst) / len(lst), 1) if lst else fallback
+        def _avg(lst):
+            return round(sum(lst) / len(lst), 1) if lst else 0.0
 
-        avg_sports = _avg(sports_scores)
-        avg_extra = _avg(extra_scores)
-        avg_value = _avg(value_scores)
         avg_acad = _avg(acad_scores)
         avg_infra = _avg(infra_scores)
+        avg_sports = _avg(sports_scores)
+        avg_extra = _avg(extra_scores)
+        avg_safety = _avg(safety_scores)
+        avg_value = _avg(value_scores)
 
         param_map = {
-            'Sports': avg_sports,
-            'Extracurriculars': avg_extra,
-            'Value for Money': avg_value,
             'Academics': avg_acad,
             'Infrastructure': avg_infra,
+            'Sports': avg_sports,
+            'Extracurriculars': avg_extra,
+            'Safety & Hygiene': avg_safety,
+            'Value for Money': avg_value,
         }
-        highest_rated = max(param_map, key=param_map.get)
+        valid_params = {k: v for k, v in param_map.items() if v > 0}
+        highest_rated = max(valid_params, key=valid_params.get) if valid_params else "Not rated yet"
 
         parameters = {
-            'sports': avg_sports,
-            'extracurricular': avg_extra,
-            'valueForMoney': avg_value,
             'academics': avg_acad,
             'infrastructure': avg_infra,
+            'sports': avg_sports,
+            'extracurricular': avg_extra,
+            'safety': avg_safety,
+            'valueForMoney': avg_value,
             'highestRated': highest_rated,
         }
 
-        overall_rating = round(float(school.rating or (sum(param_map.values()) / len(param_map) if total_count else 4.0)), 1)
+        # Real overall rating: only from approved reviews
+        if total_count > 0 and school.rating and float(school.rating) > 0:
+            overall_rating = round(float(school.rating), 1)
+        elif total_count > 0 and valid_params:
+            overall_rating = round(sum(valid_params.values()) / len(valid_params), 1)
+        else:
+            overall_rating = 0.0
 
         return Response({
             'ok': True,

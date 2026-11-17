@@ -2816,6 +2816,16 @@ export default function SchoolPortalPage() {
                                 🎓 Acad: {rv.ratingAcademics}★
                               </span>
                             )}
+                            {rv.ratingInfrastructure && (
+                              <span className="rounded-lg bg-rose-50 px-2 py-0.5 text-rose-800 font-semibold">
+                                🏫 Campus: {rv.ratingInfrastructure}★
+                              </span>
+                            )}
+                            {rv.ratingSafety && (
+                              <span className="rounded-lg bg-teal-50 px-2 py-0.5 text-teal-800 font-semibold">
+                                🛡️ Safety: {rv.ratingSafety}★
+                              </span>
+                            )}
                           </div>
                         )}
 

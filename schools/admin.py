@@ -1793,17 +1793,20 @@ class ReviewAdmin(admin.ModelAdmin):
             color, stars, obj.rating
         )
 
-    @admin.display(description='Parameters')
+    @admin.display(description='Category Ratings')
     def parameters_col(self, obj):
         return format_html(
             '<div style="font-size:11px;line-height:1.4;color:#475569;">'
+            '🎓 Academics: <strong>{}★</strong><br>'
+            '🏫 Campus: <strong>{}★</strong><br>'
             '🏆 Sports: <strong>{}★</strong><br>'
             '🎵 Extra: <strong>{}★</strong><br>'
-            '₹ Value: <strong>{}★</strong><br>'
-            '🎓 Acad: <strong>{}★</strong>'
+            '🛡️ Safety: <strong>{}★</strong><br>'
+            '₹ Value: <strong>{}★</strong>'
             '</div>',
+            obj.rating_academics or '-', obj.rating_infrastructure or '-',
             obj.rating_sports or '-', obj.rating_extracurricular or '-',
-            obj.rating_value or '-', obj.rating_academics or '-'
+            obj.rating_safety or '-', obj.rating_value or '-'
         )
 
     @admin.display(description='Review Content')

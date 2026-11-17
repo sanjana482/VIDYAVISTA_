@@ -203,8 +203,9 @@ class School(models.Model):
     def refresh_rating(self):
         """Calculates the average rating + count from approved parent reviews."""
         agg = self.review_items.filter(is_approved=True).aggregate(a=Avg('rating'), c=Count('id'))
-        avg = Decimal(str(round(agg['a'] or 0, 1)))
-        School.objects.filter(pk=self.pk).update(rating=avg, reviews=agg['c'] or 0)
+        c = agg['c'] or 0
+        avg = Decimal(str(round(agg['a'], 1))) if (agg['a'] is not None and c > 0) else Decimal('0.0')
+        School.objects.filter(pk=self.pk).update(rating=avg, reviews=c)
 
     def save(self, *args, **kwargs):
         if self.feeMin:
@@ -331,12 +332,13 @@ class Review(models.Model):
     email = models.EmailField(blank=True, default='')
     rating = models.PositiveSmallIntegerField('Overall Rating', validators=[MinValueValidator(1), MaxValueValidator(5)])
     
-    # Specific parameter ratings (1 to 5)
-    rating_sports = models.PositiveSmallIntegerField('Sports Rating', default=4, validators=[MinValueValidator(1), MaxValueValidator(5)], blank=True, null=True)
-    rating_extracurricular = models.PositiveSmallIntegerField('Extracurriculars Rating', default=4, validators=[MinValueValidator(1), MaxValueValidator(5)], blank=True, null=True)
-    rating_value = models.PositiveSmallIntegerField('Value for Money Rating', default=4, validators=[MinValueValidator(1), MaxValueValidator(5)], blank=True, null=True)
-    rating_academics = models.PositiveSmallIntegerField('Academics Rating', default=4, validators=[MinValueValidator(1), MaxValueValidator(5)], blank=True, null=True)
-    rating_infrastructure = models.PositiveSmallIntegerField('Infrastructure Rating', default=4, validators=[MinValueValidator(1), MaxValueValidator(5)], blank=True, null=True)
+    # Specific parameter/category ratings (1 to 5)
+    rating_sports = models.PositiveSmallIntegerField('Sports Rating', validators=[MinValueValidator(1), MaxValueValidator(5)], blank=True, null=True)
+    rating_extracurricular = models.PositiveSmallIntegerField('Extracurriculars Rating', validators=[MinValueValidator(1), MaxValueValidator(5)], blank=True, null=True)
+    rating_value = models.PositiveSmallIntegerField('Value for Money Rating', validators=[MinValueValidator(1), MaxValueValidator(5)], blank=True, null=True)
+    rating_academics = models.PositiveSmallIntegerField('Academics Rating', validators=[MinValueValidator(1), MaxValueValidator(5)], blank=True, null=True)
+    rating_infrastructure = models.PositiveSmallIntegerField('Infrastructure Rating', validators=[MinValueValidator(1), MaxValueValidator(5)], blank=True, null=True)
+    rating_safety = models.PositiveSmallIntegerField('Safety & Hygiene Rating', validators=[MinValueValidator(1), MaxValueValidator(5)], blank=True, null=True)
 
     text = models.TextField('Review Content')
     photos = models.JSONField('Attached Photos', default=list, blank=True)
