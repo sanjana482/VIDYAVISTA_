@@ -194,7 +194,8 @@ class SchoolListSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    schoolId = serializers.IntegerField(write_only=True)
+    schoolId = serializers.IntegerField(write_only=True, required=False, allow_null=True)
+    schoolSlug = serializers.CharField(write_only=True, required=False, allow_blank=True)
     ratingSports = serializers.IntegerField(source='rating_sports', required=False, min_value=1, max_value=5, default=None, allow_null=True)
     ratingExtracurricular = serializers.IntegerField(source='rating_extracurricular', required=False, min_value=1, max_value=5, default=None, allow_null=True)
     ratingValue = serializers.IntegerField(source='rating_value', required=False, min_value=1, max_value=5, default=None, allow_null=True)
@@ -206,7 +207,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = (
-            'schoolId', 'name', 'role', 'mobile', 'email', 'rating',
+            'schoolId', 'schoolSlug', 'name', 'role', 'mobile', 'email', 'rating',
             'ratingSports', 'ratingExtracurricular', 'ratingValue',
             'ratingAcademics', 'ratingInfrastructure', 'ratingSafety', 'text', 'photos',
         )
@@ -228,9 +229,15 @@ class ReviewSerializer(serializers.ModelSerializer):
         return v
 
     def create(self, validated):
-        sid = validated.pop('schoolId')
-        school = School.objects.filter(school_id=sid, isActive=True).first()
-        if not school:
+        sid = validated.pop('schoolId', None)
+        sslug = validated.pop('schoolSlug', None)
+
+        school = None
+        if sslug:
+            school = School.objects.filter(slug=sslug, isActive=True).first()
+        if not school and sid:
+            school = School.objects.filter(school_id=sid, isActive=True).first()
+        if not school and sid:
             school = School.objects.filter(pk=sid, isActive=True).first()
         if not school:
             raise serializers.ValidationError({'schoolId': 'School not found.'})

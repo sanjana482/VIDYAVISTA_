@@ -117,9 +117,27 @@ class ReviewViewSet(viewsets.GenericViewSet):
 
     def list(self, request, *args, **kwargs):
         school_id = request.query_params.get('schoolId') or request.query_params.get('school')
-        if not school_id:
+        slug_val = request.query_params.get('slug')
+        if not school_id and not slug_val:
             return Response({'ok': True, 'data': [], 'breakdown': {}, 'parameters': {}})
-        school = School.objects.filter(Q(school_id=school_id) | Q(pk=school_id)).first()
+
+        school = None
+        # 1. Exact lookup by slug if provided
+        if slug_val:
+            school = School.objects.filter(slug=slug_val).first()
+
+        # 2. Exact lookup by school_id (public ID used across frontend)
+        if not school and school_id and str(school_id).isdigit():
+            school = School.objects.filter(school_id=int(school_id)).first()
+
+        # 3. Lookup by slug in school_id param
+        if not school and school_id:
+            school = School.objects.filter(slug=str(school_id)).first()
+
+        # 4. Fallback to pk only if neither matches
+        if not school and school_id and str(school_id).isdigit():
+            school = School.objects.filter(pk=int(school_id)).first()
+
         if not school:
             return Response({'ok': True, 'data': [], 'breakdown': {}, 'parameters': {}})
 

@@ -46,6 +46,7 @@ export type ReviewItem = {
 
 type Props = {
   schoolId: number;
+  schoolSlug?: string;
   schoolName: string;
   rating: number;
   count: number;
@@ -70,6 +71,7 @@ const QUICK_PROMPTS = [
 
 export default function ReviewSection({
   schoolId,
+  schoolSlug,
   schoolName,
   rating: initialRating,
   count: initialCount,
@@ -110,9 +112,6 @@ export default function ReviewSection({
   // Zoomed photo modal state
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
 
-  // Filter state: "all" | "photos"
-  const [activeFilter, setActiveFilter] = useState<"all" | "photos">("all");
-
   // Live state
   const [reviewList, setReviewList] = useState<ReviewItem[]>(reviews);
   const [liveRating, setLiveRating] = useState<number>(initialCount > 0 ? initialRating : 0);
@@ -138,8 +137,9 @@ export default function ReviewSection({
 
   // Fetch live approved reviews from API
   useEffect(() => {
-    if (!schoolId) return;
-    fetch(`${API_URL}/reviews/?schoolId=${schoolId}`)
+    if (!schoolId && !schoolSlug) return;
+    const q = schoolSlug ? `slug=${encodeURIComponent(schoolSlug)}` : `schoolId=${schoolId}`;
+    fetch(`${API_URL}/reviews/?${q}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data?.ok) {
@@ -328,6 +328,7 @@ export default function ReviewSection({
       const token = localStorage.getItem("vv_token");
       const payload = {
         schoolId: Number(schoolId),
+        schoolSlug: schoolSlug || "",
         name: f.name.trim(),
         role: f.role,
         mobile: f.mobile.trim(),
@@ -371,9 +372,6 @@ export default function ReviewSection({
       setSubmitting(false);
     }
   };
-
-  const filteredReviews =
-    activeFilter === "photos" ? reviewList.filter((r) => r.photos && r.photos.length > 0) : reviewList;
 
   const initials = (name: string) => {
     const parts = name.trim().split(/\s+/);
@@ -592,39 +590,10 @@ export default function ReviewSection({
         </div>
       </div>
 
-      {/* 4. Filter Tabs (All Reviews vs With Photos) */}
-      <div className="flex items-center justify-between border-b border-[#E1E7EE] pb-2">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setActiveFilter("all")}
-            className={`rounded-full px-4 py-1.5 text-xs font-bold transition ${
-              activeFilter === "all"
-                ? "bg-[#0795DC] text-white shadow-xs"
-                : "bg-slate-100 text-[#4E5A68] hover:bg-slate-200"
-            }`}
-          >
-            All reviews ({reviewList.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveFilter("photos")}
-            className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold transition ${
-              activeFilter === "photos"
-                ? "bg-[#0795DC] text-white shadow-xs"
-                : "bg-slate-100 text-[#4E5A68] hover:bg-slate-200"
-            }`}
-          >
-            <Camera className="h-3.5 w-3.5" />
-            <span>With photos ({reviewList.filter((r) => r.photos && r.photos.length > 0).length})</span>
-          </button>
-        </div>
-      </div>
-
-      {/* 5. Reviews List Cards */}
-      {filteredReviews.length > 0 ? (
+      {/* 4. Reviews List Cards */}
+      {reviewList.length > 0 ? (
         <div className="space-y-4">
-          {filteredReviews.map((r, idx) => (
+          {reviewList.map((r, idx) => (
             <div
               key={r.id || idx}
               className="rounded-3xl border border-[#E1E7EE] bg-white p-5 sm:p-6 shadow-xs transition hover:shadow-md"
