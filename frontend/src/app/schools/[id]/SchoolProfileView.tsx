@@ -22,6 +22,7 @@ import {
   SECTION_LABEL, type Section,
 } from "../../lib/seo";
 import { classList, feeRange, feeSlabs, getProfile, lakh, rupee } from "../../data/profile";
+import SchoolPreferenceSaver from "../../components/profile/SchoolPreferenceSaver";
 
 export const findSchool = async (param: string) => {
   const bySlug = await fetchSchoolBySlug(param);
@@ -185,6 +186,8 @@ export default async function SchoolProfileView({ param, section }: { param: str
     <main className="min-h-screen bg-white pb-20 lg:pb-0">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(schema) }} />
       <Navbar />
+      {/* Auto-save school city+type to cookie for next visit */}
+      <SchoolPreferenceSaver schoolType={s.type} city={s.city} state={stateFor(s)} />
       <ProfileHero school={s} intro={p.intro} phoneHref={p.contact.phoneHref} stats={stats} />
       <ProfileTabs basePath={basePath} active={show} sections={sectionIds} />
 

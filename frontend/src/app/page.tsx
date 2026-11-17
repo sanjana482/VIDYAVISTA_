@@ -15,6 +15,7 @@ import { homeFaqs } from "./data/faqs";
 import { fetchAllSchoolsSafe } from "./lib/schoolsApi";
 import { stateFor } from "./data/schools";
 import Reveal from "./components/Reveal";
+import StatCounters from "./components/StatCounters";
 
 // Cached for 24 hours (86400s) to prevent Vercel ISR spikes; use /api/revalidate for instant updates.
 export const revalidate = 86400;
@@ -52,6 +53,7 @@ export default async function Home() {
       />
       <Navbar />
       <Hero schools={schools} />
+      <StatCounters />
       <Reveal><Categories /></Reveal>
       <Reveal><PopularLocations /></Reveal>
       <Reveal><FeaturedSchools list={featured} /></Reveal>

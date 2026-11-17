@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type ListingDescriptionProps = {
   description: string;
@@ -13,6 +13,9 @@ export default function ListingDescription({
   maxLength = 300,
 }: ListingDescriptionProps) {
   const [expanded, setExpanded] = useState(false);
+  // Prevent hydration mismatch: always render empty on server, fill on client
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   const shouldTruncate = description.length > maxLength;
 
@@ -22,12 +25,12 @@ export default function ListingDescription({
       : description.slice(0, maxLength).trimEnd() + "...";
 
   return (
-    <div className="max-w-5xl">
-      <p className="text-sm leading-7 text-[#626F7D] sm:text-base">
-        {visibleDescription}
+    <div className="max-w-5xl" suppressHydrationWarning>
+      <p className="text-sm leading-7 text-[#626F7D] sm:text-base" suppressHydrationWarning>
+        {mounted ? visibleDescription : ""}
       </p>
 
-      {shouldTruncate && (
+      {mounted && shouldTruncate && (
         <button
           type="button"
           onClick={() => setExpanded((previous) => !previous)}
