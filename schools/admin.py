@@ -1840,14 +1840,22 @@ class ReviewAdmin(admin.ModelAdmin):
     def school_reply_col(self, obj):
         if not obj.school_reply:
             return format_html('<span style="color:#94a3b8;font-size:11px;">No reply</span>')
-        status_tag = (
-            '<span style="background:#16a34a;color:#fff;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;">Reply Live</span>'
-            if obj.reply_approved else
-            '<span style="background:#f59e0b;color:#fff;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;">Reply Pending</span>'
-        )
+
+        if obj.reply_approved:
+            badge = format_html(
+                '<span style="background:#16a34a;color:#fff;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;display:inline-block;margin-bottom:4px;">'
+                '✔ Reply Live</span>'
+            )
+        else:
+            badge = format_html(
+                '<span style="background:#f59e0b;color:#fff;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;display:inline-block;margin-bottom:4px;">'
+                '⏳ Reply Pending</span>'
+            )
+
+        snippet = obj.school_reply[:80] + ('...' if len(obj.school_reply) > 80 else '')
         return format_html(
-            '<div style="max-width:220px;font-size:11px;color:#334155;">{}<br><em style="color:#475569;">"{}"</em></div>',
-            status_tag, obj.school_reply[:80] + ('...' if len(obj.school_reply) > 80 else '')
+            '<div style="max-width:220px;font-size:11px;color:#334155;">{}<br><em style="color:#475569;">&ldquo;{}&rdquo;</em></div>',
+            badge, snippet
         )
 
     @admin.action(description='✔ Approve Selected Reviews (Publish Live & Update Ratings)')

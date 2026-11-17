@@ -2752,7 +2752,7 @@ export default function SchoolPortalPage() {
                   <div>
                     <h2 className="text-xl font-extrabold text-[#0B2A47]">Parent &amp; Student Reviews</h2>
                     <p className="mt-1 text-xs text-[#64748B]">
-                      Verified reviews posted by parents and students. Official replies are verified by VidyaVista moderation before going live.
+                      Verified reviews posted by parents and students.
                     </p>
                   </div>
                 </div>
@@ -2852,15 +2852,9 @@ export default function SchoolPortalPage() {
                               <span className="font-extrabold text-[#0A5C91]">
                                 🏫 Your Official School Reply:
                               </span>
-                              {rv.replyApproved ? (
-                                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-bold text-emerald-800">
-                                  ✔ Approved &amp; Live on Profile
-                                </span>
-                              ) : (
-                                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-bold text-amber-800">
-                                  ⏳ Under Admin Review (Not Public Yet)
-                                </span>
-                              )}
+                              <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200">
+                                ✔ Reply Submitted
+                              </span>
                             </div>
                             <p className="mt-1 text-slate-700">{rv.schoolReply}</p>
                           </div>
@@ -2874,7 +2868,7 @@ export default function SchoolPortalPage() {
                                 method: "POST",
                                 body: JSON.stringify({ reply }),
                               });
-                              showToast("Official reply submitted. It will be verified by admin before going live.");
+                              showToast("Official reply submitted successfully.");
                               loadDashboard();
                             }}
                             className="mt-3 flex flex-col sm:flex-row gap-2"
@@ -2890,7 +2884,7 @@ export default function SchoolPortalPage() {
                               type="submit"
                               className="h-10 rounded-xl bg-[#0A5C91] px-5 text-xs font-bold text-white hover:bg-[#084872] transition"
                             >
-                              Submit Reply for Approval
+                              Submit Reply
                             </button>
                           </form>
                         )}
