@@ -573,7 +573,7 @@ export default function SchoolPortalPage() {
     return (
       <div className="min-h-screen bg-[#F4F7FA]">
         <Navbar />
-        <div className="mx-auto max-w-7xl px-6 py-16 text-center">
+        <div className="mx-auto max-w-[1720px] px-4 sm:px-6 py-16 text-center lg:px-8 xl:px-12">
           <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-[#0795DC] border-t-transparent" />
           <p className="mt-4 font-bold text-[#0A5C91]">Loading Institution Portal...</p>
         </div>
@@ -599,7 +599,7 @@ export default function SchoolPortalPage() {
       )}
 
       {error && (
-        <div className="mx-auto mt-4 flex max-w-7xl items-center justify-between rounded-2xl border border-rose-200 bg-rose-50 px-5 py-3 text-sm font-semibold text-rose-700">
+        <div className="mx-auto mt-4 flex max-w-[1720px] items-center justify-between rounded-2xl border border-rose-200 bg-rose-50 px-4 sm:px-6 py-3 text-sm font-semibold text-rose-700 lg:px-8 xl:px-12">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-4 w-4 shrink-0" />
             <span>{error}</span>
@@ -610,7 +610,7 @@ export default function SchoolPortalPage() {
         </div>
       )}
 
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:py-8 sm:px-6 lg:px-8 pb-28 lg:pb-8">
+      <div className="mx-auto max-w-[1720px] px-4 sm:px-6 py-6 sm:py-8 lg:px-8 xl:px-12 pb-28 lg:pb-8">
         {/* Top Institution Header Bar (Compact & Mobile-Optimized) */}
         <div className="vv-rise rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#0B2A47] via-[#0A5C91] to-[#0795DC] p-4 sm:p-6 lg:p-7 text-white shadow-lg">
           <div className="flex flex-wrap items-center justify-between gap-3">

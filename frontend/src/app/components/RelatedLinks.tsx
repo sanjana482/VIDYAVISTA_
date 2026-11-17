@@ -53,7 +53,7 @@ export default function RelatedLinks({ schools, initial }: { schools: School[]; 
       .sort((a, b) => b[1] - a[1]);
     if (!states.length) return null;
     return (
-      <section className="mx-auto max-w-7xl px-5 pb-10 lg:px-8">
+      <section className="mx-auto max-w-[1720px] px-4 sm:px-6 pb-10 lg:px-8 xl:px-12">
         <h2 className="text-xl font-extrabold text-[#0B2A47]">Browse schools by state</h2>
         <ul className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {states.map(([n, c]) => (
@@ -73,7 +73,7 @@ export default function RelatedLinks({ schools, initial }: { schools: School[]; 
   const name = pretty(active.name);
 
   return (
-    <section aria-label={`More schools in ${name}`} className="mx-auto max-w-7xl px-5 pb-12 lg:px-8">
+    <section aria-label={`More schools in ${name}`} className="mx-auto max-w-[1720px] px-4 sm:px-6 pb-12 lg:px-8 xl:px-12">
       <h2 className="text-2xl font-extrabold text-[#0B2A47]">More ways to explore schools in {name}</h2>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-3">

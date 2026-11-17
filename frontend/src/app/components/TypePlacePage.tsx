@@ -147,14 +147,14 @@ export default async function TypePlacePage({ typeKey, slug }: { typeKey: TypeKe
       )}
 
       {list.length > 0 && (
-        <section className="mx-auto max-w-7xl px-5 pt-10 lg:px-8">
+        <section className="mx-auto max-w-[1720px] px-4 sm:px-6 pt-10 lg:px-8 xl:px-12">
           <h2 className="text-2xl font-extrabold text-[#0B2A47] sm:text-3xl">About {heading}</h2>
           <div className="mt-4 max-w-4xl"><ClampedText text={description} lines={5} className="leading-8 text-[#4E5A68]" /></div>
         </section>
       )}
 
       {list.length > 0 && (<>
-      <section className="mx-auto max-w-7xl px-5 py-10 lg:px-8">
+      <section className="mx-auto max-w-[1720px] px-4 sm:px-6 py-10 lg:px-8 xl:px-12">
         <h2 className="text-2xl font-extrabold text-[#0B2A47] sm:text-3xl">Key highlights of {heading}</h2>
         <ul className="mt-5 grid gap-3 sm:grid-cols-2">
           {highlights.map((h) => (
@@ -165,7 +165,7 @@ export default async function TypePlacePage({ typeKey, slug }: { typeKey: TypeKe
         </ul>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 pb-10 lg:px-8">
+      <section className="mx-auto max-w-[1720px] px-4 sm:px-6 pb-10 lg:px-8 xl:px-12">
         <h2 className="text-2xl font-extrabold text-[#0B2A47] sm:text-3xl">Top {heading}</h2>
         <ol className="mt-5 grid gap-3 md:grid-cols-2">
           {top.map((s, i) => (

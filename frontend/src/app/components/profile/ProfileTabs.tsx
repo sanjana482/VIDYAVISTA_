@@ -80,7 +80,7 @@ export default function ProfileTabs({ basePath, active = "about", sections }: { 
 
   return (
     <div className="sticky top-[76px] z-40 border-b border-[#E1E7EE] bg-white/95 backdrop-blur sm:top-[80px]">
-      <nav ref={navRef} aria-label="Profile sections" className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-5 lg:px-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <nav ref={navRef} aria-label="Profile sections" className="mx-auto flex max-w-[1720px] gap-1 overflow-x-auto px-4 sm:px-6 lg:px-8 xl:px-12 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {tabs.map(([id, label]) => (
           <a
             key={id}

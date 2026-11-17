@@ -77,7 +77,7 @@ export default async function Schools() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(listingSchema(schools)) }} />
       <Navbar />
       <Suspense fallback={
-        <div className="mx-auto max-w-7xl px-5 py-10 space-y-5">
+        <div className="mx-auto max-w-[1720px] px-4 sm:px-6 py-10 space-y-5 lg:px-8 xl:px-12">
           {Array.from({ length: 4 }).map((_, i) => <SchoolSkeletonCard key={i} />)}
         </div>
       }>
@@ -89,7 +89,7 @@ export default async function Schools() {
       <RelatedLinks schools={schools} />
 
       {/* Plain crawlable links (the filtered list above is client-rendered) */}
-      <nav aria-label="Browse schools by city" className="mx-auto max-w-7xl px-5 pb-10 lg:px-8">
+      <nav aria-label="Browse schools by city" className="mx-auto max-w-[1720px] px-4 sm:px-6 pb-10 lg:px-8 xl:px-12">
         <h2 className="text-xl font-extrabold text-[#0B2A47]">Browse schools by city</h2>
                 <ShowMore className="mt-4 flex flex-wrap gap-3" initial={24} step={24}>
           {CITIES.map((c) => (

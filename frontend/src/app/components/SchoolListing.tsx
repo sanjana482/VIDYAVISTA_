@@ -465,8 +465,8 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
 
   return (
     <section id="results" className="relative z-10 scroll-mt-24 bg-white py-10 sm:py-12">
-<div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)] gap-8 px-5 lg:grid-cols-[290px_minmax(0,1fr)] lg:px-8">       
-   {/* ---------- Filters ---------- */}
+        <div className="mx-auto grid max-w-[1720px] grid-cols-[minmax(0,1fr)] gap-8 px-4 sm:px-6 lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)] 2xl:grid-cols-[340px_minmax(0,1fr)] lg:px-8 xl:px-12">
+          {/* ---------- Filters ---------- */}
         <aside>
           <button
             type="button"
@@ -603,7 +603,7 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
                 <span aria-hidden className="vv-card-ring" />
                 {/* 2. glowing pill on the left edge, grows from the centre */}
                 <span aria-hidden className="pointer-events-none absolute left-0 top-1/2 h-0 w-1.5 -translate-y-1/2 rounded-r-full bg-gradient-to-b from-[#EC0E58] to-[#0795DC] opacity-0 shadow-[0_0_14px_rgba(236,14,88,0.55)] transition-all duration-500 ease-out group-hover:h-3/5 group-hover:opacity-100" />
-                <div className="grid grid-cols-[minmax(0,1fr)] gap-5 md:grid-cols-[260px_minmax(0,1fr)] xl:min-h-[220px] xl:grid-cols-[280px_minmax(0,1fr)_230px]">
+                <div className="grid grid-cols-[minmax(0,1fr)] gap-5 md:grid-cols-[280px_minmax(0,1fr)] xl:min-h-[220px] xl:grid-cols-[300px_minmax(0,1fr)_250px] 2xl:grid-cols-[320px_minmax(0,1fr)_260px]">
                   {/* Photo: Single Cover Image */}
                   <div className="relative h-52 w-full overflow-hidden rounded-2xl bg-[#E6F4FC] md:h-full md:min-h-[220px]">
                     <img src={s.image} alt={`${s.name} campus`} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110" />

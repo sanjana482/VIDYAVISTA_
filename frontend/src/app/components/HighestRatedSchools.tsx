@@ -57,7 +57,7 @@ export default function HighestRatedSchools({ list }: { list: School[] }) {
 
   return (
     <section className="overflow-hidden bg-gradient-to-b from-[#FCF6F8] via-[#F8F0F3] to-[#F3F8FB] py-14 sm:py-18">
-      <div className="mx-auto max-w-7xl px-5 lg:px-8">
+      <div className="mx-auto max-w-[1720px] px-4 sm:px-6 lg:px-8 xl:px-12">
         {/* Heading and navigation arrows */}
         <div className="flex items-end justify-between gap-4">
           <div>

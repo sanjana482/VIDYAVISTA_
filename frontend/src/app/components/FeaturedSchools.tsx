@@ -126,7 +126,7 @@ export default function FeaturedSchools({ list }: { list: School[] }) {
       <div className="pointer-events-none absolute -right-32 top-20 h-80 w-80 rounded-full bg-[#F6D7E1]/30 blur-3xl" />
       <div className="pointer-events-none absolute -left-32 bottom-10 h-80 w-80 rounded-full bg-[#D6DEE8]/30 blur-3xl" />
 
-      <div className="relative mx-auto max-w-7xl px-5 lg:px-8">
+      <div className="relative mx-auto max-w-[1720px] px-4 sm:px-6 lg:px-8 xl:px-12">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <span className="inline-flex items-center gap-2 rounded-full bg-[#DDEAF2] px-3.5 py-1.5 text-xs font-extrabold uppercase tracking-wider text-[#0A5C91]">

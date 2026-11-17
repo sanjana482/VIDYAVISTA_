@@ -20,7 +20,7 @@ export default function PlaceHeading({ initial, description }: { initial: Applie
   }, []);
   const same = cur.place === initial.place && cur.type === initial.type && cur.board === initial.board;
   return (
-    <header className="mx-auto max-w-7xl px-5 pb-2 pt-10 lg:px-8">
+    <header className="mx-auto max-w-[1720px] px-4 sm:px-6 pb-2 pt-10 lg:px-8 xl:px-12">
       <h1 className="text-3xl font-extrabold tracking-tight text-[#0B2A47] sm:text-5xl">
         Best {headingFor(cur)} <span className="text-[#EC0E58]">2027-28</span>
       </h1>

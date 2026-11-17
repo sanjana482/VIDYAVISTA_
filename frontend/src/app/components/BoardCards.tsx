@@ -166,7 +166,7 @@ export default function BoardCards({ list }: { list: Row[] }) {
       <div className="pointer-events-none absolute -left-24 top-24 h-72 w-72 rounded-full bg-[#A6D8F5]/20 blur-3xl" />
       <div className="pointer-events-none absolute -right-24 bottom-10 h-72 w-72 rounded-full bg-[#FFC2D4]/20 blur-3xl" />
 
-      <div className="relative mx-auto max-w-7xl px-5 lg:px-8">
+      <div className="relative mx-auto max-w-[1720px] px-4 sm:px-6 lg:px-8 xl:px-12">
         {/* Header with Curriculum Pill */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
           <div>
@@ -224,7 +224,7 @@ export default function BoardCards({ list }: { list: Row[] }) {
               No {type.toLowerCase()}s listed yet.
             </p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5 sm:gap-4">
               {boards.map((b) => {
                 const theme = BOARD_THEMES[b.board] ?? BOARD_THEMES.CBSE;
                 const label = BOARD_LABEL[b.board] ?? b.board;

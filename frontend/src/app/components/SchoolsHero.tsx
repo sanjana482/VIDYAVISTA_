@@ -193,7 +193,7 @@ export default function SchoolsHero({
         <div className="absolute -right-20 bottom-0 h-72 w-72 rounded-full bg-[#EC0E58]/10 blur-3xl" />
       </div>
 
-      <div className="relative mx-auto max-w-7xl px-5 pb-10 pt-6 lg:px-8">
+      <div className="relative mx-auto max-w-[1720px] px-4 sm:px-6 pb-10 pt-6 lg:px-8 xl:px-12">
         <nav aria-label="Breadcrumb" className="text-sm text-[#5C6A7B]">
           <Link href="/" className="hover:text-[#0A7BBF]">Home</Link>
           <span className="mx-2">›</span>

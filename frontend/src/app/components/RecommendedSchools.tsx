@@ -53,7 +53,7 @@ export default function RecommendedSchools({ list }: { list: School[] }) {
 
   return (
     <section className="bg-white py-16 sm:py-20">
-      <div className="mx-auto max-w-7xl px-5 lg:px-8">
+      <div className="mx-auto max-w-[1720px] px-4 sm:px-6 lg:px-8 xl:px-12">
         {/* Section heading */}
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>

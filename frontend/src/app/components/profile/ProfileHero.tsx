@@ -98,7 +98,7 @@ export default function ProfileHero({ school: s, intro, phoneHref, stats }: Prop
 
   return (
     <section className="bg-gradient-to-b from-[#F3F9FD] to-white">
-      <div className="mx-auto max-w-7xl px-5 pb-10 pt-5 lg:px-8">
+      <div className="mx-auto max-w-[1720px] px-4 sm:px-6 pb-10 pt-5 lg:px-8 xl:px-12">
         <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-x-2 text-sm text-[#5C6A7B]">
           <Link href="/" className="hover:text-[#0A7BBF]">Home</Link>›
           <Link href="/schools" className="hover:text-[#0A7BBF]">Schools</Link>›

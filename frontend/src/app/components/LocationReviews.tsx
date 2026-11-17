@@ -23,7 +23,7 @@ export default function LocationReviews({ place, schools }: { place: string; sch
     .slice(0, 6);
 
   return (
-    <section aria-label={`Parent reviews for schools in ${place}`} className="mx-auto max-w-7xl px-5 py-10 lg:px-8">
+    <section aria-label={`Parent reviews for schools in ${place}`} className="mx-auto max-w-[1720px] px-4 sm:px-6 py-10 lg:px-8 xl:px-12">
       <h2 className="text-2xl font-extrabold text-[#0B2A47] sm:text-3xl">Parent reviews for schools in {place}</h2>
       <div className="mt-5 flex flex-wrap items-center gap-6 rounded-2xl border border-[#E1E7EE] bg-[#F6FAFD] p-6">
         <div>

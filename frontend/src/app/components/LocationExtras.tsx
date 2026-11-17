@@ -69,7 +69,7 @@ export default function LocationExtras({ type, placeName, url, list, content }: 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(schema) }} />
 
       {top.length > 0 && (
-        <section aria-labelledby="loc-reviews" className="mx-auto max-w-7xl px-5 pb-12 lg:px-8">
+        <section aria-labelledby="loc-reviews" className="mx-auto max-w-[1720px] px-4 sm:px-6 pb-12 lg:px-8 xl:px-12">
           <h2 id="loc-reviews" className="text-2xl font-extrabold text-[#0B2A47]">
             Parent ratings for {label.toLowerCase()} in {name}
           </h2>
@@ -99,7 +99,7 @@ export default function LocationExtras({ type, placeName, url, list, content }: 
       )}
 
       {photos.length > 0 && (
-        <section aria-labelledby="loc-photos" className="mx-auto max-w-7xl px-5 pb-12 lg:px-8">
+        <section aria-labelledby="loc-photos" className="mx-auto max-w-[1720px] px-4 sm:px-6 pb-12 lg:px-8 xl:px-12">
           <h2 id="loc-photos" className="text-2xl font-extrabold text-[#0B2A47]">
             Photos: {label.toLowerCase()} in {name}
           </h2>

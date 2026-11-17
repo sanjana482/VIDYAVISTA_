@@ -74,7 +74,7 @@ export default function LocationLanding({ kind, name, state, list, all, content 
       <Navbar />
 
       <section className="bg-gradient-to-br from-[#E6F4FC] via-white to-[#FDE8EF]">
-        <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 py-12 lg:grid-cols-[1.25fr_0.75fr] lg:px-8">
+        <div className="mx-auto grid max-w-[1720px] items-center gap-10 px-4 sm:px-6 py-12 lg:grid-cols-[1.25fr_0.75fr] lg:px-8 xl:px-12">
           <div>
             <nav aria-label="Breadcrumb" className="text-sm text-[#5C6A7B]">
               <Link href="/" className="hover:text-[#0A7BBF]">Home</Link><span className="mx-2">›</span>
@@ -108,7 +108,7 @@ export default function LocationLanding({ kind, name, state, list, all, content 
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 py-10 lg:px-8">
+      <section className="mx-auto max-w-[1720px] px-4 sm:px-6 py-10 lg:px-8 xl:px-12">
         {groups.map(({ t, items }) => (
           <div key={t} className="mb-12">
             <div className="flex flex-wrap items-end justify-between gap-3">

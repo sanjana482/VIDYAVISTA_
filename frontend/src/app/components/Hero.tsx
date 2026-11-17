@@ -64,7 +64,7 @@ export default function Hero({ schools = [] }: { schools?: SearchSchool[] }) {
         <div className="absolute left-1/2 top-1/3 h-72 w-72 rounded-full bg-[#F5C5D5]/35 blur-3xl" />
       </div>
 
-      <div className="mx-auto grid max-w-7xl items-center gap-12 px-5 py-14 sm:py-20 lg:grid-cols-2 lg:gap-16 lg:px-8">
+      <div className="mx-auto grid max-w-[1720px] items-center gap-12 px-4 sm:px-6 py-14 sm:py-20 lg:grid-cols-2 lg:gap-16 lg:px-8 xl:px-12">
         {/* Left side */}
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-[#A1D6F4] bg-white/80 px-4 py-2 text-sm font-bold text-[#0A6AA8] shadow-sm">

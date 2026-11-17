@@ -298,7 +298,7 @@ export default function ParentPortalPage() {
       )}
 
       {/* Main Container */}
-      <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:py-8 sm:px-6 lg:grid-cols-12 lg:px-8 pb-28 lg:pb-8">
+      <div className="mx-auto grid max-w-[1720px] gap-6 px-4 sm:px-6 py-6 sm:py-8 lg:grid-cols-12 lg:px-8 xl:px-12 pb-28 lg:pb-8">
 
 
         {/* Left Sidebar (Desktop) */}

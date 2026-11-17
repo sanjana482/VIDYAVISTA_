@@ -6,8 +6,8 @@ export default function SchoolsLoading() {
     <main className="min-h-screen bg-white">
       <Navbar />
       {/* Hero skeleton */}
-      <section className="relative bg-gradient-to-br from-[#E6F4FC] via-white to-[#FDE8EF] px-5 py-12 lg:px-8">
-        <div className="mx-auto max-w-7xl">
+      <section className="relative bg-gradient-to-br from-[#E6F4FC] via-white to-[#FDE8EF] px-4 sm:px-6 py-12 lg:px-8 xl:px-12">
+        <div className="mx-auto max-w-[1720px]">
           <div className="h-4 w-32 rounded bg-slate-200/80 animate-pulse" />
           <div className="mt-6 grid items-center gap-10 lg:grid-cols-[1.25fr_0.75fr]">
             <div>
@@ -29,8 +29,8 @@ export default function SchoolsLoading() {
       </section>
 
       {/* Results & filters skeleton */}
-      <section className="relative mx-auto max-w-7xl px-5 py-10 lg:px-8">
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[280px_minmax(0,1fr)]">
+      <section className="relative mx-auto max-w-[1720px] px-4 sm:px-6 py-10 lg:px-8 xl:px-12">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)]">
           {/* Sidebar skeleton */}
           <div className="hidden lg:block space-y-6">
             <div className="h-8 w-32 rounded bg-slate-200 animate-pulse" />

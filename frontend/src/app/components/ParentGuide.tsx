@@ -47,7 +47,7 @@ export default function ParentGuide() {
   const place = active?.name ?? "India";
   return (
     <section className="bg-white py-14">
-      <div className="mx-auto max-w-6xl px-5 lg:px-8">
+      <div className="mx-auto max-w-[1720px] px-4 sm:px-6 lg:px-8 xl:px-12">
         <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#0795DC]">Parent&apos;s guide</p>
         <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-[#0B2A47] sm:text-4xl">
           How to Choose the Right School in {place} (2027-28)

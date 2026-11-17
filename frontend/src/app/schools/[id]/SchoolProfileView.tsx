@@ -188,7 +188,7 @@ export default async function SchoolProfileView({ param, section }: { param: str
       <ProfileHero school={s} intro={p.intro} phoneHref={p.contact.phoneHref} stats={stats} />
       <ProfileTabs basePath={basePath} active={show} sections={sectionIds} />
 
-      <div className="mx-auto grid max-w-7xl gap-10 px-5 lg:grid-cols-[1fr_370px] lg:px-8">
+      <div className="mx-auto grid max-w-[1720px] gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_380px] xl:grid-cols-[1fr_420px] lg:px-8 xl:px-12">
         <div className="min-w-0">
           <Section id="about">
             <h2 className="text-2xl font-extrabold tracking-tight text-[#0B2A47] sm:text-3xl">About {s.name}</h2>
@@ -246,11 +246,11 @@ export default async function SchoolProfileView({ param, section }: { param: str
 
       {/* Similar schools */}
       <section className="mt-6 bg-gradient-to-b from-[#F3F9FD] to-white py-14">
-        <div className="mx-auto max-w-7xl px-5 lg:px-8">
+        <div className="mx-auto max-w-[1720px] px-4 sm:px-6 lg:px-8 xl:px-12">
           <h2 className="text-2xl font-extrabold tracking-tight text-[#0B2A47] sm:text-3xl">
             {similar.sameCity ? `Similar schools near ${s.area.split(",").slice(-1)[0].trim()}, ${s.city}` : "Similar schools you may like"}
           </h2>
-          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {similar.list.map((x) => (
               <Link key={x.id} href={schoolPath(x)} className="group overflow-hidden rounded-2xl border border-[#E1E7EE] bg-white shadow-sm transition hover:-translate-y-1 hover:border-[#9ED8F5] hover:shadow-xl hover:shadow-[#0795DC]/10">
                 <div className="aspect-[16/8] overflow-hidden bg-[#E1F1FA]">
@@ -271,7 +271,7 @@ export default async function SchoolProfileView({ param, section }: { param: str
       </section>
 
       {/* CTA banner */}
-      <section className="mx-auto max-w-6xl px-5 pb-16 lg:px-8">
+      <section className="mx-auto max-w-[1720px] px-4 sm:px-6 pb-16 lg:px-8 xl:px-12">
         <div className="flex flex-col items-start justify-between gap-5 rounded-3xl bg-gradient-to-r from-[#0A5C91] via-[#0795DC] to-[#EC0E58] px-6 py-8 sm:px-8 sm:py-10 text-white shadow-2xl shadow-[#0795DC]/25 sm:flex-row sm:items-center">
           <div>
             <h2 className="text-2xl font-extrabold sm:text-3xl">Need help choosing the right school?</h2>

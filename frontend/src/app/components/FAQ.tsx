@@ -11,7 +11,7 @@ export default function FAQ() {
 
   return (
     <section className="bg-gradient-to-b from-white via-[#FAF5F7] to-[#FFE3EC] py-16 sm:py-20">
-      <div className="mx-auto grid max-w-6xl gap-10 px-5 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16 lg:px-8">
+      <div className="mx-auto grid max-w-[1720px] gap-10 px-4 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16 lg:px-8 xl:px-12">
         {/* Left content */}
         <div>
           <span className="inline-flex rounded-full bg-[#F5DDE5] px-4 py-2 text-xs font-extrabold uppercase tracking-wider text-[#C8104F]">
