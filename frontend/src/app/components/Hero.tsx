@@ -146,8 +146,16 @@ export default function Hero({ schools = [] }: { schools?: SearchSchool[] }) {
               </span>
             </button>
 
-            {/* school-name search: a round icon that opens into a bar */}
-            <div className="mt-4 relative z-50">
+            {/* Prominent Always-Open Search Bar */}
+            <div className="mt-5 relative z-50">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-xs font-extrabold uppercase tracking-wider text-[#0A5C91]">
+                  Direct School Search
+                </span>
+                <span className="text-xs font-semibold text-[#707E8F]">
+                  Instant profile preview
+                </span>
+              </div>
               <SchoolSearchBar schools={schools} schoolType={schoolType} location={selectedLocation} />
             </div>
           </div>

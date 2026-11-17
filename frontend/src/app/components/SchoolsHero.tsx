@@ -253,16 +253,14 @@ export default function SchoolsHero({
           />
         </div>
 
-        {/* Search bar matching home page */}
-        <div className="mt-8 mx-auto max-w-2xl relative z-50">
-          <div className="rounded-3xl border border-[#D0DBE5] bg-white/95 p-3 shadow-lg shadow-[#0B2A47]/5 backdrop-blur-sm sm:p-4 relative z-50">
-            <SchoolSearchBar
-              schools={schools}
-              schoolType={activeType || type || "Day School"}
-              location={activePlace?.name || (loc ? loc.split(":")[1] : "") || ""}
-              initialQuery={q}
-            />
-          </div>
+        {/* Prominent Search bar matching Ezyschooling */}
+        <div className="mt-8 mx-auto max-w-3xl relative z-50">
+          <SchoolSearchBar
+            schools={schools}
+            schoolType={activeType || type || "Day School"}
+            location={activePlace?.name || (loc ? loc.split(":")[1] : "") || ""}
+            initialQuery={q}
+          />
         </div>
       </div>
     </section>

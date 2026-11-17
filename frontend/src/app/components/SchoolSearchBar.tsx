@@ -2,16 +2,47 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { openLocationPicker } from "../lib/places";
-import { isBoardingType } from "../lib/preferences";
 
-export type SearchSchool = { id: number; name: string; city: string; state?: string };
+export type SearchSchool = {
+  id: number;
+  name: string;
+  city: string;
+  state?: string;
+  area?: string;
+  slug?: string;
+  image?: string;
+  logo?: string;
+  board?: string;
+  rating?: number;
+  reviews?: number;
+  fee?: number;
+  type?: string;
+  verified?: boolean;
+};
 
-// Hero search. Two different buttons, two different jobs:
-//  1. the round ICON      -> only opens (or closes) the bar. It never searches.
-//  2. the "Search" button -> inside the open bar, this one searches:
-//       - location already saved (cookie) -> listing page opens (/schools?type=..&state|city=..&q=..)
-//       - first visit, no location yet    -> the location panel opens first, the listing opens after "Confirm Location"
+function slugify(s: string) {
+  return s
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function getSchoolUrl(s: SearchSchool): string {
+  if (s.slug) return `/schools/${s.slug}`;
+  const slug = slugify(`${s.name} ${s.area || ""} ${s.city || ""}`);
+  return `/schools/${slug || s.id}`;
+}
+
+function formatFeeShort(fee?: number) {
+  if (!fee || fee <= 0) return null;
+  if (fee >= 100000) {
+    const l = (fee / 100000).toFixed(1).replace(/\.0$/, "");
+    return `₹${l}L/yr`;
+  }
+  return `₹${fee.toLocaleString("en-IN")}/yr`;
+}
+
 export default function SchoolSearchBar({
   schools = [],
   schoolType,
@@ -20,152 +51,456 @@ export default function SchoolSearchBar({
   initialQuery = "",
 }: {
   schools?: SearchSchool[];
-  schoolType: string;
-  location: string;
+  schoolType?: string;
+  location?: string;
   className?: string;
   initialQuery?: string;
 }) {
   const router = useRouter();
+  const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const [open, setOpen] = useState(Boolean(initialQuery));
-  const [name, setName] = useState(initialQuery);
-  const [hint, setHint] = useState(0);
 
-  const hints = useMemo(() => schools.slice(0, 5).map((s) => s.name), [schools]);
-  const hits = useMemo(() => {
-    const t = name.trim().toLowerCase();
-    if (!open || t.length < 2) return [];
-    return schools.filter((s) => s.name.toLowerCase().includes(t)).slice(0, 5);
-  }, [name, schools, open]);
+  const [query, setQuery] = useState(initialQuery);
+  const [isOpen, setIsOpen] = useState(false);
+  const [hintIndex, setHintIndex] = useState(0);
 
-  // focus the field once the bar has opened
+  // Rotating search placeholder hints
+  const hints = useMemo(() => {
+    const top = schools.slice(0, 5).map((s) => s.name);
+    return top.length > 0
+      ? top
+      : ["The Scindia School", "Delhi Public School", "Schools in Mumbai", "CBSE Schools"];
+  }, [schools]);
+
   useEffect(() => {
-    if (!open) return;
-    const id = window.setTimeout(() => inputRef.current?.focus(), 380);
-    return () => window.clearTimeout(id);
-  }, [open]);
+    if (query || hints.length < 2) return;
+    const timer = setInterval(() => {
+      setHintIndex((prev) => (prev + 1) % hints.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [query, hints.length]);
 
-  // the hint inside the empty bar changes by itself
+  // Click outside listener to close dropdown
   useEffect(() => {
-    if (!open || name || hints.length < 2) return;
-    const id = window.setInterval(() => setHint((h) => (h + 1) % hints.length), 2600);
-    return () => window.clearInterval(id);
-  }, [open, name, hints.length]);
+    function handleClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
-  function toggle() {
-    if (!open) setOpen(true);
-    else if (!name.trim()) setOpen(false);
-    else inputRef.current?.focus();
+  const trimmed = query.trim().toLowerCase();
+
+  // Search Results Matching
+  const searchResults = useMemo(() => {
+    if (!trimmed) return [];
+
+    return schools
+      .filter((s) => {
+        const nameMatch = s.name.toLowerCase().includes(trimmed);
+        const cityMatch = s.city.toLowerCase().includes(trimmed);
+        const areaMatch = s.area ? s.area.toLowerCase().includes(trimmed) : false;
+        const boardMatch = s.board ? s.board.toLowerCase().includes(trimmed) : false;
+        return nameMatch || cityMatch || areaMatch || boardMatch;
+      })
+      .sort((a, b) => {
+        // Prioritize exact start of school name
+        const aStart = a.name.toLowerCase().startsWith(trimmed);
+        const bStart = b.name.toLowerCase().startsWith(trimmed);
+        if (aStart && !bStart) return -1;
+        if (!aStart && bStart) return 1;
+        // Then by rating or review count
+        return (b.rating || 0) - (a.rating || 0);
+      })
+      .slice(0, 6);
+  }, [trimmed, schools]);
+
+  // Matching Cities
+  const matchingCities = useMemo(() => {
+    if (trimmed.length < 2) return [];
+    const cityMap = new Map<string, number>();
+    schools.forEach((s) => {
+      if (s.city && s.city.toLowerCase().includes(trimmed)) {
+        cityMap.set(s.city, (cityMap.get(s.city) || 0) + 1);
+      }
+    });
+    return Array.from(cityMap.entries()).slice(0, 3);
+  }, [trimmed, schools]);
+
+  // Trending / Recommended Schools (shown when user clicks before typing)
+  const trendingSchools = useMemo(() => {
+    return [...schools]
+      .sort((a, b) => (b.reviews || 0) - (a.reviews || 0) || (b.rating || 0) - (a.rating || 0))
+      .slice(0, 4);
+  }, [schools]);
+
+  // Popular Cities
+  const popularCities = useMemo(() => {
+    const cityMap = new Map<string, number>();
+    schools.forEach((s) => {
+      if (s.city) cityMap.set(s.city, (cityMap.get(s.city) || 0) + 1);
+    });
+    return Array.from(cityMap.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+  }, [schools]);
+
+  function handleSelectSchool(school: SearchSchool) {
+    setIsOpen(false);
+    router.push(getSchoolUrl(school));
   }
 
-  function submit(e?: React.FormEvent) {
+  function handleSelectCity(city: string) {
+    setIsOpen(false);
+    const params = new URLSearchParams();
+    if (schoolType) params.set("type", schoolType);
+    params.set("city", city);
+    router.push(`/schools?${params.toString()}`);
+  }
+
+  function handleSubmit(e?: React.FormEvent) {
     e?.preventDefault();
-    if (!open) return; // pressing Enter on the closed icon must not search
-    const q = name.trim();
-    if (!location) {
-      if (typeof window !== "undefined" && window.location.pathname.startsWith("/schools")) {
-        const params = new URLSearchParams(window.location.search);
-        if (schoolType) params.set("type", schoolType);
-        if (q) params.set("q", q);
-        else params.delete("q");
-        router.push(`/schools?${params.toString()}`);
-        return;
-      }
-      openLocationPicker(schoolType, q); // first visit: ask for the location, then open the listing
+    setIsOpen(false);
+    const q = query.trim();
+
+    // If matches a single top school exactly, go to it
+    if (searchResults.length > 0 && searchResults[0].name.toLowerCase() === q.toLowerCase()) {
+      handleSelectSchool(searchResults[0]);
       return;
     }
+
     const params = new URLSearchParams();
-    params.set("type", schoolType);
-    params.set(isBoardingType(schoolType) ? "state" : "city", location);
+    if (schoolType) params.set("type", schoolType);
+    if (location) params.set("city", location);
     if (q) params.set("q", q);
     router.push(`/schools?${params.toString()}`);
   }
 
   return (
-    <form onSubmit={submit} role="search" className={`relative h-14 w-full ${open ? "z-[100]" : "z-10"} ${className}`}>
-      <div
-        onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node) && !name.trim()) setOpen(false); }}
-        onKeyDown={(e) => { if (e.key === "Escape") { setOpen(false); (e.target as HTMLElement).blur?.(); } }}
-        className={`absolute left-0 top-0 h-14 rounded-full border bg-white transition-[width,box-shadow,border-color] duration-500 ease-[cubic-bezier(0.65,0,0.25,1)] ${
-          open
-            ? "w-full border-[#0A7BBF] shadow-xl shadow-[#0A7BBF]/20 ring-4 ring-[#0A7BBF]/15 z-[100]"
-            : "w-14 border-[#0A5C91] shadow-lg shadow-[#0A5C91]/25 z-10"
-        }`}
+    <div ref={containerRef} className={`relative w-full ${className}`}>
+      {/* Prominent Always-Open Search Bar */}
+      <form
+        onSubmit={handleSubmit}
+        className="relative flex h-14 sm:h-15 w-full items-center rounded-2xl border-2 border-[#D6DDE5] bg-white px-3 sm:px-4 shadow-sm transition-all duration-200 focus-within:border-[#0795DC] focus-within:ring-4 focus-within:ring-[#0795DC]/15 focus-within:shadow-xl hover:border-[#B5C4D5]"
       >
-        {/* 1. the round icon: only opens / closes the bar */}
-        <button
-          type="button"
-          onClick={toggle}
-          aria-label={open ? "Close school search" : "Open school search"}
-          aria-expanded={open}
-          className={`absolute left-0 top-0 z-10 flex h-14 w-14 items-center justify-center rounded-full transition-colors duration-500 ${
-            open ? "bg-transparent text-[#0A7BBF]" : "bg-[#0A5C91] text-white hover:bg-[#0A7BBF]"
-          }`}
-        >
-          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        {/* Search Icon */}
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center text-[#0A5C91]">
+          <svg
+            viewBox="0 0 24 24"
+            className="h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
             <circle cx="11" cy="11" r="7" />
             <path d="m20 20-3.5-3.5" />
           </svg>
-        </button>
+        </div>
 
-        {/* the field */}
-        <div className={`absolute inset-y-0 left-12 right-32 transition-opacity duration-300 ${open ? "opacity-100 delay-300" : "pointer-events-none opacity-0"}`}>
-          {!name && hints.length > 0 && (
-            <span key={hint} className="vv-hint pointer-events-none absolute inset-0 flex items-center truncate text-sm text-[#8A96A5]">
-              Search school name, e.g. “{hints[hint]}”
+        {/* Input Field with Animated Hint */}
+        <div className="relative min-w-0 flex-1 px-2.5">
+          {!query && (
+            <span className="pointer-events-none absolute inset-0 flex items-center truncate text-xs sm:text-sm text-[#8896A6]">
+              Search by school name, e.g. “{hints[hintIndex]}”
             </span>
           )}
           <input
             ref={inputRef}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            tabIndex={open ? 0 : -1}
-            aria-label="School name"
-            placeholder={hints.length ? "" : "Search school name"}
+            type="text"
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setIsOpen(true);
+            }}
+            onFocus={() => setIsOpen(true)}
+            placeholder=""
             autoComplete="off"
-            className="h-full w-full bg-transparent text-sm font-semibold text-[#0B2A47] outline-none placeholder:font-normal placeholder:text-[#8A96A5]"
+            spellCheck="false"
+            className="h-full w-full bg-transparent text-sm sm:text-base font-semibold text-[#0B2A47] outline-none"
           />
         </div>
 
-        {/* 2. the Search button: only exists inside the open bar */}
+        {/* Clear Button (when text is present) */}
+        {query && (
+          <button
+            type="button"
+            onClick={() => {
+              setQuery("");
+              inputRef.current?.focus();
+            }}
+            className="mr-2 flex h-7 w-7 items-center justify-center rounded-full bg-[#EEF2F6] text-[#707E8F] hover:bg-[#DDE3EA] hover:text-[#0B2A47]"
+            aria-label="Clear search"
+          >
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          </button>
+        )}
+
+        {/* Prominent Search Action Button */}
         <button
           type="submit"
-          tabIndex={open ? 0 : -1}
-          className={`vv-btn absolute right-1.5 top-1.5 flex h-11 items-center gap-2 rounded-full bg-gradient-to-r from-[#EC0E58] to-[#C8104F] px-5 text-sm font-extrabold text-white transition-opacity duration-300 ${
-            open ? "opacity-100 delay-300" : "pointer-events-none opacity-0"
-          }`}
+          className="vv-btn flex h-10 sm:h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-4 sm:px-6 text-xs sm:text-sm font-extrabold text-white shadow-md shadow-[#0A5C91]/20 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#0795DC]/25"
         >
-          Search
+          <span>Search</span>
+          <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
         </button>
+      </form>
 
-        {/* name suggestions */}
-        {hits.length > 0 && (
-          <ul className="vv-pop absolute left-0 right-0 top-full z-[9999] mt-2 max-h-80 overflow-y-auto rounded-2xl border border-[#D9E0E8] bg-white py-2 shadow-2xl">
-            {hits.map((s) => (
-              <li key={s.id}>
-                <button
-                  type="button"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => { setName(s.name); inputRef.current?.focus(); }}
-                  className="flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left text-sm hover:bg-[#F1F5F8]"
-                >
-                  <span className="truncate font-semibold text-[#0B2A47]">{s.name}</span>
-                  <span className="shrink-0 text-xs text-[#8A96A5]">{s.city}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      {/* Rich Dropdown Panel (Ezyschooling Style) */}
+      {isOpen && (
+        <div className="vv-pop absolute left-0 right-0 top-full z-[9999] mt-2.5 max-h-[460px] overflow-y-auto rounded-2xl border border-[#D9E0E8] bg-white p-2.5 shadow-2xl shadow-[#0B2A47]/15">
+          {/* Case 1: When user has typed query */}
+          {trimmed ? (
+            <div>
+              {/* Matching Cities first if any */}
+              {matchingCities.length > 0 && (
+                <div className="mb-2 border-b border-[#EAEFF5] pb-2">
+                  <p className="px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-[#8896A6]">
+                    Locations
+                  </p>
+                  <div className="flex flex-wrap gap-2 px-3 pt-1">
+                    {matchingCities.map(([city, count]) => (
+                      <button
+                        key={city}
+                        type="button"
+                        onClick={() => handleSelectCity(city)}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-[#D6DDE5] bg-[#F6FAFD] px-3 py-1.5 text-xs font-bold text-[#0A5C91] transition hover:border-[#0795DC] hover:bg-[#E1F1FA]"
+                      >
+                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-[#EC0E58]" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                          <circle cx="12" cy="10" r="3" />
+                        </svg>
+                        <span>Schools in {city}</span>
+                        <span className="text-[10px] text-[#707E8F]">({count})</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-      {/* caption next to the closed icon */}
-      <span
-        className={`pointer-events-none absolute left-[4.25rem] top-1/2 -translate-y-1/2 whitespace-nowrap text-sm font-semibold text-[#0A5C91] transition-all duration-300 ${
-          open ? "-translate-x-2 opacity-0" : "opacity-100"
-        }`}
-      >
-        Search by school name
-      </span>
-    </form>
+              {/* Matching Schools Header */}
+              <div className="flex items-center justify-between px-3 py-1.5">
+                <p className="text-[11px] font-extrabold uppercase tracking-wider text-[#8896A6]">
+                  Schools {searchResults.length > 0 && `(${searchResults.length})`}
+                </p>
+                <span className="text-[11px] font-semibold text-[#0795DC]">Click to view profile</span>
+              </div>
+
+              {/* School Cards List */}
+              {searchResults.length > 0 ? (
+                <ul className="space-y-1">
+                  {searchResults.map((school) => {
+                    const feeText = formatFeeShort(school.fee);
+                    return (
+                      <li key={school.id}>
+                        <button
+                          type="button"
+                          onClick={() => handleSelectSchool(school)}
+                          className="group flex w-full items-center gap-3.5 rounded-xl p-2.5 text-left transition hover:bg-[#F0F7FC]"
+                        >
+                          {/* Thumbnail Image */}
+                          <div className="relative h-12 w-12 sm:h-13 sm:w-13 shrink-0 overflow-hidden rounded-xl border border-[#DDE5ED] bg-[#E1F1FA] shadow-sm">
+                            {school.image ? (
+                              <img
+                                src={school.image}
+                                alt={school.name}
+                                className="h-full w-full object-cover transition duration-300 group-hover:scale-110"
+                              />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center text-xl">
+                                🏫
+                              </div>
+                            )}
+                          </div>
+
+                          {/* School Info */}
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <h4 className="truncate text-sm font-extrabold text-[#0B2A47] group-hover:text-[#0A7BBF]">
+                                {school.name}
+                              </h4>
+                              {school.verified && (
+                                <span className="inline-flex shrink-0 items-center rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-extrabold text-emerald-700">
+                                  ✓ Verified
+                                </span>
+                              )}
+                            </div>
+
+                            <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-[#6B7A8B]">
+                              <svg viewBox="0 0 24 24" className="h-3 w-3 shrink-0 text-[#EC0E58]" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                                <circle cx="12" cy="10" r="3" />
+                              </svg>
+                              <span>
+                                {school.area ? `${school.area}, ` : ""}
+                                {school.city}
+                              </span>
+                            </p>
+
+                            <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px]">
+                              {school.board && (
+                                <span className="rounded bg-[#E1F1FA] px-1.5 py-0.5 font-bold text-[#0A5C91]">
+                                  {school.board}
+                                </span>
+                              )}
+                              {school.type && (
+                                <span className="rounded bg-[#F4F6F9] px-1.5 py-0.5 font-semibold text-[#5C6A7B]">
+                                  {school.type}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Right Side: Rating & Fee */}
+                          <div className="shrink-0 text-right">
+                            {school.rating && school.rating > 0 ? (
+                              <div className="inline-flex items-center gap-1 rounded-md bg-[#FFF3D6] px-2 py-0.5 text-xs font-black text-[#B45309]">
+                                <span>★</span>
+                                <span>{school.rating.toFixed(1)}</span>
+                                {Boolean(school.reviews) && (
+                                  <span className="text-[10px] font-normal text-[#92400E]">
+                                    ({school.reviews})
+                                  </span>
+                                )}
+                              </div>
+                            ) : null}
+                            {feeText && (
+                              <p className="mt-1 text-[11px] font-extrabold text-[#0B2A47]">
+                                {feeText}
+                              </p>
+                            )}
+                          </div>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <div className="py-6 text-center">
+                  <p className="text-sm font-bold text-[#0B2A47]">No schools found matching &ldquo;{query}&rdquo;</p>
+                  <p className="mt-1 text-xs text-[#707E8F]">Try searching by city, board, or a different school name.</p>
+                  <button
+                    type="button"
+                    onClick={handleSubmit}
+                    className="mt-3 rounded-xl bg-[#0A5C91] px-4 py-2 text-xs font-bold text-white hover:bg-[#0795DC]"
+                  >
+                    View All Schools in Directory →
+                  </button>
+                </div>
+              )}
+
+              {/* Footer View All Search Results */}
+              {searchResults.length > 0 && (
+                <div className="mt-2 border-t border-[#EAEFF5] pt-2 text-center">
+                  <button
+                    type="button"
+                    onClick={handleSubmit}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0A5C91] hover:text-[#0795DC]"
+                  >
+                    <span>View all matching results for &ldquo;{query}&rdquo;</span>
+                    <span>→</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* Case 2: User focused before typing -> Show Trending Schools & Cities */
+            <div>
+              {/* Popular Cities */}
+              {popularCities.length > 0 && (
+                <div className="mb-3 border-b border-[#EAEFF5] pb-3">
+                  <p className="px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-[#8896A6]">
+                    Popular Education Cities
+                  </p>
+                  <div className="flex flex-wrap gap-2 px-3 pt-1">
+                    {popularCities.map(([city, count]) => (
+                      <button
+                        key={city}
+                        type="button"
+                        onClick={() => handleSelectCity(city)}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-[#D6DDE5] bg-[#F6FAFD] px-3 py-1.5 text-xs font-bold text-[#0A5C91] transition hover:border-[#0795DC] hover:bg-[#E1F1FA]"
+                      >
+                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-[#EC0E58]" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                          <circle cx="12" cy="10" r="3" />
+                        </svg>
+                        <span>{city}</span>
+                        <span className="text-[10px] text-[#707E8F]">({count})</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Trending / Recommended Schools */}
+              <div>
+                <p className="px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-[#8896A6]">
+                  🔥 Trending &amp; Recommended Schools
+                </p>
+                <ul className="mt-1 space-y-1">
+                  {trendingSchools.map((school) => {
+                    const feeText = formatFeeShort(school.fee);
+                    return (
+                      <li key={school.id}>
+                        <button
+                          type="button"
+                          onClick={() => handleSelectSchool(school)}
+                          className="group flex w-full items-center gap-3.5 rounded-xl p-2.5 text-left transition hover:bg-[#F0F7FC]"
+                        >
+                          <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-[#DDE5ED] bg-[#E1F1FA] shadow-sm">
+                            {school.image ? (
+                              <img
+                                src={school.image}
+                                alt={school.name}
+                                className="h-full w-full object-cover transition duration-300 group-hover:scale-110"
+                              />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center text-lg">
+                                🏫
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <h4 className="truncate text-sm font-extrabold text-[#0B2A47] group-hover:text-[#0A7BBF]">
+                              {school.name}
+                            </h4>
+                            <p className="flex items-center gap-1 truncate text-xs text-[#6B7A8B]">
+                              <span>
+                                {school.area ? `${school.area}, ` : ""}
+                                {school.city}
+                              </span>
+                            </p>
+                          </div>
+
+                          <div className="shrink-0 text-right">
+                            {school.rating && school.rating > 0 ? (
+                              <span className="inline-flex items-center gap-1 rounded-md bg-[#FFF3D6] px-2 py-0.5 text-xs font-black text-[#B45309]">
+                                ★ {school.rating.toFixed(1)}
+                              </span>
+                            ) : null}
+                            {feeText && (
+                              <p className="text-[10px] font-bold text-[#707E8F]">{feeText}</p>
+                            )}
+                          </div>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }

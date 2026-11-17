@@ -51,7 +51,7 @@ export default async function Home() {
         }}
       />
       <Navbar />
-      <Hero schools={schools.map((s) => ({ id: s.id, name: s.name, city: s.city, state: stateFor(s) }))} />
+      <Hero schools={schools} />
       <Reveal><Categories /></Reveal>
       <Reveal><PopularLocations /></Reveal>
       <Reveal><FeaturedSchools list={featured} /></Reveal>
