@@ -465,8 +465,11 @@ export default function ReviewSection({
         </button>
       </div>
 
-      {/* 2. Rating Breakdown Card (Image 1 reference layout) */}
-      <div className="rounded-3xl border border-[#E1E7EE] bg-white p-6 shadow-sm sm:p-8">
+      {/* If approved reviews exist, show the full Rating Breakdown Card & Reviews List */}
+      {liveCount > 0 ? (
+        <>
+          {/* 2. Rating Breakdown Card (Image 1 reference layout) */}
+          <div className="rounded-3xl border border-[#E1E7EE] bg-white p-6 shadow-sm sm:p-8">
         <div className="grid gap-8 lg:grid-cols-12 lg:items-center">
           {/* Left: Overall Score & Verified Badge */}
           <div className="lg:col-span-4 lg:border-r lg:border-[#E1E7EE] lg:pr-8 text-center lg:text-left">
@@ -590,99 +593,104 @@ export default function ReviewSection({
         </div>
       </div>
 
-      {/* 4. Reviews List Cards */}
-      {reviewList.length > 0 ? (
-        <div className="space-y-4">
-          {reviewList.map((r, idx) => (
-            <div
-              key={r.id || idx}
-              className="rounded-3xl border border-[#E1E7EE] bg-white p-5 sm:p-6 shadow-xs transition hover:shadow-md"
-            >
-              {/* Review Card Header */}
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-700 text-sm font-extrabold text-white shadow-xs">
-                    {initials(r.name)}
-                  </div>
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h4 className="text-sm font-bold text-[#0B2A47]">{r.name}</h4>
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200">
-                        <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                        <span>Verified User</span>
-                      </span>
+          {/* 3. Reviews List Cards */}
+          <div className="space-y-4">
+            {reviewList.map((r, idx) => (
+              <div
+                key={r.id || idx}
+                className="rounded-3xl border border-[#E1E7EE] bg-white p-5 sm:p-6 shadow-xs transition hover:shadow-md"
+              >
+                {/* Review Card Header */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-700 text-sm font-extrabold text-white shadow-xs">
+                      {initials(r.name)}
                     </div>
-
-                    <div className="mt-1 flex items-center gap-2 text-xs text-[#64748B]">
-                      <div className="flex items-center gap-0.5">
-                        {[1, 2, 3, 4, 5].map((s) => (
-                          <Star
-                            key={s}
-                            className={`h-3 w-3 ${
-                              s <= Math.round(r.rating)
-                                ? "fill-[#E99A24] text-[#E99A24]"
-                                : "fill-[#E1E7EE] text-[#D0D6DD]"
-                            }`}
-                          />
-                        ))}
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h4 className="text-sm font-bold text-[#0B2A47]">{r.name}</h4>
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200">
+                          <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                          <span>Verified User</span>
+                        </span>
                       </div>
-                      <span className="font-bold text-[#0B2A47]">{Number(r.rating).toFixed(1)}</span>
-                      <span>•</span>
-                      <span>
-                        {r.role} • Reviewed {r.date}
-                      </span>
+
+                      <div className="mt-1 flex items-center gap-2 text-xs text-[#64748B]">
+                        <div className="flex items-center gap-0.5">
+                          {[1, 2, 3, 4, 5].map((s) => (
+                            <Star
+                              key={s}
+                              className={`h-3 w-3 ${
+                                s <= Math.round(r.rating)
+                                  ? "fill-[#E99A24] text-[#E99A24]"
+                                  : "fill-[#E1E7EE] text-[#D0D6DD]"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="font-bold text-[#0B2A47]">{Number(r.rating).toFixed(1)}</span>
+                        <span>•</span>
+                        <span>
+                          {r.role} • Reviewed {r.date}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Review Text */}
-              <p className="mt-3.5 leading-relaxed text-[#334155] text-sm whitespace-pre-line">{r.text}</p>
+                {/* Review Text */}
+                <p className="mt-3.5 leading-relaxed text-[#334155] text-sm whitespace-pre-line">{r.text}</p>
 
-              {/* Photos Gallery */}
-              {r.photos && r.photos.length > 0 && (
-                <div className="mt-4 flex flex-wrap gap-2.5">
-                  {r.photos.map((photoUrl, pIdx) => (
-                    <button
-                      key={pIdx}
-                      type="button"
-                      onClick={() => setPreviewPhoto(photoUrl)}
-                      className="group relative h-16 w-16 overflow-hidden rounded-xl border border-[#CBD5E1] bg-slate-100 transition hover:scale-105"
-                      title="Click to view full photo"
-                    >
-                      <img src={photoUrl} alt="" className="h-full w-full object-cover" />
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* School Official Reply */}
-              {r.schoolReply && (
-                <div className="mt-4 rounded-2xl border border-sky-100 bg-[#F0F8FF] p-4 text-xs text-[#0B2A47]">
-                  <div className="flex items-center gap-1.5 font-extrabold text-[#0A5C91]">
-                    <ShieldCheck className="h-4 w-4" />
-                    <span>School Response from {r.schoolName || schoolName}</span>
-                    {r.replyDate && <span className="text-[11px] font-normal text-[#64748B]">({r.replyDate})</span>}
+                {/* Photos Gallery */}
+                {r.photos && r.photos.length > 0 && (
+                  <div className="mt-4 flex flex-wrap gap-2.5">
+                    {r.photos.map((photoUrl, pIdx) => (
+                      <button
+                        key={pIdx}
+                        type="button"
+                        onClick={() => setPreviewPhoto(photoUrl)}
+                        className="group relative h-16 w-16 overflow-hidden rounded-xl border border-[#CBD5E1] bg-slate-100 transition hover:scale-105"
+                        title="Click to view full photo"
+                      >
+                        <img src={photoUrl} alt="" className="h-full w-full object-cover" />
+                      </button>
+                    ))}
                   </div>
-                  <p className="mt-1.5 leading-relaxed text-[#334155]">{r.schoolReply}</p>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+                )}
+
+                {/* School Official Reply */}
+                {r.schoolReply && (
+                  <div className="mt-4 rounded-2xl border border-sky-100 bg-[#F0F8FF] p-4 text-xs text-[#0B2A47]">
+                    <div className="flex items-center gap-1.5 font-extrabold text-[#0A5C91]">
+                      <ShieldCheck className="h-4 w-4" />
+                      <span>School Response from {r.schoolName || schoolName}</span>
+                      {r.replyDate && <span className="text-[11px] font-normal text-[#64748B]">({r.replyDate})</span>}
+                    </div>
+                    <p className="mt-1.5 leading-relaxed text-[#334155]">{r.schoolReply}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </>
       ) : (
-        <div className="rounded-3xl border border-[#E1E7EE] bg-[#FAFBFD] p-12 text-center text-[#64748B]">
-          <MessageSquare className="mx-auto h-10 w-10 text-[#0795DC]/40" />
-          <h4 className="mt-3 text-base font-extrabold text-[#0B2A47]">No parent reviews published yet</h4>
-          <p className="mt-1 text-xs text-[#5C6A7B]">
-            Be the first parent or student to share your genuine experience with {schoolName}.
+        /* Clean Empty State when 0 reviews exist (NO "-- / 5" and NO empty category cards) */
+        <div className="rounded-3xl border border-[#E1E7EE] bg-[#FAFBFD] p-10 sm:p-14 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-50 text-[#0A5C91] border border-sky-100">
+            <MessageSquare className="h-7 w-7" />
+          </div>
+          <h4 className="mt-4 text-lg font-black text-[#0B2A47]">
+            No reviews published yet for {schoolName}
+          </h4>
+          <p className="mt-1.5 mx-auto max-w-md text-xs leading-relaxed text-[#5C6A7B]">
+            Be the first parent, student, or alumnus to share your genuine experience and guide other parents.
           </p>
           <button
             type="button"
             onClick={handleOpenForm}
-            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#0A5C91] px-5 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-[#084872]"
+            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-6 py-3 text-xs font-bold text-white shadow-md shadow-[#0A5C91]/20 transition hover:from-[#084872] hover:to-[#0680bd]"
           >
-            <MessageSquare className="h-3.5 w-3.5" />
+            <MessageSquare className="h-4 w-4" />
             <span>Write the First Review</span>
           </button>
         </div>

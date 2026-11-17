@@ -2852,9 +2852,15 @@ export default function SchoolPortalPage() {
                               <span className="font-extrabold text-[#0A5C91]">
                                 🏫 Your Official School Reply:
                               </span>
-                              <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200">
-                                ✔ Reply Submitted
-                              </span>
+                              {rv.replyApproved ? (
+                                <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200">
+                                  ✔ Live on Profile
+                                </span>
+                              ) : (
+                                <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold text-amber-700 border border-amber-200">
+                                  ⏳ Submitted (Pending Admin Approval)
+                                </span>
+                              )}
                             </div>
                             <p className="mt-1 text-slate-700">{rv.schoolReply}</p>
                           </div>

@@ -1801,13 +1801,13 @@ def school_reply_review(request, review_id):
         return _err("Please write a reply.")
     rv.school_reply = reply[:1000]
     rv.school_reply_at = timezone.now()
-    rv.reply_approved = True  # School reply is live immediately
+    rv.reply_approved = False  # Requires admin approval before appearing publicly
     rv.save()
     return Response({
         "ok": True,
         "message": "Your official response has been submitted.",
         "reply": rv.school_reply,
-        "replyApproved": True,
+        "replyApproved": False,
     })
 
 
