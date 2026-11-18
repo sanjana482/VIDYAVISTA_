@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { Suspense } from "react";
 import Navbar from "../components/Navbar";
 import SchoolsHero from "../components/SchoolsHero";
@@ -76,7 +76,7 @@ export default async function Schools({ searchParams }: { searchParams?: Record<
   const schools = await fetchAllSchoolsSafe();
   const CITIES = citiesOf(schools);
   return (
-    <main className="min-h-screen bg-white">
+    <main data-page="listing" className="min-h-screen bg-white">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(listingSchema(schools)) }} />
       <Navbar />
       <Suspense fallback={

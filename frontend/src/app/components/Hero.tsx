@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import {
@@ -203,12 +203,14 @@ export default function Hero({ schools = [] }: { schools?: SearchSchool[] }) {
 
   return (
     <>
-      <section className="hero-art relative overflow-hidden">
-        {/* Rotating Conic Arc Glow */}
-        <div className="hero-arc pointer-events-none" />
+      <section className="hero-art relative z-30">
+        {/* Decorative background layer safely clipped to hero section */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden -z-1">
+          {/* Rotating Conic Arc Glow */}
+          <div className="hero-arc pointer-events-none" />
 
-        {/* Animated Background Container with Parallax */}
-        <div ref={bgRef} className="bg pointer-events-none absolute inset-0 -z-1 select-none transition-transform duration-300 ease-out">
+          {/* Animated Background Container with Parallax */}
+          <div ref={bgRef} className="bg pointer-events-none absolute inset-0 select-none transition-transform duration-300 ease-out">
           {/* SVG Flight Trail & Animated Aeroplane (Properly Proportioned) */}
           <svg className="fly absolute inset-0 h-full w-full pointer-events-none" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
             <path
@@ -271,6 +273,7 @@ export default function Hero({ schools = [] }: { schools?: SearchSchool[] }) {
           <span className="art-cr" style={{ left: "97%", top: "8%", width: 22, height: 22, borderColor: "#f5a524", animationDelay: "-5s" }} />
           <span className="art-cr" style={{ left: "36%", top: "96%", width: 16, height: 16, background: "#7b3fa0", borderColor: "#7b3fa0", animationDelay: "-1s" }} />
         </div>
+      </div>
 
         {/* ================= CENTERED HERO INNER CONTAINER (max-w-[1280px]) ================= */}
         <div className="relative mx-auto grid w-full max-w-[1280px] grid-cols-1 items-center gap-10 lg:gap-12 px-4 sm:px-6 lg:px-8 py-10 sm:py-14 lg:grid-cols-[1.05fr_1.15fr]">
@@ -334,7 +337,7 @@ export default function Hero({ schools = [] }: { schools?: SearchSchool[] }) {
           </div>
 
           {/* ================= RIGHT COLUMN (GLASS PANEL) ================= */}
-          <div className="stage relative w-full">
+          <div className="stage relative z-40 w-full">
             <div className="art-panel relative p-6 sm:p-7 rounded-[24px] w-full shadow-xl">
               {/* Header */}
               <div className="ph flex items-center justify-between">
@@ -414,7 +417,7 @@ export default function Hero({ schools = [] }: { schools?: SearchSchool[] }) {
       </section>
 
       {/* ================= RUNNING MARQUEE STRIP ================= */}
-      <div className="art-strip">
+      <div className="art-strip relative z-10">
         <div className="art-mr">
           <div className="art-track">
             {/* 4 loops for endless smooth continuous scrolling */}

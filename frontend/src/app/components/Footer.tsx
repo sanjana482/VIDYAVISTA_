@@ -1,4 +1,4 @@
-
+﻿
 "use client";
 
 import { useState } from "react";
@@ -187,7 +187,7 @@ export default function Footer({ context }: { context?: FooterContext } = {}) {
         VV
       </div>
 
-      <div className="relative mx-auto max-w-[1240px] px-4 sm:px-6 lg:px-8">
+      <div className="relative mx-auto w-full max-w-[1720px] px-4 sm:px-6 lg:px-8 xl:px-12">
         {/* Quick links */}
         <div className="grid gap-4 border-b border-white/10 py-10 sm:grid-cols-2 xl:grid-cols-4">
           {features.map((feature) => (

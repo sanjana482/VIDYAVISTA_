@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
@@ -145,7 +145,7 @@ function CompareContent() {
   const activeCount = selectedSchools.filter(Boolean).length;
 
   return (
-    <main className="min-h-screen bg-[#F6F9FC]">
+    <main data-page="compare" className="min-h-screen bg-[#F6F9FC]">
       <Navbar />
 
       {/* Header Banner */}

@@ -1,4 +1,4 @@
-// SEO landing pages that are built from live data (nothing is typed by hand):
+﻿// SEO landing pages that are built from live data (nothing is typed by hand):
 //   /boarding-schools/india                          Best Boarding Schools in India   (hub with every category)
 //   /boarding-schools/india/board/cbse               Best CBSE Boarding Schools in India
 //   /boarding-schools/maharashtra/gender/girls       Best Girls Boarding Schools in Maharashtra
@@ -111,7 +111,7 @@ export default async function FacetPage(args: Args) {
   ];
 
   return (
-    <main className="min-h-screen bg-white">
+    <main data-page="listing" className="min-h-screen bg-white">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(schema) }} />
       <Navbar />
 

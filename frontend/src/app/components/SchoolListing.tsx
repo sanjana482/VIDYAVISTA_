@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -481,7 +481,7 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
     "h-11 w-full rounded-xl border border-[#D6DDE5] bg-white px-3 text-sm text-[#0B2A47] outline-none placeholder:text-[#8896A6] focus:border-[#0795DC] focus:ring-4 focus:ring-[#0795DC]/15";
 
   return (
-    <section id="results" className="relative z-10 scroll-mt-24 bg-white py-10 sm:py-12">
+    <section id="results" data-page="listing" className="relative z-10 scroll-mt-24 bg-white py-10 sm:py-12">
         <div className="mx-auto grid max-w-[1720px] grid-cols-[minmax(0,1fr)] gap-8 px-4 sm:px-6 lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)] 2xl:grid-cols-[340px_minmax(0,1fr)] lg:px-8 xl:px-12">
           {/* ---------- Filters ---------- */}
         <aside>
