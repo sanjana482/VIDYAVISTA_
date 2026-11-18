@@ -258,7 +258,7 @@ export default function SchoolSearchBar({
         {/* Prominent Search Action Button */}
         <button
           type="submit"
-          className="vv-btn flex h-10 sm:h-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-[#4A3AFF] to-[#7C3AED] px-5 sm:px-7 text-xs sm:text-sm font-extrabold text-white shadow-md shadow-[#4A3AFF]/25 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#7C3AED]/30"
+          className="art-btn-p flex h-10 sm:h-11 shrink-0 items-center justify-center rounded-xl px-5 sm:px-7 text-xs sm:text-sm font-extrabold text-white shadow-md transition-all hover:-translate-y-0.5"
         >
           <span>Search</span>
         </button>
