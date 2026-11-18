@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { savePreference, type SchoolTypeLabel } from "../lib/preferences";
 
 export type SearchSchool = {
   id: number;
@@ -114,7 +115,7 @@ export default function SchoolSearchBar({
         // Then by rating or review count
         return (b.rating || 0) - (a.rating || 0);
       })
-      .slice(0, 6);
+      .slice(0, 15);
   }, [trimmed, schools]);
 
   // Matching Cities
@@ -149,6 +150,18 @@ export default function SchoolSearchBar({
 
   function handleSelectSchool(school: SearchSchool) {
     setIsOpen(false);
+    // Auto-save location and school type to preference cookie
+    const rawType = (school.type || "").toLowerCase();
+    let heroType: SchoolTypeLabel = "Day Schools";
+    if (rawType.includes("boarding") && !rawType.includes("day")) {
+      heroType = "Boarding Schools";
+    } else if (rawType.includes("play") || rawType.includes("pre")) {
+      heroType = "Play School";
+    }
+    const loc = heroType === "Boarding Schools" ? (school.state || school.city || "") : (school.city || "");
+    if (loc) {
+      savePreference({ type: heroType, location: loc });
+    }
     router.push(getSchoolUrl(school));
   }
 
@@ -256,7 +269,7 @@ export default function SchoolSearchBar({
 
       {/* Rich Dropdown Panel (Ezyschooling Style) */}
       {isOpen && (
-        <div className="vv-pop absolute left-0 right-0 top-full z-[9999] mt-2.5 max-h-[460px] overflow-y-auto rounded-2xl border border-[#D9E0E8] bg-white p-2.5 shadow-2xl shadow-[#0B2A47]/15">
+        <div className="vv-pop absolute left-0 right-0 top-full z-[99999] mt-2.5 max-h-[min(520px,75vh)] overflow-y-auto overscroll-contain rounded-2xl border border-[#D9E0E8] bg-white p-2.5 shadow-2xl shadow-[#0B2A47]/20">
           {/* Case 1: When user has typed query */}
           {trimmed ? (
             <div>

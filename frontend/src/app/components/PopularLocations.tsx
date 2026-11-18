@@ -169,7 +169,7 @@ export default function PopularLocations() {
   const router = useRouter();
 
   return (
-    <section className="overflow-hidden bg-gradient-to-b from-[#FAFCFD] via-[#F0F5F8] to-[#EEF5FA] py-16 sm:py-20">
+    <section id="places" className="overflow-hidden bg-gradient-to-b from-[#FAFCFD] via-[#F0F5F8] to-[#EEF5FA] py-16 sm:py-20">
       <div className="mx-auto max-w-[1720px] space-y-20 px-4 sm:px-6 lg:px-8 xl:px-12">
         {/* Popular States */}
         <div>

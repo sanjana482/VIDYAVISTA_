@@ -2,9 +2,12 @@
 import { useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 
-export type ListingInitial = { type?: string; city?: string; state?: string };
+export type ListingInitial = {
+  type?: string; city?: string; state?: string;
+  area?: string; board?: string; gender?: string; min?: string; max?: string;
+};
 
-/** ?filters ya clean URL (/day-schools/mumbai) se aane wale filters, dono ek saath */
+/** ?filters ya clean URL (/day-schools/mumbai/board/cbse) se aane wale filters, dono ek saath */
 export function useListingParams(initial?: ListingInitial): URLSearchParams {
   const sp = useSearchParams();
   const key = sp.toString();

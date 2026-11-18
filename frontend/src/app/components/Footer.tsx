@@ -304,6 +304,7 @@ export default function Footer({ context }: { context?: FooterContext } = {}) {
               <Link className="hover:text-white" href="/compare">Compare Schools</Link>
               <Link className="hover:text-white" href="/counselling">Get Counselling</Link>
               <Link className="hover:text-white" href="/parents-guide">Parent&apos;s Guide</Link>
+              <Link className="hover:text-white" href="/blog">Blog &amp; Guides</Link>
             </div>
           </div>
 

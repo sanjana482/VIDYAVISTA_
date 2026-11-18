@@ -6,7 +6,7 @@ from django.db import transaction
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
-from .models import School
+from .models import BlogPost, School
 
 
 def _ping_frontend():
@@ -34,4 +34,14 @@ def school_saved(sender, **kwargs):
 
 @receiver(post_delete, sender=School)
 def school_deleted(sender, **kwargs):
+    _trigger()
+
+
+@receiver(post_save, sender=BlogPost)
+def blog_saved(sender, **kwargs):
+    _trigger()
+
+
+@receiver(post_delete, sender=BlogPost)
+def blog_deleted(sender, **kwargs):
     _trigger()

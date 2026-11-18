@@ -12,6 +12,7 @@ import Icon from "./Icon";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [schoolDropdownOpen, setSchoolDropdownOpen] = useState(false);
   const [user, setUser] = useState<PortalUser | null>(null);
   const pathname = usePathname();
   const router = useRouter();
@@ -35,11 +36,11 @@ export default function Navbar() {
   };
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
 
-  const links = [
+  const mainLinks = [
     { name: "Home", href: "/" },
-    { name: "Schools", href: "/schools" },
+    { name: "Schools", href: "/#browse" },
     { name: "Compare", href: "/compare" },
-    { name: "About Us", href: "/about" },
+    { name: "Blog", href: "/blog" },
   ];
 
   const handleLogout = () => {
@@ -59,8 +60,9 @@ export default function Navbar() {
           />
         </Link>
 
-        <div className="hidden items-center gap-8 md:flex">
-          {links.map((link) => (
+        {/* Desktop Navigation Links */}
+        <div className="hidden items-center gap-7 lg:gap-8 md:flex">
+          {mainLinks.map((link) => (
             <Link
               key={link.name}
               href={link.href}
@@ -70,8 +72,72 @@ export default function Navbar() {
               {link.name}
             </Link>
           ))}
+
+          {/* For Schools Dropdown */}
+          <div
+            className="relative"
+            onMouseEnter={() => setSchoolDropdownOpen(true)}
+            onMouseLeave={() => setSchoolDropdownOpen(false)}
+          >
+            <button
+              type="button"
+              onClick={() => setSchoolDropdownOpen(!schoolDropdownOpen)}
+              className={`inline-flex items-center gap-1.5 border-b-2 pb-1 text-sm font-semibold transition hover:text-[#0A7BBF] ${
+                pathname.startsWith("/school") || schoolDropdownOpen
+                  ? "border-[#EC0E58] text-[#0B2A47]"
+                  : "border-transparent text-[#4E5A68]"
+              }`}
+            >
+              <span>For Schools</span>
+              <svg
+                className={`h-4 w-4 transition-transform duration-200 ${schoolDropdownOpen ? "rotate-180 text-[#EC0E58]" : "text-[#707E8F]"}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {schoolDropdownOpen && (
+              <div className="absolute left-0 top-full z-50 pt-2 animate-in fade-in slide-in-from-top-1 duration-150">
+                <div className="w-60 rounded-2xl border border-[#D6DDE5] bg-white p-2 shadow-2xl ring-1 ring-black/5">
+                  <Link
+                    href="/login?role=school&mode=login"
+                    onClick={() => setSchoolDropdownOpen(false)}
+                    className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium text-[#1E3A5F] transition hover:bg-[#F0F8FF] hover:text-[#0A5C91]"
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#E1F1FA] text-[#0A5C91]">
+                      <Icon name="school" className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-xs text-[#0B2A47]">School Login</div>
+                      <div className="text-[11px] text-[#6E7C87]">Access your dashboard</div>
+                    </div>
+                  </Link>
+
+                  <Link
+                    href="/login?role=school&mode=register"
+                    onClick={() => setSchoolDropdownOpen(false)}
+                    className="mt-1 flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium text-[#1E3A5F] transition hover:bg-[#FDF2F4] hover:text-[#EC0E58]"
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#FDE8EF] text-[#EC0E58]">
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="font-bold text-xs text-[#0B2A47]">Register School</div>
+                      <div className="text-[11px] text-[#6E7C87]">List your institution</div>
+                    </div>
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
+        {/* Right Action Buttons */}
         <div className="hidden items-center gap-3 md:flex">
           {user ? (
             <>
@@ -93,18 +159,17 @@ export default function Navbar() {
           ) : (
             <>
               <Link
-                href="/login?role=school"
-                className="inline-flex h-10 min-w-[155px] items-center justify-center gap-2 rounded-xl border border-[#0795DC]/40 bg-[#F0F8FF] px-4 text-sm font-semibold text-[#0A5C91] transition hover:border-[#0795DC] hover:bg-[#E1F1FA]"
+                href="/login?role=parent&mode=login"
+                className="inline-flex h-10 items-center justify-center rounded-xl border border-[#D6DDE5] bg-white px-4 text-sm font-bold text-[#0B2A47] transition hover:border-[#0795DC] hover:text-[#0A5C91]"
               >
-                <Icon name="school" className="h-4 w-4 shrink-0" />
-                <span>Institution Portal</span>
+                Login
               </Link>
               <Link
-                href="/login?role=parent"
-                className="vv-btn inline-flex h-10 min-w-[155px] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-4 text-sm font-semibold text-white shadow-sm"
+                href="/login?role=parent&mode=register"
+                className="vv-btn inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-5 text-sm font-bold text-white shadow-md shadow-[#0A5C91]/20 transition hover:-translate-y-0.5 hover:shadow-lg"
               >
-                <Icon name="user" className="h-4 w-4 shrink-0" />
-                <span>Parent Login</span>
+                <span>Sign Up</span>
+                <span className="text-white/80">→</span>
               </Link>
             </>
           )}
@@ -123,7 +188,7 @@ export default function Navbar() {
 
       {menuOpen && (
         <div className="space-y-3 border-t border-[#D6DDE5] bg-white px-5 py-5 md:hidden">
-          {links.map((link) => (
+          {mainLinks.map((link) => (
             <Link
               key={link.name}
               href={link.href}
@@ -133,6 +198,28 @@ export default function Navbar() {
               {link.name}
             </Link>
           ))}
+
+          {/* For Schools in Mobile Nav */}
+          <div className="rounded-xl border border-[#E1E7EE] bg-[#F8FBFE] p-3 space-y-2">
+            <p className="px-1 text-xs font-extrabold uppercase tracking-wider text-[#0A5C91]">For Schools</p>
+            <div className="grid grid-cols-2 gap-2">
+              <Link
+                href="/login?role=school&mode=login"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center justify-center rounded-lg border border-[#D6DDE5] bg-white py-2 text-xs font-bold text-[#0B2A47] hover:border-[#0795DC]"
+              >
+                School Login
+              </Link>
+              <Link
+                href="/login?role=school&mode=register"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center justify-center rounded-lg bg-[#EC0E58] py-2 text-xs font-bold text-white shadow-sm hover:bg-[#C8104F]"
+              >
+                Register School
+              </Link>
+            </div>
+          </div>
+
           {user ? (
             <div className="grid grid-cols-1 gap-2.5 pt-2">
               <Link
@@ -152,22 +239,20 @@ export default function Navbar() {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-2.5 pt-2">
+            <div className="grid grid-cols-2 gap-2.5 pt-2">
               <Link
-                href="/login?role=school"
+                href="/login?role=parent&mode=login"
                 onClick={() => setMenuOpen(false)}
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-[#0795DC] bg-[#F0F8FF] px-4 text-sm font-semibold text-[#0A5C91]"
+                className="inline-flex h-11 items-center justify-center rounded-xl border border-[#D6DDE5] bg-white px-4 text-sm font-bold text-[#0B2A47]"
               >
-                <Icon name="school" className="h-4 w-4" />
-                <span>Institution Portal</span>
+                Login
               </Link>
               <Link
-                href="/login?role=parent"
+                href="/login?role=parent&mode=register"
                 onClick={() => setMenuOpen(false)}
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-4 text-sm font-semibold text-white"
+                className="inline-flex h-11 items-center justify-center rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-4 text-sm font-bold text-white shadow-sm"
               >
-                <Icon name="user" className="h-4 w-4" />
-                <span>Parent Login</span>
+                Sign Up
               </Link>
             </div>
           )}

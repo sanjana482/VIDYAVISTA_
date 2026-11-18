@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,650;0,9..144,750;1,9..144,560&family=Outfit:wght@400;500;600;700;800&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -9,8 +9,8 @@
   --brand-blue: #0795DC;
   --brand-pink: #EC0E58;
   --brand-ink: #262423;
-  --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-merriweather: 'Merriweather', Georgia, Cambria, 'Times New Roman', serif;
+  --font-inter: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-merriweather: 'Fraunces', Georgia, Cambria, 'Times New Roman', serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -28,9 +28,13 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Headings use elegant Merriweather font */
-h1, h2, h3, h4, h5, h6, .font-heading {
+/* Display headings: Fraunces. UI, buttons and forms stay in Outfit. */
+h1, h2, h3, .font-heading {
   font-family: var(--font-merriweather);
+  font-optical-sizing: auto;
+}
+h4, h5, h6 {
+  font-family: var(--font-inter);
 }
 
 /* Form controls & buttons default to Inter */
@@ -55,6 +59,16 @@ button, input, select, textarea {
 /* ---------- hero visual: soft floating cards ---------- */
 @keyframes vv-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 @keyframes vv-rise { from { opacity: 0; transform: translateY(22px) scale(0.96); } to { opacity: 1; transform: none; } }
+@keyframes vv-line {
+  from { transform: translateX(-50%) scaleX(0); }
+  to { transform: translateX(-50%) scaleX(1); }
+}
+.vv-line { transform-origin: center; animation: vv-line 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) 0.35s both; }
+@keyframes vv-orbit {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-8px) rotate(2deg); }
+}
+.vv-orbit { animation: vv-orbit 7s ease-in-out infinite; }
 @keyframes vv-drift { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(8px, -14px) scale(1.08); } }
 .vv-rise { animation: vv-rise 0.75s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
 .vv-float-a { animation: vv-float 5.2s ease-in-out infinite; }
@@ -62,7 +76,7 @@ button, input, select, textarea {
 .vv-float-c { animation: vv-float 5.8s ease-in-out -4s infinite; }
 .vv-drift { animation: vv-drift 9s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) {
-  .vv-rise, .vv-float-a, .vv-float-b, .vv-float-c, .vv-drift { animation: none; }
+  .vv-rise, .vv-float-a, .vv-float-b, .vv-float-c, .vv-drift, .vv-line, .vv-orbit { animation: none; }
 }
 
 /* ---------- scroll reveal ---------- */
@@ -248,3 +262,62 @@ img { max-width: 100%; }
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ================= home: finder (notebook page) + blog ================= */
+/* Display face for the new home page and the blog. Overrides the global h1/h2 serif. */
+.vv-display { font-family: 'Bricolage Grotesque', var(--font-inter), -apple-system, 'Segoe UI', sans-serif; letter-spacing: -0.015em; }
+
+/* ruled paper: the line height IS the rule spacing, so text sits on the lines */
+.vv-ruled {
+  --rule: 2.9rem;
+  position: relative;
+  padding: 0 1.25rem var(--rule) 3.4rem;
+  background-image: repeating-linear-gradient(to bottom, transparent 0, transparent calc(var(--rule) - 1px), #D3E4F3 calc(var(--rule) - 1px), #D3E4F3 var(--rule));
+}
+.vv-ruled::before {
+  content: ""; position: absolute; top: 0; bottom: 0; left: 2.6rem; width: 2px; background: #F2A5BC;
+  transform-origin: top; animation: vv-margin 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@keyframes vv-margin { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+.vv-ruled-hint { height: var(--rule); line-height: var(--rule); font-size: 0.8125rem; color: #6A7C8F; }
+.vv-sentence { line-height: var(--rule); font-size: 1.2rem; font-weight: 500; color: #0B2A47; }
+@media (min-width: 640px) {
+  .vv-ruled { --rule: 3.5rem; padding-left: 5rem; padding-right: 2rem; }
+  .vv-ruled::before { left: 3.8rem; }
+  .vv-sentence { font-size: 1.65rem; }
+}
+
+/* a highlighted blank: a real <select> sits invisibly on top of it */
+.vv-blank-wrap { position: relative; display: inline-block; vertical-align: middle; }
+.vv-blank-wrap select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.vv-blank {
+  display: inline-flex; align-items: center; gap: 0.15rem; padding: 0 0.4rem; margin: 0 0.05rem;
+  border-radius: 0.4rem; font-weight: 700; line-height: 1.45; color: #0A5C91; background: #E6F2FB;
+  border-bottom: 2px dashed #0795DC; transition: background-color 0.2s ease, color 0.2s ease;
+}
+.vv-blank[data-set="true"] {
+  background: linear-gradient(transparent 12%, #FFE27A 12%); color: #0B2A47; border-bottom: 2px solid #0B2A47;
+}
+.vv-blank-wrap:hover .vv-blank { background-color: #D3E9F8; }
+.vv-blank-wrap:hover .vv-blank[data-set="true"] { background: linear-gradient(transparent 12%, #FFD84D 12%); }
+.vv-blank-wrap:focus-within .vv-blank { outline: 2px solid #0795DC; outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .vv-ruled::before { animation: none; } .vv-blank { transition: none; } }
+
+/* ---------- blog article body (HTML written in Django admin) ---------- */
+.vv-prose { color: #2b3a4a; font-size: 1.0625rem; line-height: 2rem; }
+.vv-prose > :first-child { margin-top: 0; }
+.vv-prose p { margin-top: 1rem; }
+.vv-prose h2 { margin: 2.5rem 0 0.75rem; font-size: 1.7rem; line-height: 1.2; font-weight: 800; color: #0b2a47; }
+.vv-prose h3 { margin: 2rem 0 0.5rem; font-size: 1.3rem; line-height: 1.3; font-weight: 700; color: #0b2a47; }
+.vv-prose ul, .vv-prose ol { margin-top: 1rem; padding-left: 1.4rem; }
+.vv-prose ul { list-style: disc; }
+.vv-prose ol { list-style: decimal; }
+.vv-prose li { margin-top: 0.6rem; padding-left: 0.2rem; }
+.vv-prose li::marker { color: #0795dc; }
+.vv-prose a { color: #0a5c91; text-decoration: underline; text-underline-offset: 3px; }
+.vv-prose a:hover { color: #ec0e58; }
+.vv-prose blockquote { margin-top: 1.5rem; border-left: 4px solid #ec0e58; background: #fff6f9; padding: 1rem 1.25rem; border-radius: 0 1rem 1rem 0; color: #41566b; }
+.vv-prose table { margin-top: 1.5rem; width: 100%; border-collapse: collapse; font-size: 0.95rem; display: block; overflow-x: auto; }
+.vv-prose th, .vv-prose td { border: 1px solid #d6dde5; padding: 0.6rem 0.8rem; text-align: left; }
+.vv-prose th { background: #eef4fa; color: #0b2a47; }
+.vv-prose img { margin-top: 1.5rem; border-radius: 1rem; max-width: 100%; height: auto; }

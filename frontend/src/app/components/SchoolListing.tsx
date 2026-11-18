@@ -59,7 +59,7 @@ type Filters = {
 };
 
 const EMPTY: Filters = { q: "", state: [], city: [], area: [], type: [], board: [], gender: [], cls: [], min: "", max: "" };
-const URL_FILTER_KEYS = ["q", "city", "state", "area", "type", "board"];
+const URL_FILTER_KEYS = ["q", "city", "state", "area", "type", "board", "gender", "cls", "min", "max"];
 
 // Saved cookie preference -> listing filters
 function filtersFromPref(pref: Preference): Filters {
@@ -169,6 +169,10 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
       area: params.get("area") ? [params.get("area")!] : [],
       type: normalizeType(params.get("type") ?? "") ? [normalizeType(params.get("type")!)] : [],
       board: params.get("board") ? [params.get("board")!] : [],
+      gender: params.get("gender") ? [params.get("gender")!] : [],
+      cls: params.get("cls") ? [params.get("cls")!] : [],
+      min: (params.get("min") ?? "").replace(/\D/g, ""),
+      max: (params.get("max") ?? "").replace(/\D/g, ""),
     }),
     [params]
   );
@@ -282,6 +286,7 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
   const pick = (key: "state" | "city" | "area" | "type" | "board" | "gender" | "cls", value: string) =>
     setDraft((d) => {
       const on = d[key][0] === value;
+      if (key === "type" && on) return d; // day / boarding stays chosen, only the other one can replace it
       let next: Filters = { ...d, [key]: on ? [] : [value] };
       if (key === "state") next = { ...next, city: [], area: [] }; // another state -> its cities and areas reset
       if (key === "city" && !on) {
@@ -349,7 +354,14 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
     return () => { document.body.style.overflow = prev; };
   }, [showFilters]);
 
+  // A visitor must choose day or boarding first, and day / play schools also need a city (or state).
+  // Without that we show a prompt instead of every school in India.
+  const needsChoice =
+    !applied.q &&
+    (!applied.type.length || (applied.type[0] !== "Boarding School" && !applied.city.length && !applied.state.length));
+
   const results = useMemo(() => {
+    if (needsChoice) return [];
     const q = applied.q.toLowerCase();
     const min = applied.min ? Number(applied.min) : 0;
     const max = applied.max ? Number(applied.max) : Infinity;
@@ -363,6 +375,7 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
         (!applied.board.length || applied.board.includes(s.board)) &&
         (!applied.gender.length || applied.gender.includes(s.gender)) &&
         (!applied.cls.length || offersClass(s, applied.cls[0])) &&
+        (!(applied.min || applied.max) || s.fee > 0) &&
         s.fee >= min &&
         s.fee <= max
     );
@@ -372,7 +385,7 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
     if (sort === "fee-low") list.sort((a, b) => a.fee - b.fee);
     if (sort === "fee-high") list.sort((a, b) => b.fee - a.fee);
     return list;
-  }, [applied, sort]);
+  }, [applied, sort, needsChoice]);
 
   const pages = Math.max(1, Math.ceil(results.length / PAGE_SIZE));
   const current = Math.min(page, pages);
@@ -386,13 +399,17 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
     setShowFilters(false);
     document.getElementById("results")?.scrollIntoView({ behavior: "smooth" });
   }
+  // "Clear all" removes board / gender / fees / class ... but keeps the school type (and the city for day / play schools),
+  // so it never turns into "every school in India".
   function clearAll() {
-    clearPreference();
-    setDraft(EMPTY);
-    setApplied(EMPTY);
+    const type = applied.type.slice(0, 1);
+    const keepPlace = type.length > 0 && type[0] !== "Boarding School";
+    const base: Filters = { ...EMPTY, type, ...(keepPlace ? { city: applied.city.slice(0, 1), state: applied.state.slice(0, 1) } : {}) };
+    setDraft(base);
+    setApplied(base);
     setPage(1);
-    syncUrl(EMPTY);
-    if (params.toString() && !fixedRoute) router.push("/schools", { scroll: false });
+    syncCookie(base);
+    syncUrl(base);
   }
   function goTo(p: number) {
     setPage(p);
@@ -585,6 +602,20 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
               Array.from({ length: 4 }).map((_, i) => (
                 <SchoolSkeletonCard key={i} />
               ))
+            ) : needsChoice ? (
+              <div className="rounded-2xl border border-dashed border-[#C9D3DE] bg-[#F6FAFD] p-10 text-center">
+                <p className="text-lg font-extrabold text-[#0B2A47]">
+                  {applied.type.length ? "Choose a city to see these schools" : "Choose day or boarding school first"}
+                </p>
+                <p className="mt-2 text-sm text-[#707E8F]">
+                  {applied.type.length
+                    ? "Day and play schools are listed city by city."
+                    : "Pick a school type in the filters. Boarding schools can be browsed state by state."}
+                </p>
+                <button onClick={() => setShowFilters(true)} className="mt-5 rounded-xl bg-[#0A5C91] px-6 py-3 text-sm font-bold text-white hover:bg-[#0795DC] vv-btn lg:hidden">
+                  Open filters
+                </button>
+              </div>
             ) : visible.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-[#C9D3DE] bg-[#F6FAFD] p-10 text-center">
                 <p className="text-lg font-extrabold text-[#0B2A47]">No schools match these filters</p>

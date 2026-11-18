@@ -10,6 +10,7 @@ import SchoolsFAQ from "../components/SchoolsFAQ";
 import RelatedLinks from "../components/RelatedLinks";
 import Footer from "../components/Footer";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { citiesOf, type School } from "../data/schools";
 import { fetchAllSchoolsSafe } from "../lib/schoolsApi";
 import { listingFaqs } from "../data/faqs";
@@ -69,7 +70,9 @@ const listingSchema = (schools: School[]) => [
 ];
 
 
-export default async function Schools() {
+export default async function Schools({ searchParams }: { searchParams?: Record<string, string | string[] | undefined> }) {
+  // /schools with no filter would list every school in India. Send visitors to the finder instead.
+  if (!searchParams || Object.keys(searchParams).length === 0) redirect("/#browse");
   const schools = await fetchAllSchoolsSafe();
   const CITIES = citiesOf(schools);
   return (

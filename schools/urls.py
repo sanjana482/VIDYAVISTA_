@@ -2,6 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import admin_api as A
 from . import portal_api as P
+from . import blog_api as B
 from .views import SchoolViewSet, EnquiryViewSet, LocationViewSet, ReviewViewSet, location_detail, location_index
 
 router = DefaultRouter()
@@ -65,6 +66,8 @@ urlpatterns = [
     path("admin/upload", A.upload),
 
     # ---- Public API
+    path("blog/", B.blog_list),
+    path("blog/<slug:slug>/", B.blog_detail),
     path("locations/index", location_index),
     path("locations/<str:kind>/<slug:slug>", location_detail),
     path("", include(router.urls)),

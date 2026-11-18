@@ -1881,3 +1881,5 @@ class ReviewAdmin(admin.ModelAdmin):
         n = queryset.filter(school_reply__gt='').update(reply_approved=True)
         messages.success(request, f"Approved {n} school official reply/replies.")
 
+
+from . import blog_admin  # noqa: E402,F401  (registers Blog posts in the admin)

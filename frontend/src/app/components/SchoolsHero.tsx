@@ -120,6 +120,9 @@ export default function SchoolsHero({
   const pickedTitle = picked ? `Best ${headingFor(picked)} 2027-28` : "";
 
   const heroDescription = (() => {
+    if (content?.description) {
+      return content.description;
+    }
     if (activeType || picked) {
       const bName = activeBoard ? (BOARD_LABEL[activeBoard] ?? activeBoard) + " " : "";
       const where = activePlace ? `in ${activePlace.name}` : "across India";

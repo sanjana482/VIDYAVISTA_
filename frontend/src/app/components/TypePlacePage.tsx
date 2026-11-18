@@ -9,6 +9,7 @@ import Navbar from "./Navbar";
 import Footer from "./Footer";
 import SchoolListing from "./SchoolListing";
 import RelatedLinks from "./RelatedLinks";
+import ScopeSections from "./browse/ScopeSections";
 import SchoolsHero from "./SchoolsHero";
 import LocationReviews, { reviewSummary } from "./LocationReviews";
 import FaqList from "./profile/FaqList";
@@ -194,6 +195,12 @@ export default async function TypePlacePage({ typeKey, slug }: { typeKey: TypeKe
         </section>
       )}
       </>)}
+
+      {list.length > 0 && (
+        <section className="mx-auto max-w-[1240px] px-4 pb-12 pt-2 sm:px-6">
+          <ScopeSections schools={schools} scope={{ type: typeKey, place: { kind: place.kind, name: place.name } }} showTotal={false} />
+        </section>
+      )}
 
       <RelatedLinks schools={schools} initial={{ kind: place.kind, name: place.name }} />
       <Footer />

@@ -88,7 +88,7 @@ export default function SchoolGuidance() {
         </div>
 
         {/* Counsellor callback banner */}
-        <div className="relative z-10 mt-16 overflow-hidden rounded-[30px] border border-[#D1DAE5] bg-gradient-to-br from-[#B8C6D7] via-[#D1DAE5] to-[#E5EBF1] p-6 shadow-[0_18px_55px_rgba(34,34,59,0.10)] sm:p-10 lg:mt-20">
+        <div id="talk-to-us" className="relative z-10 mt-16 scroll-mt-24 overflow-hidden rounded-[30px] border border-[#D1DAE5] bg-gradient-to-br from-[#B8C6D7] via-[#D1DAE5] to-[#E5EBF1] p-6 shadow-[0_18px_55px_rgba(34,34,59,0.10)] sm:p-10 lg:mt-20">
           <div className="absolute -right-12 -top-16 h-48 w-48 rounded-full bg-white/30 blur-3xl" />
 
           <div className="relative grid items-center gap-8 lg:grid-cols-[1fr_1fr]">

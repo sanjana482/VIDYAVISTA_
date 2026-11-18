@@ -6,9 +6,14 @@ export const TYPE_ORDER = ["Boarding School", "Play School", "Day School"] as co
 export const typeLabel = (t: string) =>
   t === "Boarding School" ? "Boarding Schools" : t === "Day School" ? "Day Schools" : "Play School Schools";
 
-export function listingHref(p: { type?: string; board?: string; city?: string; state?: string }) {
+export type ListingFilters = {
+  type?: string; board?: string; city?: string; state?: string; area?: string;
+  gender?: string; cls?: string; min?: string; max?: string;
+};
+
+export function listingHref(p: ListingFilters) {
   const qs = new URLSearchParams();
-  (["type", "board", "city", "state"] as const).forEach((k) => p[k] && qs.set(k, p[k] as string));
+  (["type", "board", "city", "state", "area", "gender", "cls", "min", "max"] as const).forEach((k) => p[k] && qs.set(k, p[k] as string));
   const q = qs.toString();
   return q ? `/schools?${q}` : "/schools";
 }

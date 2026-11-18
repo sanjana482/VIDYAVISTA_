@@ -5,7 +5,7 @@ import Link from "next/link";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import FaqList from "./profile/FaqList";
-import { formatFee, stateFor, type School } from "../data/schools";
+import { BOARD_LABEL, formatFee, stateFor, type School } from "../data/schools";
 import { fillPhotos, resolveContent, type LocationContent, type LocationKind } from "../lib/locationsApi";
 import { TYPE_ORDER, listingHref, typeLabel } from "../lib/links";
 import { abs, cityPath, jsonLd, schoolPath, statePath } from "../lib/seo";
@@ -108,6 +108,8 @@ export default function LocationLanding({ kind, name, state, list, all, content 
         </div>
       </section>
 
+      <CityDesk name={name} own={own} list={list} />
+
       <section className="mx-auto max-w-[1720px] px-4 sm:px-6 py-10 lg:px-8 xl:px-12">
         {groups.map(({ t, items }) => (
           <div key={t} className="mb-12">
@@ -179,5 +181,87 @@ export default function LocationLanding({ kind, name, state, list, all, content 
 
       <Footer context={{ state, city: kind === "city" ? name : undefined }} />
     </main>
+  );
+}
+
+function placeQuery(own: "state" | "city", name: string, extra: Record<string, string> = {}) {
+  return `/schools?${new URLSearchParams({ [own]: name, ...extra }).toString()}`;
+}
+
+function CityDesk({ name, own, list }: { name: string; own: "state" | "city"; list: School[] }) {
+  const areas = Array.from(
+    list.reduce((map, school) => {
+      if (school.area) map.set(school.area, (map.get(school.area) ?? 0) + 1);
+      return map;
+    }, new Map<string, number>()),
+  ).sort((a, b) => b[1] - a[1]).slice(0, 14);
+
+  const boards = Array.from(
+    list.reduce((map, school) => {
+      map.set(school.board, (map.get(school.board) ?? 0) + 1);
+      return map;
+    }, new Map<string, number>()),
+  ).sort((a, b) => b[1] - a[1]);
+
+  const formats = TYPE_ORDER.map((type) => ({ type, count: list.filter((s) => s.type === type).length })).filter((row) => row.count);
+  const open = list.filter((s) => s.admissionStatus === "open" || s.admissionStatus === "closing_soon").length;
+  const rated = list.filter((s) => s.rating > 0);
+  const average = rated.length ? (rated.reduce((sum, school) => sum + school.rating, 0) / rated.length).toFixed(1) : "–";
+
+  return (
+    <section className="border-y border-[#E7DFD4] bg-[#F7F4EF]">
+      <div className="mx-auto max-w-[1720px] px-4 py-10 sm:px-6 lg:px-8 xl:px-12">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            [String(list.length), "Schools on this page"],
+            [String(areas.length), own === "city" ? "Localities" : "Cities represented"],
+            [String(boards.length), "Boards"],
+            [open ? String(open) : average, open ? "Admissions open now" : "Average rating"],
+          ].map(([value, label]) => (
+            <div key={label} className="rounded-2xl bg-white px-5 py-4">
+              <p className="font-heading text-3xl text-[#172433]">{value}</p>
+              <p className="mt-1 text-sm text-[#66707C]">{label}</p>
+            </div>
+          ))}
+        </div>
+
+        {formats.length > 0 && (
+          <div className="mt-6 grid gap-3 md:grid-cols-3">
+            {formats.map((row) => (
+              <Link key={row.type} href={placeQuery(own, name, { type: row.type })} className="group rounded-2xl border border-[#E7DFD4] bg-white p-5 transition hover:-translate-y-0.5 hover:border-[#0A5C91]">
+                <p className="text-sm font-semibold text-[#8A4B32]">{row.count} listed</p>
+                <p className="mt-1 font-heading text-2xl text-[#172433] group-hover:text-[#0A5C91]">{typeLabel(row.type)}</p>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {boards.length > 0 && (
+          <div className="mt-8">
+            <h2 className="text-lg font-semibold text-[#172433]">Boards in {name}</h2>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {boards.map(([board, count]) => (
+                <Link key={board} href={placeQuery(own, name, { board })} className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#0A5C91] ring-1 ring-[#E7DFD4] hover:ring-[#0A5C91]">
+                  {BOARD_LABEL[board] ?? board} · {count}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {areas.length > 0 && (
+          <div className="mt-8">
+            <h2 className="text-lg font-semibold text-[#172433]">{own === "city" ? `Localities in ${name}` : `Areas parents search in ${name}`}</h2>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {areas.map(([area, count]) => (
+                <Link key={area} href={placeQuery(own, name, { area })} className="rounded-full bg-[#172433] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0A5C91]">
+                  {area} · {count}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
   );
 }

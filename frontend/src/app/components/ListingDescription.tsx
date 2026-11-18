@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type ListingDescriptionProps = {
   description: string;
@@ -10,31 +9,36 @@ type ListingDescriptionProps = {
 
 export default function ListingDescription({
   description,
-  maxLength = 300,
+  maxLength = 220,
 }: ListingDescriptionProps) {
   const [expanded, setExpanded] = useState(false);
-  // Prevent hydration mismatch: always render empty on server, fill on client
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+  const textRef = useRef<HTMLParagraphElement>(null);
+  const [hasOverflow, setHasOverflow] = useState(false);
 
-  const shouldTruncate = description.length > maxLength;
+  useEffect(() => {
+    if (description && description.length > maxLength) {
+      setHasOverflow(true);
+    }
+  }, [description, maxLength]);
 
-  const visibleDescription =
-    expanded || !shouldTruncate
-      ? description
-      : description.slice(0, maxLength).trimEnd() + "...";
+  if (!description) return null;
 
   return (
-    <div className="max-w-5xl" suppressHydrationWarning>
-      <p className="text-sm leading-7 text-[#626F7D] sm:text-base" suppressHydrationWarning>
-        {mounted ? visibleDescription : ""}
+    <div className="max-w-4xl">
+      <p
+        ref={textRef}
+        className={`text-sm leading-7 text-[#626F7D] sm:text-base ${
+          expanded ? "" : "line-clamp-3 sm:line-clamp-4"
+        }`}
+      >
+        {description}
       </p>
 
-      {mounted && shouldTruncate && (
+      {hasOverflow && (
         <button
           type="button"
-          onClick={() => setExpanded((previous) => !previous)}
-          className="mt-2 font-semibold text-[#475E78] underline-offset-4 transition hover:text-[#0B2A47] hover:underline"
+          onClick={() => setExpanded((prev) => !prev)}
+          className="mt-1.5 inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-[#0A7BBF] transition hover:text-[#0B2A47] hover:underline"
         >
           {expanded ? "Read less ↑" : "Read more ↓"}
         </button>

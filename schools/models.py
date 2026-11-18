@@ -1045,3 +1045,56 @@ class BranchClaim(models.Model):
 
     def __str__(self):
         return f"{self.school.name} - {self.account.contact_person} ({self.status})"
+
+
+# ============================================================================
+# BLOG  (only the admin can add / edit posts: Django admin -> Blog posts)
+# ============================================================================
+class BlogPost(models.Model):
+    title = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=220, unique=True, blank=True,
+                            help_text='Part of the URL (/blog/<slug>). Leave empty to create it from the title.')
+    category = models.CharField(max_length=60, default='Choosing a school',
+                                help_text='Any text, e.g. Boards, Fees, Boarding, Admissions. Posts with the same category are grouped.')
+    excerpt = models.TextField(max_length=400, help_text='1-2 lines shown on cards and in Google.')
+    body = models.TextField('Article', help_text='Write the full article here.')
+    cover_image = models.ImageField('Cover photo', upload_to='blog/', blank=True,
+                                    help_text='Upload the photo yourself. Nothing is added automatically.')
+    cover_alt = models.CharField('Photo description', max_length=200, blank=True, default='',
+                                 help_text='Short description of the photo (helps SEO and screen readers).')
+    author = models.CharField(max_length=120, default='VidyaVista Editorial Team')
+    published_at = models.DateField('Post date', default=timezone.localdate,
+                                    help_text='Shown on the website. You can change it (past date, or a future date to schedule the post).')
+    is_published = models.BooleanField('Published', default=True,
+                                       help_text='Untick to keep it as a draft (not visible on the website).')
+    meta_title = models.CharField('SEO title', max_length=70, blank=True, default='',
+                                  help_text='Optional. Google title (about 60 characters). Empty = post title.')
+    meta_description = models.CharField('SEO description', max_length=170, blank=True, default='',
+                                        help_text='Optional. Google description (about 155 characters). Empty = excerpt.')
+    cta_label = models.CharField('Button text', max_length=60, blank=True, default='',
+                                 help_text='Optional button at the end of the post, e.g. See CBSE schools')
+    cta_url = models.CharField('Button link', max_length=300, blank=True, default='',
+                               help_text='Optional, e.g. /boarding-schools/india/board/cbse')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-published_at', '-id']
+        verbose_name = 'Blog post'
+        verbose_name_plural = 'Blog posts'
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base = slugify(self.title)[:200] or 'post'
+            slug, n = base, 2
+            while BlogPost.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug, n = f'{base}-{n}', n + 1
+            self.slug = slug
+        super().save(*args, **kwargs)
+
+    @property
+    def is_live(self):
+        return self.is_published and self.published_at <= timezone.localdate()
+
+    def __str__(self):
+        return self.title
