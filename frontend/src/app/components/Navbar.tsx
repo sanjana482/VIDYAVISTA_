@@ -51,23 +51,24 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-[#D6DDE5] bg-white/95 shadow-sm backdrop-blur-xl">
-      <nav className="mx-auto flex max-w-[1720px] items-center justify-between px-4 sm:px-6 py-3.5 lg:px-8 xl:px-12">
-        <Link href="/" className="flex items-center" aria-label="VidyaVista home">
+      <nav className="mx-auto flex max-w-[1720px] items-center justify-between px-6 sm:px-10 lg:px-14 xl:px-20 py-4 sm:py-5">
+        {/* Logo shifted slightly rightward away from extreme left edge */}
+        <Link href="/" className="flex items-center ml-1 sm:ml-4 lg:ml-6" aria-label="VidyaVista home">
           <img
             src="/logo.png"
             alt="VidyaVista - Discover | Learn | Grow"
-            className="h-11 w-auto object-contain sm:h-12"
+            className="h-12 w-auto object-contain sm:h-14 transition hover:opacity-95"
           />
         </Link>
 
         {/* Desktop Navigation Links */}
-        <div className="hidden items-center gap-7 lg:gap-8 md:flex">
+        <div className="hidden items-center gap-8 lg:gap-10 md:flex">
           {mainLinks.map((link) => (
             <Link
               key={link.name}
               href={link.href}
               onClick={link.name === "Schools" ? (e) => { e.preventDefault(); goSchools(); } : undefined}
-              className={`border-b-2 pb-1 text-sm font-semibold transition hover:text-[#0A7BBF] ${isActive(link.href) ? "border-[#EC0E58] text-[#0B2A47]" : "border-transparent text-[#4E5A68]"}`}
+              className={`border-b-2 pb-1.5 text-[15px] sm:text-base font-bold transition hover:text-[#0A7BBF] ${isActive(link.href) ? "border-[#EC0E58] text-[#0B2A47]" : "border-transparent text-[#4E5A68]"}`}
             >
               {link.name}
             </Link>
@@ -82,7 +83,7 @@ export default function Navbar() {
             <button
               type="button"
               onClick={() => setSchoolDropdownOpen(!schoolDropdownOpen)}
-              className={`inline-flex items-center gap-1.5 border-b-2 pb-1 text-sm font-semibold transition hover:text-[#0A7BBF] ${
+              className={`inline-flex items-center gap-1.5 border-b-2 pb-1.5 text-[15px] sm:text-base font-bold transition hover:text-[#0A7BBF] ${
                 pathname.startsWith("/school") || schoolDropdownOpen
                   ? "border-[#EC0E58] text-[#0B2A47]"
                   : "border-transparent text-[#4E5A68]"
@@ -101,34 +102,34 @@ export default function Navbar() {
 
             {schoolDropdownOpen && (
               <div className="absolute left-0 top-full z-50 pt-2 animate-in fade-in slide-in-from-top-1 duration-150">
-                <div className="w-60 rounded-2xl border border-[#D6DDE5] bg-white p-2 shadow-2xl ring-1 ring-black/5">
+                <div className="w-64 rounded-2xl border border-[#D6DDE5] bg-white p-2.5 shadow-2xl ring-1 ring-black/5">
                   <Link
                     href="/login?role=school&mode=login"
                     onClick={() => setSchoolDropdownOpen(false)}
-                    className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium text-[#1E3A5F] transition hover:bg-[#F0F8FF] hover:text-[#0A5C91]"
+                    className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-[#1E3A5F] transition hover:bg-[#F0F8FF] hover:text-[#0A5C91]"
                   >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#E1F1FA] text-[#0A5C91]">
-                      <Icon name="school" className="h-4 w-4" />
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E1F1FA] text-[#0A5C91]">
+                      <Icon name="school" className="h-5 w-5" />
                     </div>
                     <div>
-                      <div className="font-bold text-xs text-[#0B2A47]">School Login</div>
-                      <div className="text-[11px] text-[#6E7C87]">Access your dashboard</div>
+                      <div className="font-bold text-sm text-[#0B2A47]">School Login</div>
+                      <div className="text-xs text-[#6E7C87]">Access your dashboard</div>
                     </div>
                   </Link>
 
                   <Link
                     href="/login?role=school&mode=register"
                     onClick={() => setSchoolDropdownOpen(false)}
-                    className="mt-1 flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium text-[#1E3A5F] transition hover:bg-[#FDF2F4] hover:text-[#EC0E58]"
+                    className="mt-1 flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-[#1E3A5F] transition hover:bg-[#FDF2F4] hover:text-[#EC0E58]"
                   >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#FDE8EF] text-[#EC0E58]">
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#FDE8EF] text-[#EC0E58]">
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
                       </svg>
                     </div>
                     <div>
-                      <div className="font-bold text-xs text-[#0B2A47]">Register School</div>
-                      <div className="text-[11px] text-[#6E7C87]">List your institution</div>
+                      <div className="font-bold text-sm text-[#0B2A47]">Register School</div>
+                      <div className="text-xs text-[#6E7C87]">List your institution</div>
                     </div>
                   </Link>
                 </div>
@@ -137,13 +138,13 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Right Action Buttons */}
-        <div className="hidden items-center gap-3 md:flex">
+        {/* Right Action Buttons shifted slightly leftward away from extreme right edge */}
+        <div className="hidden items-center gap-3.5 md:flex mr-1 sm:mr-4 lg:mr-6">
           {user ? (
             <>
               <Link
                 href={user.role === "school" ? "/school" : "/parent"}
-                className="vv-btn inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-4 text-sm font-semibold text-white shadow-sm"
+                className="art-btn-p inline-flex h-11 sm:h-12 items-center justify-center gap-2 rounded-xl px-5 text-sm sm:text-base font-bold text-white shadow-sm"
               >
                 <Icon name={user.role === "school" ? "school" : "user"} className="h-4 w-4" />
                 <span>{user.role === "school" ? "Institution Dashboard" : "Parent Dashboard"}</span>
@@ -151,7 +152,7 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="inline-flex h-10 items-center justify-center rounded-xl border border-[#D6DDE5] bg-white px-4 text-sm font-semibold text-[#C8104F] transition hover:border-[#C8104F]/40 hover:bg-[#FDE8EF]"
+                className="inline-flex h-11 sm:h-12 items-center justify-center rounded-xl border-2 border-[#D6DDE5] bg-white px-5 text-sm sm:text-base font-bold text-[#C8104F] transition hover:border-[#C8104F]/40 hover:bg-[#FDE8EF]"
               >
                 Sign Out
               </button>
@@ -160,16 +161,16 @@ export default function Navbar() {
             <>
               <Link
                 href="/login?role=parent&mode=login"
-                className="inline-flex h-10 items-center justify-center rounded-xl border border-[#D6DDE5] bg-white px-4 text-sm font-bold text-[#0B2A47] transition hover:border-[#0795DC] hover:text-[#0A5C91]"
+                className="inline-flex h-11 sm:h-12 items-center justify-center rounded-xl border-2 border-[#D6DDE5] bg-white px-5 sm:px-6 text-sm sm:text-base font-bold text-[#0B2A47] transition hover:border-[#0795DC] hover:text-[#0A5C91] hover:bg-[#F8FBFE]"
               >
                 Login
               </Link>
               <Link
                 href="/login?role=parent&mode=register"
-                className="vv-btn inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-5 text-sm font-bold text-white shadow-md shadow-[#0A5C91]/20 transition hover:-translate-y-0.5 hover:shadow-lg"
+                className="art-btn-p inline-flex h-11 sm:h-12 items-center justify-center gap-2 rounded-xl px-6 sm:px-7 text-sm sm:text-base font-bold text-white shadow-lg transition hover:-translate-y-0.5"
               >
                 <span>Sign Up</span>
-                <span className="text-white/80">→</span>
+                <span className="text-white/90">→</span>
               </Link>
             </>
           )}

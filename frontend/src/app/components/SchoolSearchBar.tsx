@@ -196,13 +196,13 @@ export default function SchoolSearchBar({
       {/* Prominent Always-Open Search Bar */}
       <form
         onSubmit={handleSubmit}
-        className="relative flex h-14 sm:h-15 w-full items-center rounded-2xl border-2 border-[#D6DDE5] bg-white px-3 sm:px-4 shadow-sm transition-all duration-200 focus-within:border-[#0795DC] focus-within:ring-4 focus-within:ring-[#0795DC]/15 focus-within:shadow-xl hover:border-[#B5C4D5]"
+        className="relative flex h-14 sm:h-16 w-full items-center rounded-2xl border-2 border-[#D6DDE5] bg-white px-3.5 sm:px-4 shadow-sm transition-all duration-200 focus-within:border-[#0795DC] focus-within:ring-4 focus-within:ring-[#0795DC]/15 focus-within:shadow-xl hover:border-[#B5C4D5]"
       >
         {/* Search Icon */}
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center text-[#0A5C91]">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center text-[#0A5C91]">
           <svg
             viewBox="0 0 24 24"
-            className="h-5 w-5"
+            className="h-5 w-5 sm:h-6 sm:w-6"
             fill="none"
             stroke="currentColor"
             strokeWidth="2.2"
@@ -216,9 +216,9 @@ export default function SchoolSearchBar({
         </div>
 
         {/* Input Field with Animated Hint */}
-        <div className="relative min-w-0 flex-1 px-2.5">
+        <div className="relative min-w-0 flex-1 px-3">
           {!query && (
-            <span className="pointer-events-none absolute inset-0 flex items-center truncate text-xs sm:text-sm text-[#8896A6]">
+            <span className="pointer-events-none absolute inset-0 flex items-center truncate text-sm sm:text-base text-[#8896A6]">
               Search by school name, e.g. “{hints[hintIndex]}”
             </span>
           )}
@@ -234,7 +234,7 @@ export default function SchoolSearchBar({
             placeholder=""
             autoComplete="off"
             spellCheck="false"
-            className="h-full w-full bg-transparent text-sm sm:text-base font-semibold text-[#0B2A47] outline-none"
+            className="h-full w-full bg-transparent text-base sm:text-lg font-semibold text-[#0B2A47] outline-none"
           />
         </div>
 
@@ -246,7 +246,7 @@ export default function SchoolSearchBar({
               setQuery("");
               inputRef.current?.focus();
             }}
-            className="mr-2 flex h-7 w-7 items-center justify-center rounded-full bg-[#EEF2F6] text-[#707E8F] hover:bg-[#DDE3EA] hover:text-[#0B2A47]"
+            className="mr-2 flex h-8 w-8 items-center justify-center rounded-full bg-[#EEF2F6] text-[#707E8F] hover:bg-[#DDE3EA] hover:text-[#0B2A47]"
             aria-label="Clear search"
           >
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -258,7 +258,7 @@ export default function SchoolSearchBar({
         {/* Prominent Search Action Button */}
         <button
           type="submit"
-          className="art-btn-p flex h-10 sm:h-11 shrink-0 items-center justify-center rounded-xl px-5 sm:px-7 text-xs sm:text-sm font-extrabold text-white shadow-md transition-all hover:-translate-y-0.5"
+          className="art-btn-p flex h-11 sm:h-12 shrink-0 items-center justify-center rounded-xl px-6 sm:px-8 text-sm sm:text-base font-bold text-white shadow-md transition-all hover:-translate-y-0.5"
         >
           <span>Search</span>
         </button>
