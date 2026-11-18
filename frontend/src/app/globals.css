@@ -75,8 +75,65 @@ button, input, select, textarea {
 .vv-float-b { animation: vv-float 6.4s ease-in-out -2s infinite; }
 .vv-float-c { animation: vv-float 5.8s ease-in-out -4s infinite; }
 .vv-drift { animation: vv-drift 9s ease-in-out infinite; }
+
+/* Continuous Horizontal Running Marquee Line */
+@keyframes vv-marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.vv-marquee {
+  display: flex;
+  width: max-content;
+  animation: vv-marquee 35s linear infinite;
+  will-change: transform;
+}
+.vv-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Aeroplane and Doodle Flying Animations */
+@keyframes vv-airplane-fly {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(8px, -14px) rotate(5deg);
+  }
+  50% {
+    transform: translate(18px, -8px) rotate(2deg);
+  }
+  75% {
+    transform: translate(10px, 8px) rotate(-4deg);
+  }
+}
+.vv-airplane {
+  animation: vv-airplane-fly 4.8s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes vv-float-doodle-1 {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-14px) rotate(7deg); }
+}
+@keyframes vv-float-doodle-2 {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-18px) rotate(-9deg); }
+}
+@keyframes vv-float-doodle-3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-8px, -12px) scale(1.08); }
+}
+@keyframes vv-pulse-glow {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.15); }
+}
+.vv-doodle-1 { animation: vv-float-doodle-1 6.5s ease-in-out infinite; will-change: transform; }
+.vv-doodle-2 { animation: vv-float-doodle-2 8s ease-in-out -2s infinite; will-change: transform; }
+.vv-doodle-3 { animation: vv-float-doodle-3 5.8s ease-in-out -3.5s infinite; will-change: transform; }
+.vv-pulse-glow { animation: vv-pulse-glow 3.2s ease-in-out infinite; }
+
 @media (prefers-reduced-motion: reduce) {
-  .vv-rise, .vv-float-a, .vv-float-b, .vv-float-c, .vv-drift, .vv-line, .vv-orbit { animation: none; }
+  .vv-rise, .vv-float-a, .vv-float-b, .vv-float-c, .vv-drift, .vv-line, .vv-orbit, .vv-marquee, .vv-airplane, .vv-doodle-1, .vv-doodle-2, .vv-doodle-3 { animation: none; }
 }
 
 /* ---------- scroll reveal ---------- */

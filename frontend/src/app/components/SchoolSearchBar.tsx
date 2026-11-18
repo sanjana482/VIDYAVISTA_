@@ -258,12 +258,9 @@ export default function SchoolSearchBar({
         {/* Prominent Search Action Button */}
         <button
           type="submit"
-          className="vv-btn flex h-10 sm:h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] px-4 sm:px-6 text-xs sm:text-sm font-extrabold text-white shadow-md shadow-[#0A5C91]/20 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#0795DC]/25"
+          className="vv-btn flex h-10 sm:h-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-[#4A3AFF] to-[#7C3AED] px-5 sm:px-7 text-xs sm:text-sm font-extrabold text-white shadow-md shadow-[#4A3AFF]/25 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#7C3AED]/30"
         >
           <span>Search</span>
-          <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M5 12h14M12 5l7 7-7 7" />
-          </svg>
         </button>
       </form>
 
