@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { School } from "../data/schools";
-import { BOARD_LABEL } from "../data/schools";
+import { BOARD_LABEL, stateFor } from "../data/schools";
+import { normalizeType, readPreference, PREF_EVENT } from "../lib/preferences";
 import { schoolPath } from "../lib/seo";
 import { feeRange, lakh } from "../data/profile";
 import Icon from "./Icon";
@@ -44,8 +45,63 @@ const toCard = (s: School, i: number) => ({
   color: BOARD_COLOR[i % BOARD_COLOR.length],
 });
 
-export default function FeaturedSchools({ list }: { list: School[] }) {
-  const schools = list.map(toCard);
+export default function FeaturedSchools({ list = [], allSchools = [] }: { list?: School[]; allSchools?: School[] }) {
+  const [pref, setPref] = useState(readPreference());
+
+  useEffect(() => {
+    const sync = () => setPref(readPreference());
+    sync();
+    window.addEventListener(PREF_EVENT, sync);
+    return () => window.removeEventListener(PREF_EVENT, sync);
+  }, []);
+
+  const pool = allSchools.length > 0 ? allSchools : list;
+  const activeType = pref ? normalizeType(pref.type) : "Boarding School";
+  const isBoarding = activeType === "Boarding School";
+  const activeLoc = (pref?.location || "").trim().toLowerCase();
+
+  let matches: School[] = [];
+  if (isBoarding) {
+    const boardingSchools = pool.filter((s) => s.type === "Boarding School");
+    if (activeLoc) {
+      const stateMatches = boardingSchools.filter(
+        (s) => stateFor(s).toLowerCase() === activeLoc || s.city.toLowerCase() === activeLoc
+      );
+      const otherBoarding = boardingSchools.filter(
+        (s) => stateFor(s).toLowerCase() !== activeLoc && s.city.toLowerCase() !== activeLoc
+      );
+      matches = [...stateMatches, ...otherBoarding];
+    } else {
+      matches = boardingSchools;
+    }
+  } else {
+    const typeSchools = pool.filter((s) => s.type === (activeType || "Day School"));
+    if (activeLoc) {
+      const cityMatches = typeSchools.filter((s) => s.city.toLowerCase() === activeLoc);
+      const otherCities = typeSchools.filter((s) => s.city.toLowerCase() !== activeLoc);
+      matches = [...cityMatches, ...otherCities];
+    } else {
+      matches = typeSchools;
+    }
+  }
+
+  // Prioritize isFeatured within matches
+  matches.sort((a, b) => Number(!!b.isFeatured) - Number(!!a.isFeatured));
+
+  // Ensure minimum 10 schools
+  const seen = new Set(matches.map((s) => s.id));
+  if (matches.length < 10) {
+    for (const s of pool) {
+      if (!seen.has(s.id)) {
+        seen.add(s.id);
+        matches.push(s);
+        if (matches.length >= 10) break;
+      }
+    }
+  }
+
+  const selectedList = matches.slice(0, Math.max(10, Math.min(14, matches.length)));
+  const schools = selectedList.map(toCard);
   const router = useRouter();
   const [compareIds, setCompareIds] = useState<number[]>([]);
   const [savedIds, setSavedIds] = useState<number[]>([]);

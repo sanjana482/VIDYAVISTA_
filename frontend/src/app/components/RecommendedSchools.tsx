@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { typeRank } from "../lib/preferences";
 import type { School } from "../data/schools";
@@ -10,36 +9,43 @@ import { schoolPath } from "../lib/seo";
 import { feeRange, lakh } from "../data/profile";
 import Icon, { Stars } from "./Icon";
 
-const BOARD_COLOR = ["bg-[#DDEAF2] text-[#0A5C91]", "bg-[#FAE5EC] text-[#C8104F]", "bg-[#E5EAF0] text-[#39506B]", "bg-[#FCE5ED] text-[#A34262]"];
 const feeText = (s: School) => {
   const r = feeRange(s);
   return r.min > 0 ? `${lakh(r.min)} – ${lakh(r.max)}` : "Ask school";
 };
 
-
 const toCard = (s: School) => ({
   id: s.id,
   href: schoolPath(s),
   name: s.name,
+  rating: s.rating,
+  reviews: s.reviews,
   board: BOARD_LABEL[s.board] ?? s.board,
   type: s.type,
-  location: [s.city, s.state].filter(Boolean).join(", "),
+  location: [s.area, s.city].filter(Boolean).join(", ") || s.city,
   fees: feeText(s),
-  image: s.image,
 });
 
-export default function RecommendedSchools({ list }: { list: School[] }) {
-  const schools = list.map(toCard);
+export default function RecommendedSchools({ list = [], allSchools = [] }: { list?: School[]; allSchools?: School[] }) {
+  const pool = list.length > 0 ? list : allSchools.slice(0, 15);
+  const schools = pool.map(toCard);
   const router = useRouter();
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [selectedSchools, setSelectedSchools] = useState<number[]>([]);
+
+  function scroll(dir: "left" | "right") {
+    if (!scrollRef.current) return;
+    const step = 320;
+    scrollRef.current.scrollBy({ left: dir === "left" ? -step : step, behavior: "smooth" });
+  }
 
   function toggleCompare(id: number) {
     setSelectedSchools((current) =>
       current.includes(id)
         ? current.filter((schoolId) => schoolId !== id)
         : current.length < 3
-          ? [...current, id]
-          : current
+        ? [...current, id]
+        : current
     );
   }
 
@@ -52,137 +58,141 @@ export default function RecommendedSchools({ list }: { list: School[] }) {
   if (schools.length === 0) return null;
 
   return (
-    <section className="bg-white py-16 sm:py-20">
+    <section className="bg-[#FAFDFE] py-14 sm:py-18 border-t border-[#E8EEF5]">
       <div className="mx-auto max-w-[1720px] px-4 sm:px-6 lg:px-8 xl:px-12">
-        {/* Section heading */}
+        {/* Section heading & slider buttons */}
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <span className="inline-flex rounded-full bg-[#DDEAF2] px-4 py-2 text-xs font-extrabold uppercase tracking-wider text-[#0E547C]">
+            <span className="inline-flex rounded-full bg-[#DDEAF2] px-3.5 py-1.5 text-xs font-extrabold uppercase tracking-wider text-[#0E547C]">
               Discover schools
             </span>
 
-            <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-[#0B2A47] sm:text-4xl">
+            <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-[#0B2A47] sm:text-3xl lg:text-4xl">
               Recommended Schools
             </h2>
 
-            <p className="mt-3 text-sm text-[#626F7D] sm:text-base">
-              Schools our team recommends for parents.
+            <p className="mt-2 text-xs sm:text-sm text-[#626F7D]">
+              Handpicked institutions recommended by our education team.
             </p>
           </div>
 
-          <span className="pb-1 text-sm font-semibold text-[#C8104F]">
-            Picked by our team
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="hidden sm:inline-block pr-2 text-xs font-bold text-[#C8104F]">
+              ✦ Picked by our team
+            </span>
+            <button
+              type="button"
+              aria-label="Scroll left"
+              onClick={() => scroll("left")}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#D6DDE5] bg-white text-[#0A5C91] shadow-sm transition hover:bg-[#0A5C91] hover:text-white"
+            >
+              <Icon name="chevronLeft" className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              aria-label="Scroll right"
+              onClick={() => scroll("right")}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#D6DDE5] bg-white text-[#0A5C91] shadow-sm transition hover:bg-[#0A5C91] hover:text-white"
+            >
+              <Icon name="chevronRight" className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
-        {/* School cards */}
-        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {[...schools].sort((a, b) => typeRank(a.type) - typeRank(b.type)).map((school) => {
+        {/* Horizontal Slider: Compact Cards Without Big Images */}
+        <div
+          ref={scrollRef}
+          className="mt-8 flex gap-4 sm:gap-5 overflow-x-auto scroll-smooth pb-4 pt-1 snap-x scrollbar-none"
+        >
+          {schools.map((school) => {
             const selected = selectedSchools.includes(school.id);
 
             return (
               <article
                 key={school.id}
-                className="group overflow-hidden rounded-3xl border border-[#DFE3E8] bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-[#FF6B9A] hover:shadow-xl hover:shadow-[#C8104F]/10"
+                className="group flex w-[280px] sm:w-[320px] shrink-0 snap-start flex-col justify-between rounded-2xl border border-[#DFE7EE] bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-[#0A7BBF] hover:shadow-lg"
               >
-                {/* Image */}
-                <div className="relative h-56 overflow-hidden sm:h-60">
-                  <img
-                    src={school.image}
-                    alt={`${school.name} campus`}
-                    loading="lazy"
-                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                  />
-
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0B2A47]/30 via-transparent to-transparent" />
-
-                  <span className="absolute left-4 top-4 rounded-full bg-[#0B2A47] px-3.5 py-2 text-xs font-bold text-white shadow-lg">
-                    <Icon name="sparkles" className="mr-1 inline h-3.5 w-3.5" /> Recommended
-                  </span>
-                </div>
-
-                {/* School details */}
-                <div className="p-5 sm:p-6">
-                  <div className="flex flex-wrap gap-2">
-                    <span className="rounded-lg bg-[#E5EBF1] px-3 py-1.5 text-xs font-bold text-[#4F5964]">
+                <div>
+                  {/* Top Badges */}
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="rounded-lg bg-[#EBF3F9] px-2.5 py-1 text-[11px] font-bold text-[#0A5C91]">
                       {school.board}
                     </span>
-
-                    <span className="rounded-lg bg-[#E5EEF3] px-3 py-1.5 text-xs font-bold text-[#0E567F]">
+                    <span className="rounded-lg bg-[#F8EFF3] px-2.5 py-1 text-[11px] font-bold text-[#C8104F]">
                       {school.type}
                     </span>
                   </div>
 
-                  <h3 className="mt-4 text-xl font-extrabold leading-snug text-[#0B2A47] transition group-hover:text-[#C8104F]">
+                  {/* School Name */}
+                  <h3
+                    onClick={() => router.push(school.href)}
+                    className="mt-3.5 text-base sm:text-lg font-extrabold leading-snug text-[#0B2A47] line-clamp-2 cursor-pointer transition group-hover:text-[#0A7BBF]"
+                  >
                     {school.name}
                   </h3>
 
-                  <p className="mt-2 flex items-center gap-2 text-sm text-[#707E8F]">
-                    <Icon name="mapPin" className="h-4 w-4 shrink-0 text-[#D97798]" />
-                    {school.location}
+                  {/* Location */}
+                  <p className="mt-1.5 flex items-center gap-1.5 text-xs text-[#707E8F]">
+                    <Icon name="mapPin" className="h-3.5 w-3.5 shrink-0 text-[#0A7BBF]" />
+                    <span className="truncate">{school.location}</span>
                   </p>
 
-                  <div className="my-5 border-t border-[#DFE3E8]" />
+                  {/* Ratings if available */}
+                  {school.rating > 0 && (
+                    <div className="mt-2.5 flex items-center gap-1.5 text-xs">
+                      <Stars value={school.rating} />
+                      <span className="font-extrabold text-[#0B2A47]">{school.rating.toFixed(1)}</span>
+                      {school.reviews > 0 && <span className="text-[#8896A6]">({school.reviews})</span>}
+                    </div>
+                  )}
 
-                  <p className="flex items-center gap-2 text-sm text-[#626F7D]">
-                    <Icon name="trending" className="h-4 w-4 text-[#C8104F]" />
-                    <span>
-                      Annual fee{" "}
-                      <strong className="font-extrabold text-[#0B2A47]">{school.fees}</strong>
-                    </span>
-                  </p>
-
-                  {/* Compare and view actions */}
-                  <div className="mt-5 flex items-center justify-between gap-3">
-                    <label className="flex cursor-pointer items-center gap-2 text-xs font-medium text-[#707E8F]">
-                      <input
-                        type="checkbox"
-                        checked={selected}
-                        onChange={() => toggleCompare(school.id)}
-                        className="h-4 w-4 accent-[#C8104F]"
-                      />
-                      Add to compare
-                    </label>
-
-                    <button
-                      type="button"
-                      onClick={() => router.push(school.href)}
-                      className="rounded-lg px-2 py-2 text-sm font-extrabold text-[#344251] transition hover:bg-[#F8EAEF] hover:text-[#C8104F]"
-                    >
-                      View school →
-                    </button>
+                  {/* Fee box */}
+                  <div className="mt-3.5 rounded-xl bg-[#F6FAFD] border border-[#E3EDF5] p-2.5">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#7A8A99]">Annual fee</p>
+                    <p className="text-xs sm:text-sm font-extrabold text-[#0B2A47] truncate">{school.fees}</p>
                   </div>
+                </div>
+
+                {/* Card Footer: Compare and View Link */}
+                <div className="mt-4 flex items-center justify-between gap-2 border-t border-[#EDF2F7] pt-3">
+                  <label className="flex cursor-pointer items-center gap-1.5 text-[11px] font-semibold text-[#687789] hover:text-[#0B2A47]">
+                    <input
+                      type="checkbox"
+                      checked={selected}
+                      onChange={() => toggleCompare(school.id)}
+                      className="h-3.5 w-3.5 accent-[#0A7BBF] rounded"
+                    />
+                    Compare
+                  </label>
+
+                  <button
+                    type="button"
+                    onClick={() => router.push(school.href)}
+                    className="inline-flex items-center gap-1 text-xs font-bold text-[#0A7BBF] hover:text-[#084A74] transition"
+                  >
+                    View school →
+                  </button>
                 </div>
               </article>
             );
           })}
         </div>
 
-
-        {/* Bottom action */}
-        <div className="mt-12 flex flex-col items-center text-center">
-          <p className="text-sm text-[#707E8F]">
-            Find a school that fits your needs.
-          </p>
-
-          {selectedSchools.length > 0 && (
+        {/* Compare banner if schools selected */}
+        {selectedSchools.length > 0 && (
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#C9D3DF] bg-white p-3.5 shadow-sm">
+            <p className="text-xs sm:text-sm font-semibold text-[#0A5C91]">
+              {selectedSchools.length} school{selectedSchools.length > 1 ? "s" : ""} selected for comparison
+            </p>
             <button
               type="button"
               onClick={openCompare}
-              className="mt-4 rounded-xl bg-[#0E567F] px-6 py-3.5 text-sm font-bold text-white transition hover:bg-[#0B4262]"
+              className="rounded-xl bg-[#0A5C91] px-5 py-2 text-xs sm:text-sm font-bold text-white hover:bg-[#084A74] transition"
             >
-              Compare selected ({selectedSchools.length})
+              Compare selected ({selectedSchools.length}) →
             </button>
-          )}
-
-          <button
-            type="button"
-            onClick={() => router.push("/schools")}
-            className="mt-4 rounded-xl bg-[#0B2A47] px-7 py-4 text-sm font-extrabold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#41556B]"
-          >
-            Explore All Schools →
-          </button>
-        </div>
+          </div>
+        )}
       </div>
     </section>
   );
