@@ -18,8 +18,8 @@ export default function ParentVoices({ list }: { list: School[] }) {
   ).slice(0, 3);
 
   return (
-    <section className="bg-[#172433] py-16 text-white sm:py-20">
-      <div className="mx-auto max-w-[1720px] px-4 sm:px-6 lg:px-8 xl:px-12">
+    <section className="bg-[#172433] py-12 text-white sm:py-16">
+      <div className="mx-auto max-w-[1240px] px-4 sm:px-6 lg:px-8">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#F3C7B2]">How families decide</p>
         <h2 className="mt-3 max-w-2xl text-3xl font-medium tracking-tight sm:text-4xl">
           The same four questions, every city.

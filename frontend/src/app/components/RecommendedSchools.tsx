@@ -58,8 +58,8 @@ export default function RecommendedSchools({ list = [], allSchools = [] }: { lis
   if (schools.length === 0) return null;
 
   return (
-    <section className="bg-[#FAFDFE] py-14 sm:py-18 border-t border-[#E8EEF5]">
-      <div className="mx-auto max-w-[1720px] px-4 sm:px-6 lg:px-8 xl:px-12">
+    <section className="bg-[#FAFDFE] py-12 sm:py-16 border-t border-[#E8EEF5]">
+      <div className="mx-auto max-w-[1240px] px-4 sm:px-6 lg:px-8">
         {/* Section heading & slider buttons */}
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>

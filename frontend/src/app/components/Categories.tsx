@@ -52,11 +52,11 @@ export default function Categories() {
   }
 
   return (
-    <section className="relative overflow-hidden bg-[#FAFCFD] py-16 sm:py-20">
+    <section className="relative overflow-hidden bg-[#FAFCFD] py-12 sm:py-16">
       <div className="pointer-events-none absolute -right-24 top-10 h-64 w-64 rounded-full bg-[#FFC2D4]/30 blur-3xl" />
       <div className="pointer-events-none absolute -left-24 bottom-0 h-64 w-64 rounded-full bg-[#A6D8F5]/30 blur-3xl" />
 
-      <div className="relative mx-auto max-w-[1720px] px-4 sm:px-6 lg:px-8 xl:px-12">
+      <div className="relative mx-auto max-w-[1240px] px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
           <div>
             <span className="inline-flex rounded-full bg-[#DDEAF2] px-4 py-2 text-xs font-extrabold uppercase tracking-wider text-[#0A5C91]">

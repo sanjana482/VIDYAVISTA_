@@ -8,8 +8,8 @@ export default function BlogSection({ posts }: { posts: BlogCardData[] }) {
   const [lead, ...others] = posts.slice(0, 4);
   if (!lead) return null;
   return (
-    <section id="guides" className="bg-[#F6F9FC] py-14 sm:py-20 border-t border-[#E8EEF5]">
-      <div className="mx-auto max-w-[1720px] px-4 sm:px-6 lg:px-8 xl:px-12">
+    <section id="guides" className="bg-[#F6F9FC] py-12 sm:py-16 border-t border-[#E8EEF5]">
+      <div className="mx-auto max-w-[1240px] px-4 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <span className="inline-flex rounded-full bg-[#EAF4FB] px-3.5 py-1 text-xs font-extrabold uppercase tracking-wider text-[#0A5C91]">

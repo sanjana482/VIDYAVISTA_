@@ -2,8 +2,8 @@ import Link from "next/link";
 
 export default function ForSchoolsBand() {
   return (
-    <section className="bg-white py-16 sm:py-20">
-      <div className="mx-auto grid max-w-[1720px] items-center gap-8 px-4 sm:px-6 lg:grid-cols-[1.2fr_0.8fr] lg:px-8 xl:px-12">
+    <section className="bg-white py-12 sm:py-16">
+      <div className="mx-auto grid max-w-[1240px] items-center gap-8 px-4 sm:px-6 lg:grid-cols-[1.2fr_0.8fr] lg:px-8">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#EC0E58]">For schools</p>
           <h2 className="mt-3 text-3xl font-medium tracking-tight text-[#172433] sm:text-4xl">

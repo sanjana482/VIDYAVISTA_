@@ -36,8 +36,8 @@ export default function BrowseSections() {
   const total = scope ? scopeSchools(schools, scope).length : 0;
 
   return (
-    <section id="browse" className="scroll-mt-20 bg-white py-14 sm:py-20 border-b border-[#E8EEF5]">
-      <div className="mx-auto max-w-[1720px] px-4 sm:px-6 lg:px-8 xl:px-12">
+    <section id="browse" className="scroll-mt-20 bg-white py-12 sm:py-16 border-b border-[#E8EEF5]">
+      <div className="mx-auto max-w-[1240px] px-4 sm:px-6 lg:px-8">
         {/* Scope selected: show the stacked Jump to categories */}
         {scope ? (
           <>

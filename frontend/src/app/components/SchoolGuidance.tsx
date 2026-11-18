@@ -47,8 +47,8 @@ export default function SchoolGuidance() {
   }
 
   return (
-    <section className="bg-white pb-0 pt-16 sm:pt-20">
-      <div className="mx-auto max-w-[1720px] px-4 sm:px-6 lg:px-8 xl:px-12">
+    <section className="bg-white pb-0 pt-12 sm:pt-16">
+      <div className="mx-auto max-w-[1240px] px-4 sm:px-6 lg:px-8">
         {/* Guidance steps */}
         <div>
           <span className="inline-flex rounded-full bg-[#F6E3E9] px-4 py-2 text-xs font-extrabold uppercase tracking-wider text-[#C8104F]">

@@ -162,11 +162,11 @@ export default function BoardCards({ list = [] }: { list?: Row[] }) {
   }
 
   return (
-    <section id="boards" className="relative overflow-hidden bg-gradient-to-b from-white via-[#F6F9FC] to-white py-14 sm:py-18">
+    <section id="boards" className="relative overflow-hidden bg-gradient-to-b from-white via-[#F6F9FC] to-white py-12 sm:py-16">
       <div className="pointer-events-none absolute -left-24 top-24 h-72 w-72 rounded-full bg-[#A6D8F5]/20 blur-3xl" />
       <div className="pointer-events-none absolute -right-24 bottom-10 h-72 w-72 rounded-full bg-[#FFC2D4]/20 blur-3xl" />
 
-      <div className="relative mx-auto max-w-[1720px] px-4 sm:px-6 lg:px-8 xl:px-12">
+      <div className="relative mx-auto max-w-[1240px] px-4 sm:px-6 lg:px-8">
         {/* Header with Curriculum Pill */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
           <div>

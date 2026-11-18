@@ -50,25 +50,25 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[#D6DDE5] bg-white/95 shadow-sm backdrop-blur-xl">
-      <nav className="mx-auto flex max-w-[1720px] items-center justify-between px-6 sm:px-10 lg:px-14 xl:px-20 py-4 sm:py-5">
-        {/* Logo shifted slightly rightward away from extreme left edge */}
-        <Link href="/" className="flex items-center ml-1 sm:ml-4 lg:ml-6" aria-label="VidyaVista home">
+    <header className="sticky top-0 z-50 border-b border-[#D6DDE5]/80 bg-white/95 shadow-[0_6px_24px_rgba(12,50,54,0.05)] backdrop-blur-xl">
+      <nav className="mx-auto flex max-w-[1280px] items-center justify-between px-4 sm:px-6 lg:px-8 py-3.5 sm:py-4">
+        {/* Logo */}
+        <Link href="/" className="flex items-center" aria-label="VidyaVista home">
           <img
             src="/logo.png"
             alt="VidyaVista - Discover | Learn | Grow"
-            className="h-12 w-auto object-contain sm:h-14 transition hover:opacity-95"
+            className="h-11 w-auto object-contain sm:h-12 transition hover:opacity-95"
           />
         </Link>
 
         {/* Desktop Navigation Links */}
-        <div className="hidden items-center gap-8 lg:gap-10 md:flex">
+        <div className="hidden items-center gap-6 lg:gap-8 md:flex">
           {mainLinks.map((link) => (
             <Link
               key={link.name}
               href={link.href}
               onClick={link.name === "Schools" ? (e) => { e.preventDefault(); goSchools(); } : undefined}
-              className={`border-b-2 pb-1.5 text-[15px] sm:text-base font-bold transition hover:text-[#0A7BBF] ${isActive(link.href) ? "border-[#EC0E58] text-[#0B2A47]" : "border-transparent text-[#4E5A68]"}`}
+              className={`border-b-2 pb-1 text-sm sm:text-[14.5px] font-semibold transition hover:text-[#0A7BBF] ${isActive(link.href) ? "border-[#EC0E58] text-[#0B2A47]" : "border-transparent text-[#4E5A68]"}`}
             >
               {link.name}
             </Link>
@@ -83,7 +83,7 @@ export default function Navbar() {
             <button
               type="button"
               onClick={() => setSchoolDropdownOpen(!schoolDropdownOpen)}
-              className={`inline-flex items-center gap-1.5 border-b-2 pb-1.5 text-[15px] sm:text-base font-bold transition hover:text-[#0A7BBF] ${
+              className={`inline-flex items-center gap-1.5 border-b-2 pb-1 text-sm sm:text-[14.5px] font-semibold transition hover:text-[#0A7BBF] ${
                 pathname.startsWith("/school") || schoolDropdownOpen
                   ? "border-[#EC0E58] text-[#0B2A47]"
                   : "border-transparent text-[#4E5A68]"
@@ -138,13 +138,13 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Right Action Buttons shifted slightly leftward away from extreme right edge */}
-        <div className="hidden items-center gap-3.5 md:flex mr-1 sm:mr-4 lg:mr-6">
+        {/* Right Action Buttons */}
+        <div className="hidden items-center gap-3 md:flex">
           {user ? (
             <>
               <Link
                 href={user.role === "school" ? "/school" : "/parent"}
-                className="art-btn-p inline-flex h-11 sm:h-12 items-center justify-center gap-2 rounded-xl px-5 text-sm sm:text-base font-bold text-white shadow-sm"
+                className="art-btn-p inline-flex h-10 sm:h-[42px] items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold text-white shadow-sm"
               >
                 <Icon name={user.role === "school" ? "school" : "user"} className="h-4 w-4" />
                 <span>{user.role === "school" ? "Institution Dashboard" : "Parent Dashboard"}</span>
@@ -152,7 +152,7 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="inline-flex h-11 sm:h-12 items-center justify-center rounded-xl border-2 border-[#D6DDE5] bg-white px-5 text-sm sm:text-base font-bold text-[#C8104F] transition hover:border-[#C8104F]/40 hover:bg-[#FDE8EF]"
+                className="inline-flex h-10 sm:h-[42px] items-center justify-center rounded-xl border-2 border-[#D6DDE5] bg-white px-4 text-sm font-bold text-[#C8104F] transition hover:border-[#C8104F]/40 hover:bg-[#FDE8EF]"
               >
                 Sign Out
               </button>
@@ -161,13 +161,13 @@ export default function Navbar() {
             <>
               <Link
                 href="/login?role=parent&mode=login"
-                className="inline-flex h-11 sm:h-12 items-center justify-center rounded-xl border-2 border-[#D6DDE5] bg-white px-5 sm:px-6 text-sm sm:text-base font-bold text-[#0B2A47] transition hover:border-[#0795DC] hover:text-[#0A5C91] hover:bg-[#F8FBFE]"
+                className="inline-flex h-10 sm:h-[42px] items-center justify-center rounded-xl border border-[#D6DDE5] bg-white px-4 text-sm font-bold text-[#25343a] transition hover:border-[#0795DC] hover:text-[#0A5C91] hover:bg-[#F8FBFE]"
               >
                 Login
               </Link>
               <Link
                 href="/login?role=parent&mode=register"
-                className="art-btn-p inline-flex h-11 sm:h-12 items-center justify-center gap-2 rounded-xl px-6 sm:px-7 text-sm sm:text-base font-bold text-white shadow-lg transition hover:-translate-y-0.5"
+                className="art-btn-p inline-flex h-10 sm:h-[42px] items-center justify-center gap-1.5 rounded-xl px-5 text-sm font-bold text-white shadow-md transition hover:-translate-y-0.5"
               >
                 <span>Sign Up</span>
                 <span className="text-white/90">→</span>

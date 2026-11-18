@@ -36,8 +36,8 @@ const checks = [
 
 export default function ParentDesk() {
   return (
-    <section id="tools" className="bg-white py-16 sm:py-20">
-      <div className="mx-auto max-w-[1720px] px-4 sm:px-6 lg:px-8 xl:px-12">
+    <section id="tools" className="bg-white py-12 sm:py-16">
+      <div className="mx-auto max-w-[1240px] px-4 sm:px-6 lg:px-8">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#0A5C91]">Parent desk</p>
         <h2 className="mt-3 max-w-xl text-3xl font-medium tracking-tight text-[#172433] sm:text-4xl">
           Three checks before you fill a form.

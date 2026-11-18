@@ -203,7 +203,7 @@ export default function Hero({ schools = [] }: { schools?: SearchSchool[] }) {
 
   return (
     <>
-      <section className="hero-art relative grid grid-cols-1 items-center gap-10 lg:gap-12 xl:gap-14 px-6 sm:px-10 lg:px-14 xl:px-16 py-12 sm:py-16 lg:grid-cols-[1fr_1.15fr] xl:grid-cols-[1fr_1.22fr]">
+      <section className="hero-art relative overflow-hidden">
         {/* Rotating Conic Arc Glow */}
         <div className="hero-arc pointer-events-none" />
 
@@ -272,139 +272,142 @@ export default function Hero({ schools = [] }: { schools?: SearchSchool[] }) {
           <span className="art-cr" style={{ left: "36%", top: "96%", width: 16, height: 16, background: "#7b3fa0", borderColor: "#7b3fa0", animationDelay: "-1s" }} />
         </div>
 
-        {/* ================= LEFT COLUMN ================= */}
-        <div>
-          {/* Pill Badge */}
-          <span className="pill inline-flex items-center gap-2.5 rounded-full border border-[#dbe6f3] bg-white px-4 py-2 text-xs sm:text-sm font-semibold text-[#0a69a8] shadow-sm">
-            <span className="dot" />
-            A Brighter Future Begins Here
-          </span>
-
-          {/* Heading */}
-          <h1 className="mt-5 text-4xl sm:text-5xl lg:text-[56px] xl:text-[62px] font-extrabold leading-[1.08] tracking-tight text-[#0f2742]">
-            <span className="l block overflow-hidden pb-[0.2em] -mb-[0.14em]">
-              <span className="inline-block animate-[up_0.9s_cubic-bezier(0.2,0.8,0.2,1)_both]">
-                Find the School
-              </span>
+        {/* ================= CENTERED HERO INNER CONTAINER (max-w-[1240px]) ================= */}
+        <div className="relative mx-auto grid w-full max-w-[1240px] grid-cols-1 items-center gap-10 lg:gap-12 px-4 sm:px-6 lg:px-8 py-10 sm:py-14 lg:grid-cols-[1.05fr_1.15fr]">
+          {/* ================= LEFT COLUMN ================= */}
+          <div>
+            {/* Pill Badge */}
+            <span className="pill inline-flex items-center gap-2 rounded-full border border-[#dbe6f3] bg-white px-3.5 py-1.5 text-xs font-semibold text-[#0a69a8] shadow-sm">
+              <span className="dot" />
+              A Brighter Future Begins Here
             </span>
-            <span className="l block overflow-hidden pb-[0.2em] -mb-[0.14em]">
-              <span className="art-g">
-                That Feels Right.
-              </span>
-            </span>
-          </h1>
 
-          {/* Subtitle */}
-          <p className="sub mt-4 max-w-lg text-sm sm:text-base leading-relaxed text-[#5b6b80]">
-            Explore schools, compare facilities and fees, and find a learning
-            environment where your child can learn, grow and shine.
-          </p>
-
-          {/* Stats Counter Row */}
-          <div className="stats mt-8 flex flex-wrap gap-7 sm:gap-10">
-            <div className="stat border-l-[3px] border-[#e91e63] pl-3.5">
-              <b className="block font-heading text-2xl sm:text-3xl font-extrabold text-[#0f2742] leading-none">
-                {countSchools.toLocaleString("en-IN")}+
-              </b>
-              <span className="mt-1 block text-xs font-semibold text-[#64748b]">
-                Schools listed
+            {/* Heading */}
+            <h1 className="mt-4 text-3xl sm:text-4xl lg:text-[46px] xl:text-[50px] font-extrabold leading-[1.12] tracking-tight text-[#0f2742]">
+              <span className="l block overflow-hidden pb-[0.2em] -mb-[0.14em]">
+                <span className="inline-block animate-[up_0.9s_cubic-bezier(0.2,0.8,0.2,1)_both]">
+                  Find the School
+                </span>
               </span>
-            </div>
-
-            <div className="stat border-l-[3px] border-[#e91e63] pl-3.5">
-              <b className="block font-heading text-2xl sm:text-3xl font-extrabold text-[#0f2742] leading-none">
-                {countStates}
-              </b>
-              <span className="mt-1 block text-xs font-semibold text-[#64748b]">
-                States covered
+              <span className="l block overflow-hidden pb-[0.2em] -mb-[0.14em]">
+                <span className="art-g">
+                  That Feels Right.
+                </span>
               </span>
-            </div>
+            </h1>
 
-            <div className="stat border-l-[3px] border-[#e91e63] pl-3.5">
-              <b className="block font-heading text-2xl sm:text-3xl font-extrabold text-[#0f2742] leading-none">
-                {countParents.toLocaleString("en-IN")}+
-              </b>
-              <span className="mt-1 block text-xs font-semibold text-[#64748b]">
-                Happy parents
-              </span>
+            {/* Subtitle */}
+            <p className="sub mt-3 max-w-lg text-[15px] sm:text-base leading-relaxed text-[#5b6b80]">
+              Explore schools, compare facilities and fees, and find a learning
+              environment where your child can learn, grow and shine.
+            </p>
+
+            {/* Stats Counter Row */}
+            <div className="stats mt-7 flex flex-wrap gap-6 sm:gap-8">
+              <div className="stat border-l-[3px] border-[#e91e63] pl-3">
+                <b className="block font-heading text-2xl sm:text-[28px] font-extrabold text-[#0f2742] leading-none">
+                  {countSchools.toLocaleString("en-IN")}+
+                </b>
+                <span className="mt-1 block text-[11px] sm:text-xs font-semibold text-[#64748b]">
+                  Schools listed
+                </span>
+              </div>
+
+              <div className="stat border-l-[3px] border-[#e91e63] pl-3">
+                <b className="block font-heading text-2xl sm:text-[28px] font-extrabold text-[#0f2742] leading-none">
+                  {countStates}
+                </b>
+                <span className="mt-1 block text-[11px] sm:text-xs font-semibold text-[#64748b]">
+                  States covered
+                </span>
+              </div>
+
+              <div className="stat border-l-[3px] border-[#e91e63] pl-3">
+                <b className="block font-heading text-2xl sm:text-[28px] font-extrabold text-[#0f2742] leading-none">
+                  {countParents.toLocaleString("en-IN")}+
+                </b>
+                <span className="mt-1 block text-[11px] sm:text-xs font-semibold text-[#64748b]">
+                  Happy parents
+                </span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* ================= RIGHT COLUMN (GLASS PANEL) ================= */}
-        <div className="stage relative w-full">
-          <div className="art-panel relative p-6 sm:p-8 lg:p-9 rounded-[28px] w-full shadow-2xl">
-            {/* Header */}
-            <div className="ph flex items-center justify-between">
-              <div>
-                <h2 className="font-heading text-xl sm:text-2xl lg:text-[26px] font-bold text-[#0f2742]">
-                  Find your ideal school
-                </h2>
-                <p className="mt-1 text-xs sm:text-sm text-[#5b6b80]">
-                  Select a school type to get started.
-                </p>
+          {/* ================= RIGHT COLUMN (GLASS PANEL) ================= */}
+          <div className="stage relative w-full">
+            <div className="art-panel relative p-6 sm:p-7 rounded-[24px] w-full shadow-xl">
+              {/* Header */}
+              <div className="ph flex items-center justify-between">
+                <div>
+                  <h2 className="font-heading text-lg sm:text-xl lg:text-[22px] font-bold text-[#0f2742]">
+                    Find your ideal school
+                  </h2>
+                  <p className="mt-0.5 text-xs text-[#5b6b80]">
+                    Select a school type to get started.
+                  </p>
+                </div>
+                <span className="tag rounded-full bg-[#e6f0fa] px-3 py-1 text-xs font-bold text-[#0a69a8]">
+                  Start here
+                </span>
               </div>
-              <span className="tag rounded-full bg-[#e6f0fa] px-3.5 py-1.5 text-xs font-bold text-[#0a69a8]">
-                Start here
-              </span>
-            </div>
 
-            {/* 3 Tabs */}
-            <div className="tabs my-5 grid grid-cols-3 gap-3">
-              {schoolTypesConfig.map(({ type, shortLabel, icon }) => {
-                const active = schoolType === type;
-                return (
-                  <button
-                    key={type}
-                    type="button"
-                    onClick={() => chooseSchoolType(type)}
-                    className={`tab flex flex-col items-center gap-2 rounded-2xl border-2 py-3.5 px-2 text-center font-extrabold text-xs sm:text-sm transition-all duration-200 ${
-                      active
-                        ? "on border-[#0a69a8] bg-[#e6f0fa] text-[#0a69a8] shadow-md shadow-[#0a69a8]/15"
-                        : "border-[#dbe6f3] bg-white text-[#0f2742] hover:-translate-y-0.5 hover:border-[#0a69a8]"
-                    }`}
-                  >
-                    <span className={`i text-xl sm:text-2xl ${active ? "text-[#0a69a8]" : "text-[#5b6b80]"}`}>
-                      <TickerIcon name={icon} className="h-6 w-6" />
-                    </span>
-                    <span className="truncate w-full">{shortLabel}</span>
-                  </button>
-                );
-              })}
-            </div>
+              {/* 3 Tabs */}
+              <div className="tabs my-4 grid grid-cols-3 gap-2.5">
+                {schoolTypesConfig.map(({ type, shortLabel, icon }) => {
+                  const active = schoolType === type;
+                  return (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => chooseSchoolType(type)}
+                      className={`tab flex flex-col items-center gap-1.5 rounded-xl border-2 py-3 px-2 text-center font-bold text-xs sm:text-[13px] transition-all duration-200 ${
+                        active
+                          ? "on border-[#0a69a8] bg-[#e6f0fa] text-[#0a69a8] shadow-sm shadow-[#0a69a8]/15"
+                          : "border-[#dbe6f3] bg-white text-[#0f2742] hover:-translate-y-0.5 hover:border-[#0a69a8]"
+                      }`}
+                    >
+                      <span className={`i text-lg sm:text-xl ${active ? "text-[#0a69a8]" : "text-[#5b6b80]"}`}>
+                        <TickerIcon name={icon} className="h-5 w-5" />
+                      </span>
+                      <span className="truncate w-full">{shortLabel}</span>
+                    </button>
+                  );
+                })}
+              </div>
 
-            {/* State/City Row */}
-            <div
-              onClick={() => openLocationPicker(schoolType)}
-              className="state flex cursor-pointer items-center gap-3.5 rounded-2xl border border-[#dbe6f3] bg-white/90 p-3.5 sm:p-4 transition hover:border-[#0a69a8] hover:bg-white hover:shadow-sm"
-            >
-              <div className="art-pin flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#e6f0fa] text-xl text-[#e91e63]">
-                <TickerIcon name="pin" className="h-5 w-5" />
+              {/* State/City Row */}
+              <div
+                onClick={() => openLocationPicker(schoolType)}
+                className="state flex cursor-pointer items-center gap-3 rounded-xl border border-[#dbe6f3] bg-white/90 p-3 transition hover:border-[#0a69a8] hover:bg-white hover:shadow-sm"
+              >
+                <div className="art-pin flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#e6f0fa] text-lg text-[#e91e63]">
+                  <TickerIcon name="pin" className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <small className="block text-[10px] font-semibold uppercase tracking-wider text-[#5b6b80]">
+                    SELECT {locationLabel.toUpperCase()}
+                  </small>
+                  <b className="mt-0.5 block truncate text-sm sm:text-base font-extrabold text-[#0f2742]">
+                    {selectedLocation || `Choose your ${locationLabel.toLowerCase()}`}
+                  </b>
+                </div>
+                <a className="ml-auto text-xs font-bold text-[#0a69a8] hover:underline">
+                  Change
+                </a>
               </div>
-              <div className="min-w-0">
-                <small className="block text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-[#5b6b80]">
-                  SELECT {locationLabel.toUpperCase()}
-                </small>
-                <b className="mt-0.5 block truncate text-base sm:text-lg font-extrabold text-[#0f2742]">
-                  {selectedLocation || `Choose your ${locationLabel.toLowerCase()}`}
-                </b>
-              </div>
-              <a className="ml-auto text-xs sm:text-sm font-bold text-[#0a69a8] hover:underline">
-                Change
-              </a>
-            </div>
 
-            {/* Direct School Search Bar */}
-            <div className="mt-5 relative z-50">
-              <div className="sl mb-2 flex items-center justify-between text-xs font-bold tracking-wider text-[#0a69a8]">
-                <span>DIRECT SCHOOL SEARCH</span>
-                <i className="normal-case tracking-normal text-xs text-[#5b6b80]">Instant profile preview</i>
+              {/* Direct School Search Bar */}
+              <div className="mt-4 relative z-50">
+                <div className="sl mb-1.5 flex items-center justify-between text-[11px] font-bold tracking-wider text-[#0a69a8]">
+                  <span>DIRECT SCHOOL SEARCH</span>
+                  <i className="normal-case tracking-normal text-[11px] text-[#5b6b80]">Instant profile preview</i>
+                </div>
+                <SchoolSearchBar
+                  schools={schools}
+                  schoolType={schoolType}
+                  location={selectedLocation}
+                />
               </div>
-              <SchoolSearchBar
-                schools={schools}
-                schoolType={schoolType}
-                location={selectedLocation}
-              />
             </div>
           </div>
         </div>
