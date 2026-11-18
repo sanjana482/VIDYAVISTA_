@@ -272,8 +272,8 @@ export default function Hero({ schools = [] }: { schools?: SearchSchool[] }) {
           <span className="art-cr" style={{ left: "36%", top: "96%", width: 16, height: 16, background: "#7b3fa0", borderColor: "#7b3fa0", animationDelay: "-1s" }} />
         </div>
 
-        {/* ================= CENTERED HERO INNER CONTAINER (max-w-[1240px]) ================= */}
-        <div className="relative mx-auto grid w-full max-w-[1240px] grid-cols-1 items-center gap-10 lg:gap-12 px-4 sm:px-6 lg:px-8 py-10 sm:py-14 lg:grid-cols-[1.05fr_1.15fr]">
+        {/* ================= CENTERED HERO INNER CONTAINER (max-w-[1280px]) ================= */}
+        <div className="relative mx-auto grid w-full max-w-[1280px] grid-cols-1 items-center gap-10 lg:gap-12 px-4 sm:px-6 lg:px-8 py-10 sm:py-14 lg:grid-cols-[1.05fr_1.15fr]">
           {/* ================= LEFT COLUMN ================= */}
           <div>
             {/* Pill Badge */}
