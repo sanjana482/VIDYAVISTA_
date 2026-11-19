@@ -94,8 +94,8 @@ button, input, select, textarea {
 
 .hero-art {
   position: relative;
-  isolation: isolate;
-  overflow: hidden;
+  z-index: 40;
+  overflow: visible !important;
   background: radial-gradient(620px 420px at 0% 100%, #a9d6f3 0%, transparent 70%),
               radial-gradient(720px 520px at 100% 0%, #f9c3d6 0%, transparent 70%),
               linear-gradient(120deg, #dde9f4, #e8f0f7 55%, #f3dbe6);
@@ -184,6 +184,8 @@ button, input, select, textarea {
   animation: flow 6s linear infinite;
 }
 .art-panel {
+  position: relative;
+  z-index: 40;
   background: rgba(255, 255, 255, .82);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
@@ -205,6 +207,8 @@ button, input, select, textarea {
 .art-btn-p:hover { transform: translateY(-2px); }
 /* art-btn-p ring animation removed */
 .art-strip {
+  position: relative;
+  z-index: 10;
   padding: 14px 0;
   background: linear-gradient(90deg, #e6f0fa, #ffffff 50%, #e6f0fa);
   border-block: 1.5px solid #dbe6f3;

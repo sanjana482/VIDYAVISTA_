@@ -50,7 +50,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[#D6DDE5]/80 bg-white/95 shadow-[0_6px_24px_rgba(12,50,54,0.05)] backdrop-blur-xl">
+    <header className="sticky top-0 z-[100] border-b border-[#D6DDE5]/80 bg-white/95 shadow-[0_6px_24px_rgba(12,50,54,0.05)] backdrop-blur-xl">
       <nav className="mx-auto flex min-h-[80px] max-w-[1280px] items-center justify-between px-4 sm:px-6 lg:px-8 py-4">
         {/* Logo */}
         <Link href="/" className="flex items-center" aria-label="VidyaVista home">

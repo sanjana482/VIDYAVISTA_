@@ -203,7 +203,7 @@ export default function Hero({ schools = [] }: { schools?: SearchSchool[] }) {
 
   return (
     <>
-      <section className="hero-art relative z-30">
+      <section className="hero-art relative z-40">
         {/* Decorative background layer safely clipped to hero section */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden -z-1">
           {/* Rotating Conic Arc Glow */}
