@@ -203,14 +203,7 @@ button, input, select, textarea {
   animation: btnflow 7s ease-in-out infinite;
 }
 .art-btn-p:hover { transform: translateY(-2px); }
-.art-btn-p::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  animation: ring 2.6s ease-out infinite;
-}
+/* art-btn-p ring animation removed */
 .art-strip {
   padding: 14px 0;
   background: linear-gradient(90deg, #e6f0fa, #ffffff 50%, #e6f0fa);
