@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { SITE_NAME, SITE_URL, abs, jsonLd } from "./lib/seo";
+import CounsellorModal from "./components/CounsellorModal";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -113,6 +114,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: jsonLd(siteSchema) }}
         />
         {children}
+        <CounsellorModal />
       </body>
     </html>
   );

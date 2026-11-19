@@ -1,7 +1,7 @@
-
 "use client";
 
 import { useState } from "react";
+import { openCounsellorModal } from "../lib/counsellor";
 
 const steps = [
   {
@@ -32,18 +32,10 @@ const steps = [
 
 export default function SchoolGuidance() {
   const [mobile, setMobile] = useState("");
-  const [message, setMessage] = useState("");
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-
-    if (!/^[6-9]\d{9}$/.test(mobile)) {
-      setMessage("Please enter a valid 10-digit Indian mobile number.");
-      return;
-    }
-
-    // Connect this form to your backend API to save the request.
-    setMessage("Your number is ready. Connect the callback API to submit your request.");
+    openCounsellorModal({ mobile, source: "Home Guidance Banner" });
   }
 
   return (
@@ -122,29 +114,22 @@ export default function SchoolGuidance() {
                   value={mobile}
                   onChange={(e) => {
                     setMobile(e.target.value.replace(/\D/g, "").slice(0, 10));
-                    setMessage("");
                   }}
                   placeholder="10-digit mobile number"
                   className="min-w-0 flex-1 rounded-xl bg-transparent px-3 py-3 text-sm text-[#0B2A47] outline-none placeholder:text-[#98909A] focus:ring-2 focus:ring-[#F28CAE]"
-                  required
                 />
 
                 <button
                   type="submit"
-                  className="shrink-0 rounded-xl bg-[#0B2A47] px-5 py-3.5 text-sm font-extrabold text-white transition hover:bg-[#475E78] sm:px-6"
+                  className="shrink-0 rounded-xl bg-[#0B2A47] px-5 py-3.5 text-sm font-extrabold text-white transition hover:bg-[#0795DC] sm:px-6 shadow-sm flex items-center justify-center gap-1.5"
                 >
-                  Request a call →
+                  <span>Request a call</span>
+                  <span>→</span>
                 </button>
               </div>
 
-              <p aria-live="polite" className="mt-3 text-sm text-[#3F4B58]">
-                {message}
-              </p>
-
-              <p className="mt-1 text-xs leading-5 text-[#5C6875]">
-                By submitting, you agree to be contacted about school
-                admissions. Your request will need to be connected to our
-                secure backend.
+              <p className="mt-2 text-xs leading-5 text-[#5C6875]">
+                🔒 100% Free Service · Get callback from our senior school counsellor within 2-4 hours.
               </p>
             </form>
           </div>

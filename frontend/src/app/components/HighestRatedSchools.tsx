@@ -5,6 +5,8 @@ import { BOARD_LABEL, stateFor } from "../data/schools";
 import { normalizeType, readPreference, PREF_EVENT } from "../lib/preferences";
 import { useRouter } from "next/navigation";
 import { typeRank } from "../lib/preferences";
+import { typePath } from "../lib/links";
+import { openLocationPicker } from "../lib/places";
 import type { School } from "../data/schools";
 
 import { schoolPath } from "../lib/seo";
@@ -48,24 +50,45 @@ export default function HighestRatedSchools({ list = [], allSchools = [] }: { li
 
   let matches: School[] = [];
   if (isBoarding) {
-    const boardingSchools = pool.filter((s) => s.type === "Boarding School" && s.reviews > 0 && s.rating > 0);
+    const boardingSchools = pool.filter((s) => s.type === "Boarding School" && s.rating > 0);
     if (activeLoc) {
       const stateMatches = boardingSchools.filter(
         (s) => stateFor(s).toLowerCase() === activeLoc || s.city.toLowerCase() === activeLoc
       );
-      const otherBoarding = boardingSchools.filter(
-        (s) => stateFor(s).toLowerCase() !== activeLoc && s.city.toLowerCase() !== activeLoc
-      );
-      matches = [...stateMatches, ...otherBoarding];
+      if (stateMatches.length >= 4) {
+        matches = stateMatches;
+      } else {
+        const otherBoarding = boardingSchools.filter(
+          (s) => stateFor(s).toLowerCase() !== activeLoc && s.city.toLowerCase() !== activeLoc
+        );
+        matches = [...stateMatches, ...otherBoarding];
+      }
     } else {
       matches = boardingSchools;
     }
   } else {
-    const typeSchools = pool.filter((s) => s.type === (activeType || "Day School") && s.reviews > 0 && s.rating > 0);
+    const typeSchools = pool.filter((s) => s.type !== "Boarding School" && s.rating > 0);
     if (activeLoc) {
-      const cityMatches = typeSchools.filter((s) => s.city.toLowerCase() === activeLoc);
-      const otherCities = typeSchools.filter((s) => s.city.toLowerCase() !== activeLoc);
-      matches = [...cityMatches, ...otherCities];
+      const cityMatches = typeSchools.filter(
+        (s) => s.city.toLowerCase() === activeLoc || (s.area && s.area.toLowerCase() === activeLoc)
+      );
+      if (cityMatches.length >= 4) {
+        matches = cityMatches;
+      } else {
+        const stateMatches = typeSchools.filter(
+          (s) =>
+            s.city.toLowerCase() !== activeLoc &&
+            (!s.area || s.area.toLowerCase() !== activeLoc) &&
+            stateFor(s).toLowerCase() === activeLoc
+        );
+        const otherDay = typeSchools.filter(
+          (s) =>
+            s.city.toLowerCase() !== activeLoc &&
+            (!s.area || s.area.toLowerCase() !== activeLoc) &&
+            stateFor(s).toLowerCase() !== activeLoc
+        );
+        matches = [...cityMatches, ...stateMatches, ...otherDay];
+      }
     } else {
       matches = typeSchools;
     }
@@ -73,31 +96,36 @@ export default function HighestRatedSchools({ list = [], allSchools = [] }: { li
 
   matches.sort((a, b) => b.rating - a.rating || b.reviews - a.reviews);
 
-  // Pad to minimum 10 schools
+  // Pad to minimum 4 schools strictly matching type
   const seen = new Set(matches.map((s) => s.id));
-  if (matches.length < 10) {
-    const otherRated = pool
-      .filter((s) => s.reviews > 0 && s.rating > 0 && !seen.has(s.id))
-      .sort((a, b) => b.rating - a.rating || b.reviews - a.reviews);
+  if (matches.length < 4) {
+    const fallbackPool = isBoarding
+      ? pool.filter((s) => s.type === "Boarding School")
+      : pool.filter((s) => s.type !== "Boarding School");
+    const otherRated = fallbackPool
+      .filter((s) => !seen.has(s.id))
+      .sort((a, b) => (b.rating || 0) - (a.rating || 0) || (b.reviews || 0) - (a.reviews || 0));
     for (const s of otherRated) {
       seen.add(s.id);
       matches.push(s);
-      if (matches.length >= 10) break;
-    }
-  }
-  if (matches.length < 10) {
-    for (const s of pool) {
-      if (!seen.has(s.id)) {
-        seen.add(s.id);
-        matches.push(s);
-        if (matches.length >= 10) break;
-      }
+      if (matches.length >= 4) break;
     }
   }
 
-  const ratedSchools = matches.slice(0, Math.max(10, Math.min(14, matches.length))).map(toCard);
+  const ratedSchools = matches.slice(0, Math.max(4, Math.min(12, matches.length))).map(toCard);
 
   const router = useRouter();
+
+  const handleExploreAll = () => {
+    const p = readPreference();
+    const type = p ? normalizeType(p.type) : normalizeType(activeType);
+    if (p?.location && type) {
+      router.push(typePath(type, p.location));
+    } else {
+      openLocationPicker(type);
+    }
+  };
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const [savedIds, setSavedIds] = useState<number[]>([]);
 
@@ -247,6 +275,18 @@ export default function HighestRatedSchools({ list = [], allSchools = [] }: { li
                 </div>
               </article>
             ))}
+        </div>
+
+        {/* Explore All Schools Button */}
+        <div className="relative mt-8 text-center">
+          <button
+            type="button"
+            onClick={handleExploreAll}
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#0B2A47] to-[#1E4366] px-6 py-3 text-xs sm:text-sm font-extrabold text-white shadow-md shadow-[#0B2A47]/15 transition hover:-translate-y-0.5 hover:shadow-lg vv-btn"
+          >
+            Explore All Schools
+            <Icon name="arrowUpRight" className="h-4 w-4" />
+          </button>
         </div>
       </div>
     </section>

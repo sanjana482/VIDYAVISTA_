@@ -120,6 +120,7 @@ export default async function SchoolProfileView({ param, section }: { param: str
   const stats = [
     { label: "Board", value: BOARD_LABEL[s.board] ?? s.board },
     { label: "School type", value: s.type },
+    s.gender ? { label: "Gender", value: s.gender } : null,
     { label: "Classes", value: `${classes[0].cls} - ${lastCls}` },
     p.established ? { label: "Established", value: String(p.established) } : null,
     p.ratio ? { label: "Student : Teacher", value: `${p.ratio} : 1` } : null,
@@ -280,9 +281,16 @@ export default async function SchoolProfileView({ param, section }: { param: str
             <h2 className="text-2xl font-extrabold sm:text-3xl">Need help choosing the right school?</h2>
             <p className="mt-2 max-w-xl text-white/90">Talk to a free counsellor, compare fees and shortlist schools that match your child&apos;s needs.</p>
           </div>
-          <Link href="/counselling" className="shrink-0 rounded-xl bg-white px-7 py-4 text-sm font-extrabold text-[#0A5C91] shadow-lg transition hover:-translate-y-0.5">
+          <button
+            type="button"
+            data-open-counsellor="true"
+            data-source={`School Profile: ${s.name}`}
+            data-city={s.city}
+            data-class={classes[0]?.cls || "Class 1"}
+            className="shrink-0 rounded-xl bg-white px-7 py-4 text-sm font-extrabold text-[#0A5C91] shadow-lg transition hover:-translate-y-0.5 hover:bg-[#F0F8FF]"
+          >
             Get Counselling →
-          </Link>
+          </button>
         </div>
       </section>
 

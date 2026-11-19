@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 from . import admin_api as A
 from . import portal_api as P
 from . import blog_api as B
-from .views import SchoolViewSet, EnquiryViewSet, LocationViewSet, ReviewViewSet, location_detail, location_index
+from .views import SchoolViewSet, EnquiryViewSet, LocationViewSet, ReviewViewSet, location_detail, location_index, submit_counsellor_request
 
 router = DefaultRouter()
 router.register("schools", SchoolViewSet, basename="school")
@@ -66,6 +66,7 @@ urlpatterns = [
     path("admin/upload", A.upload),
 
     # ---- Public API
+    path("counsellor-request/", submit_counsellor_request, name="counsellor_request"),
     path("blog/", B.blog_list),
     path("blog/<slug:slug>/", B.blog_detail),
     path("locations/index", location_index),

@@ -1,10 +1,11 @@
-﻿
+
 "use client";
 
 import { useState } from "react";
 import Link from "next/link";
 import FooterLocationLinks, { type FooterContext } from "./FooterLocationLinks";
 import Icon from "./Icon";
+import { openCounsellorModal } from "../lib/counsellor";
 
 type BrowseTab = "region" | "board" | "popular";
 
@@ -188,27 +189,36 @@ export default function Footer({ context }: { context?: FooterContext } = {}) {
       </div>
 
       <div className="relative mx-auto w-full max-w-[1720px] px-4 sm:px-6 lg:px-8 xl:px-12">
-        {/* Quick links */}
+        {/* Value Proposition Highlights */}
         <div className="grid gap-4 border-b border-white/10 py-10 sm:grid-cols-2 xl:grid-cols-4">
           {features.map((feature) => (
-            <Link
-              href={feature.href}
+            <div
               key={feature.title}
-              className="group flex gap-4 rounded-2xl border border-white/10 bg-white/[0.055] p-5 transition duration-300 hover:-translate-y-1 hover:border-[#FF6B9A]/60 hover:bg-white/[0.09]"
+              className="flex gap-4 rounded-2xl border border-white/10 bg-white/[0.055] p-5 select-none transition duration-300 hover:border-white/20 hover:bg-white/[0.08]"
             >
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FF6B9A] to-[#EC0E58] text-xl shadow-lg">
-                <Icon name={feature.icon} className="h-6 w-6" />
+                <Icon name={feature.icon} className="h-6 w-6 text-white" />
               </span>
 
-              <span>
+              <div className="flex-1">
                 <span className="block font-extrabold text-white">
                   {feature.title}
                 </span>
                 <span className="mt-1.5 block text-sm leading-6 text-[#C5CED8]">
                   {feature.description}
                 </span>
-              </span>
-            </Link>
+                {feature.title === "Free counselling" && (
+                  <button
+                    type="button"
+                    onClick={() => openCounsellorModal({ source: "Footer: Free Counselling" })}
+                    className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-bold text-[#FF6B9A] hover:text-[#FFE3EC] transition cursor-pointer"
+                  >
+                    <span>Talk to a counsellor</span>
+                    <span aria-hidden="true">&rarr;</span>
+                  </button>
+                )}
+              </div>
+            </div>
           ))}
         </div>
 
@@ -302,7 +312,13 @@ export default function Footer({ context }: { context?: FooterContext } = {}) {
             <div className="mt-6 flex flex-col gap-4 text-sm text-[#CDD4DD]">
               <Link className="hover:text-white" href="/schools">Explore All Schools</Link>
               <Link className="hover:text-white" href="/compare">Compare Schools</Link>
-              <Link className="hover:text-white" href="/counselling">Get Counselling</Link>
+              <button
+                type="button"
+                onClick={() => openCounsellorModal({ source: "Footer: Get Counselling" })}
+                className="text-left text-sm text-[#CDD4DD] hover:text-white cursor-pointer transition"
+              >
+                Get Counselling
+              </button>
               <Link className="hover:text-white" href="/parents-guide">Parent&apos;s Guide</Link>
               <Link className="hover:text-white" href="/blog">Blog &amp; Guides</Link>
             </div>
@@ -330,7 +346,7 @@ export default function Footer({ context }: { context?: FooterContext } = {}) {
             <div className="mt-6 flex flex-col gap-4 text-sm text-[#CDD4DD]">
               <Link className="hover:text-white" href="/about">About Us</Link>
               <Link className="hover:text-white" href="/contact">Contact Us</Link>
-              <Link className="hover:text-white" href="/list-school">List Your School</Link>
+              <Link className="hover:text-white" href="/login?role=school&mode=register">List Your School</Link>
               <Link className="hover:text-white" href="/support">Help &amp; Support</Link>
             </div>
           </div>

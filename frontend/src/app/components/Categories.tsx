@@ -76,13 +76,7 @@ export default function Categories() {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => router.push("/schools")}
-            className="w-fit rounded-xl border border-[#C9D3DF] bg-white px-5 py-3 font-bold text-[#0A5C91] transition hover:border-[#0A7BBF] hover:bg-[#EAF1F5]"
-          >
-            View All Schools →
-          </button>
+
         </div>
 
 

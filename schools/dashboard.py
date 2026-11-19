@@ -9,7 +9,7 @@ from django.utils import timezone
 
 from .models import (
     ADMISSION_STATUS, BOARDS, Enquiry, Invoice, LocationPage,
-    ParentProfile, Plan, Review, School, SchoolAccount, SchoolMembership,
+    ParentProfile, Plan, Review, School, SchoolAccount, SchoolMembership, CounsellorLead,
 )
 from .portal_api import ensure_default_plans
 
@@ -95,6 +95,8 @@ def dashboard_data(request):
             "pendingSchoolLinks": SchoolAccount.objects.filter(school_link_status__in=["pending_claim", "pending_new"]).count(),
             "pendingEdits": SchoolAccount.objects.filter(edit_approval_status="pending").count(),
             "parentAccounts": ParentProfile.objects.count(),
+            "counsellorLeads": CounsellorLead.objects.count(),
+            "newCounsellorLeads": CounsellorLead.objects.filter(status="new").count(),
             "activePlans": active_plans,
             "totalRevenue": total_revenue,
             "invoicesCount": Invoice.objects.count(),
@@ -116,6 +118,7 @@ def dashboard_data(request):
             "locations": reverse("admin:schools_locationpage_changelist"),
             "importCsv": "/admin/schools/school/import-csv/",
             "schoolAccounts": reverse("admin:schools_schoolaccount_changelist"),
+            "counsellorLeads": reverse("admin:schools_counsellorlead_changelist"),
             "createSchoolLogin": reverse("admin:schools_schoolaccount_quick_create"),
             "parentAccounts": reverse("admin:schools_parentprofile_changelist"),
             "plans": reverse("admin:schools_plan_changelist"),

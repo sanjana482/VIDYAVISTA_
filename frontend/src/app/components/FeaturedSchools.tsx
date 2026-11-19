@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import type { School } from "../data/schools";
 import { BOARD_LABEL, stateFor } from "../data/schools";
 import { normalizeType, readPreference, PREF_EVENT } from "../lib/preferences";
+import { typePath } from "../lib/links";
+import { openLocationPicker } from "../lib/places";
 import { schoolPath } from "../lib/seo";
 import { feeRange, lakh } from "../data/profile";
 import Icon from "./Icon";
@@ -67,42 +69,77 @@ export default function FeaturedSchools({ list = [], allSchools = [] }: { list?:
       const stateMatches = boardingSchools.filter(
         (s) => stateFor(s).toLowerCase() === activeLoc || s.city.toLowerCase() === activeLoc
       );
-      const otherBoarding = boardingSchools.filter(
-        (s) => stateFor(s).toLowerCase() !== activeLoc && s.city.toLowerCase() !== activeLoc
-      );
-      matches = [...stateMatches, ...otherBoarding];
+      if (stateMatches.length >= 4) {
+        matches = stateMatches;
+      } else {
+        const otherBoarding = boardingSchools.filter(
+          (s) => stateFor(s).toLowerCase() !== activeLoc && s.city.toLowerCase() !== activeLoc
+        );
+        matches = [...stateMatches, ...otherBoarding];
+      }
     } else {
       matches = boardingSchools;
     }
   } else {
-    const typeSchools = pool.filter((s) => s.type === (activeType || "Day School"));
+    const typeSchools = pool.filter((s) => s.type !== "Boarding School");
     if (activeLoc) {
-      const cityMatches = typeSchools.filter((s) => s.city.toLowerCase() === activeLoc);
-      const otherCities = typeSchools.filter((s) => s.city.toLowerCase() !== activeLoc);
-      matches = [...cityMatches, ...otherCities];
+      const cityMatches = typeSchools.filter(
+        (s) => s.city.toLowerCase() === activeLoc || (s.area && s.area.toLowerCase() === activeLoc)
+      );
+      if (cityMatches.length >= 4) {
+        matches = cityMatches;
+      } else {
+        const stateMatches = typeSchools.filter(
+          (s) =>
+            s.city.toLowerCase() !== activeLoc &&
+            (!s.area || s.area.toLowerCase() !== activeLoc) &&
+            stateFor(s).toLowerCase() === activeLoc
+        );
+        const otherDay = typeSchools.filter(
+          (s) =>
+            s.city.toLowerCase() !== activeLoc &&
+            (!s.area || s.area.toLowerCase() !== activeLoc) &&
+            stateFor(s).toLowerCase() !== activeLoc
+        );
+        matches = [...cityMatches, ...stateMatches, ...otherDay];
+      }
     } else {
       matches = typeSchools;
     }
   }
 
-  // Prioritize isFeatured within matches
-  matches.sort((a, b) => Number(!!b.isFeatured) - Number(!!a.isFeatured));
+  // Prioritize isFeatured within matches, then rating
+  matches.sort((a, b) => Number(!!b.isFeatured) - Number(!!a.isFeatured) || (b.rating || 0) - (a.rating || 0));
 
-  // Ensure minimum 10 schools
+  // Ensure minimum 4 schools matching type strictly
   const seen = new Set(matches.map((s) => s.id));
-  if (matches.length < 10) {
-    for (const s of pool) {
+  if (matches.length < 4) {
+    const fallbackPool = isBoarding
+      ? pool.filter((s) => s.type === "Boarding School")
+      : pool.filter((s) => s.type !== "Boarding School");
+    for (const s of fallbackPool) {
       if (!seen.has(s.id)) {
         seen.add(s.id);
         matches.push(s);
-        if (matches.length >= 10) break;
+        if (matches.length >= 4) break;
       }
     }
   }
 
-  const selectedList = matches.slice(0, Math.max(10, Math.min(14, matches.length)));
+  const selectedList = matches.slice(0, Math.max(4, Math.min(12, matches.length)));
   const schools = selectedList.map(toCard);
   const router = useRouter();
+
+  const handleExploreAll = () => {
+    const p = readPreference();
+    const type = p ? normalizeType(p.type) : normalizeType(activeType);
+    if (p?.location && type) {
+      router.push(typePath(type, p.location));
+    } else {
+      openLocationPicker(type);
+    }
+  };
+
   const [compareIds, setCompareIds] = useState<number[]>([]);
   const [savedIds, setSavedIds] = useState<number[]>([]);
 
@@ -402,7 +439,7 @@ export default function FeaturedSchools({ list = [], allSchools = [] }: { list?:
       <div className="relative mt-8 text-center">
         <button
           type="button"
-          onClick={() => router.push("/schools")}
+          onClick={handleExploreAll}
           className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#0B2A47] to-[#1E4366] px-6 py-3 text-xs sm:text-sm font-extrabold text-white shadow-md shadow-[#0B2A47]/15 transition hover:-translate-y-0.5 hover:shadow-lg vv-btn"
         >
           Explore All Schools

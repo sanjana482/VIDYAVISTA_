@@ -1,9 +1,9 @@
-
 "use client";
 
 import { useState } from "react";
 import { homeFaqs as faqs } from "../data/faqs";
 import Icon from "./Icon";
+import { openCounsellorModal } from "../lib/counsellor";
 
 
 export default function FAQ() {
@@ -42,12 +42,13 @@ export default function FAQ() {
               </div>
             </div>
 
-            <a
-              href="/counselling"
-              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#0B2A47] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#475E78]"
+            <button
+              type="button"
+              onClick={() => openCounsellorModal({ source: "FAQ Section" })}
+              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#0B2A47] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#0795DC]"
             >
               Get Counselling <span>→</span>
-            </a>
+            </button>
           </div>
         </div>
 

@@ -653,8 +653,8 @@ class SchoolAccount(models.Model):
 
     class Meta:
         ordering = ['-created_at']
-        verbose_name = 'School Owner & Institution'
-        verbose_name_plural = 'School Owners & Institutions'
+        verbose_name = 'School Owner & Approval'
+        verbose_name_plural = 'School Owners & Approvals'
 
     def sync_owner_record(self):
         """Keeps the `Owner` table synchronized with this `SchoolAccount` so Admin sees everything in both places."""
@@ -774,8 +774,8 @@ class Plan(models.Model):
 
     class Meta:
         ordering = ['order', 'price', 'id']
-        verbose_name = 'Membership Plan / Lead Top-up'
-        verbose_name_plural = 'Membership Plans & Lead Top-ups'
+        verbose_name = 'Membership Plan'
+        verbose_name_plural = 'Membership Plans'
 
     @property
     def gst_amount(self):
@@ -853,8 +853,8 @@ class SchoolMembership(models.Model):
 
     class Meta:
         ordering = ['-created_at']
-        verbose_name = 'School Membership / Lead Recharge'
-        verbose_name_plural = 'School Memberships & Lead Recharges'
+        verbose_name = 'School Membership'
+        verbose_name_plural = 'School Memberships'
 
     @property
     def leads_remaining(self):
@@ -1098,3 +1098,40 @@ class BlogPost(models.Model):
 
     def __str__(self):
         return self.title
+
+
+# ============================================================================
+# COUNSELLOR LEADS (Talk to a Counsellor / Free Counselling Requests)
+# ============================================================================
+class CounsellorLead(models.Model):
+    STATUS_CHOICES = [
+        ('new', 'New Request'),
+        ('contacted', 'Contacted / In Touch'),
+        ('shortlisted', 'Schools Shortlisted / Visit Scheduled'),
+        ('admitted', 'Admission Completed'),
+        ('closed', 'Closed / Not Interested'),
+    ]
+
+    name = models.CharField('Parent / Student Name', max_length=120)
+    mobile = models.CharField('Mobile Number', max_length=10, db_index=True, validators=[mobile_validator])
+    child_class = models.CharField('Seeking Admission for Class', max_length=50, blank=True, default='')
+    city = models.CharField('City / Preferred Location', max_length=120, blank=True, default='')
+    board = models.CharField('Preferred Board', max_length=40, blank=True, default='', choices=BOARDS)
+    budget = models.CharField('Annual Fee Budget', max_length=80, blank=True, default='')
+    notes = models.TextField('Additional Requirements / Notes', blank=True, default='')
+
+    status = models.CharField('Status', max_length=20, choices=STATUS_CHOICES, default='new', db_index=True)
+    counsellor_remarks = models.TextField('Counsellor Call Notes / Follow-up', blank=True, default='')
+    source = models.CharField('Source / Trigger Location', max_length=200, blank=True, default='Home Guidance Banner')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Counsellor Request'
+        verbose_name_plural = 'School Counsellor Leads'
+
+    def __str__(self):
+        return f"{self.name} ({self.mobile}) - {self.child_class or 'Counselling'}"
+

@@ -1,3 +1,4 @@
+import re
 from django.db.models import Count, Prefetch, Q
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, filters, status
@@ -6,12 +7,52 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
-from .models import School, Enquiry, LocationPage, Review, ParentProfile
+from .models import School, Enquiry, LocationPage, Review, ParentProfile, CounsellorLead
 from .serializers import SchoolSerializer, SchoolListSerializer, EnquirySerializer, LocationSerializer, ReviewSerializer
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def health(request): return Response({'ok':True,'service':'VidyaVista API','database':'configured'})
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def submit_counsellor_request(request):
+    data = request.data
+    name = (data.get('name') or '').strip()
+    mobile = (data.get('mobile') or '').strip()
+    child_class = (data.get('child_class') or data.get('className') or '').strip()
+    city = (data.get('city') or '').strip()
+    board = (data.get('board') or '').strip()
+    budget = (data.get('budget') or '').strip()
+    notes = (data.get('notes') or '').strip()
+    source = (data.get('source') or 'Website Counsellor Panel').strip()
+
+    if not name:
+        return Response({'ok': False, 'error': 'Please enter your name.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    cleaned_mobile = re.sub(r'\D', '', mobile)
+    if len(cleaned_mobile) > 10 and cleaned_mobile.startswith('91'):
+        cleaned_mobile = cleaned_mobile[2:]
+    if len(cleaned_mobile) != 10 or not cleaned_mobile[0] in '6789':
+        return Response({'ok': False, 'error': 'Please enter a valid 10-digit Indian mobile number.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    lead = CounsellorLead.objects.create(
+        name=name,
+        mobile=cleaned_mobile,
+        child_class=child_class,
+        city=city,
+        board=board,
+        budget=budget,
+        notes=notes,
+        source=source,
+    )
+
+    return Response({
+        'ok': True,
+        'message': 'Your counselling request has been received! Our expert counsellor will connect with you shortly.',
+        'lead_id': lead.id,
+    }, status=status.HTTP_201_CREATED)
 
 class SchoolPagination(PageNumberPagination):
     page_size = 50

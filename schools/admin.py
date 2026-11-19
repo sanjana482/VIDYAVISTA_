@@ -20,6 +20,7 @@ from .models import (
     LocationFAQ, LocationHighlight, LocationPage, Owner, ParentProfile,
     Plan, Review, School, SchoolAccount, SchoolAward, SchoolFAQ,
     BranchClaim, SchoolHighlight, SchoolMembership, SchoolPhoto, SchoolVideo, Shortlist,
+    BlogPost, CounsellorLead,
 )
 from .portal_api import (
     approve_owner_profile, approve_school_edits, approve_school_link, ensure_default_plans,
@@ -1880,6 +1881,84 @@ class ReviewAdmin(admin.ModelAdmin):
     def approve_selected_school_replies(self, request, queryset):
         n = queryset.filter(school_reply__gt='').update(reply_approved=True)
         messages.success(request, f"Approved {n} school official reply/replies.")
+
+
+@admin.register(CounsellorLead)
+class CounsellorLeadAdmin(admin.ModelAdmin):
+    list_display = (
+        'name',
+        'call_link',
+        'child_class',
+        'city',
+        'board',
+        'budget',
+        'status_badge',
+        'source',
+        'created_at',
+    )
+    list_filter = ('status', 'board', 'created_at')
+    search_fields = ('name', 'mobile', 'city', 'child_class', 'notes', 'counsellor_remarks')
+    list_per_page = 30
+    readonly_fields = ('created_at', 'updated_at', 'call_link')
+    actions = ['mark_contacted', 'mark_shortlisted', 'mark_admitted', 'mark_closed']
+
+    fieldsets = (
+        ('Parent & Student Details', {
+            'fields': ('name', 'mobile', 'call_link', 'child_class', 'city', 'board', 'budget', 'source')
+        }),
+        ('Parent Query / Requirements', {
+            'fields': ('notes',)
+        }),
+        ('Counselling Status & Follow-up', {
+            'fields': ('status', 'counsellor_remarks', 'created_at', 'updated_at')
+        }),
+    )
+
+    @admin.display(description="Mobile / Call")
+    def call_link(self, obj):
+        if not obj.mobile:
+            return "-"
+        return format_html(
+            '<a href="tel:{}" class="btn btn-xs btn-success" style="font-weight:700;padding:4px 10px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;">'
+            '<i class="fas fa-phone-alt"></i>{}</a>',
+            obj.mobile, obj.mobile
+        )
+
+    @admin.display(description="Status")
+    def status_badge(self, obj):
+        colors = {
+            'new': ('#fef3c7', '#b45309', 'fas fa-sparkles', 'New Request'),
+            'contacted': ('#e0f2fe', '#0369a1', 'fas fa-phone-volume', 'Contacted / In Touch'),
+            'shortlisted': ('#ede9fe', '#6d28d9', 'fas fa-school', 'Shortlisted / Visit Scheduled'),
+            'admitted': ('#dcfce7', '#15803d', 'fas fa-check-circle', 'Admission Completed'),
+            'closed': ('#f1f5f9', '#475569', 'fas fa-times-circle', 'Closed'),
+        }
+        bg, fg, icon, label = colors.get(obj.status, ('#f1f5f9', '#475569', 'fas fa-info-circle', obj.status))
+        return format_html(
+            '<span style="background:{};color:{};padding:4px 10px;border-radius:99px;font-weight:700;font-size:11.5px;display:inline-flex;align-items:center;gap:5px;">'
+            '<i class="{}"></i>{}</span>',
+            bg, fg, icon, label
+        )
+
+    @admin.action(description='📞 Mark as Contacted / In Touch')
+    def mark_contacted(self, request, queryset):
+        n = queryset.update(status='contacted')
+        messages.success(request, f"Updated {n} counsellor request(s) to Contacted.")
+
+    @admin.action(description='🏫 Mark as Shortlisted / Visit Scheduled')
+    def mark_shortlisted(self, request, queryset):
+        n = queryset.update(status='shortlisted')
+        messages.success(request, f"Updated {n} counsellor request(s) to Shortlisted.")
+
+    @admin.action(description='🎉 Mark as Admission Completed')
+    def mark_admitted(self, request, queryset):
+        n = queryset.update(status='admitted')
+        messages.success(request, f"Updated {n} counsellor request(s) to Admission Completed.")
+
+    @admin.action(description='✖ Mark as Closed / Not Interested')
+    def mark_closed(self, request, queryset):
+        n = queryset.update(status='closed')
+        messages.info(request, f"Closed {n} counsellor request(s).")
 
 
 from . import blog_admin  # noqa: E402,F401  (registers Blog posts in the admin)

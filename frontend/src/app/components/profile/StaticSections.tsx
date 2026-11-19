@@ -6,22 +6,62 @@ import Icon from "../Icon";
 const FACILITY_ICON: Record<string, string> = { building: "building", book: "book", trophy: "trophy", flask: "flask", palette: "palette", shield: "shield", accessibility: "accessibility" };
 
 export function Facilities({ p }: { p: Profile }) {
+  const totalCount = p.facilities.reduce((sum, g) => sum + g.items.length, 0);
+
   return (
     <div>
-      <h2 className="text-3xl font-extrabold tracking-tight text-[#0B2A47]">Facilities</h2>
-      <div className="mt-6 space-y-7">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#0B2A47]">Facilities</h2>
+          <p className="mt-1 text-xs sm:text-sm text-[#707E8F]">
+            Campus infrastructure, sports and academic amenities
+          </p>
+        </div>
+        <span className="rounded-full bg-[#E1F1FA] px-3.5 py-1 text-xs font-extrabold text-[#0A5C91]">
+          {totalCount} {totalCount === 1 ? "amenity" : "amenities"} available
+        </span>
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-5">
         {p.facilities.map((g) => (
-          <div key={g.title}>
-            <h3 className="flex items-center gap-2 font-extrabold text-[#0B2A47]"><Icon name={FACILITY_ICON[g.icon] ?? "building"} className="h-5 w-5 text-[#0795DC]" />{g.title}</h3>
-            <div className="mt-3 flex flex-wrap gap-3">
-              {g.items.map((i) => (
-                <span key={i} className="rounded-full border border-[#D6DDE5] bg-white px-5 py-3 text-sm text-[#4E5A68] transition hover:border-[#0795DC] hover:bg-[#F1F8FC] hover:text-[#0A5C91]">{i}</span>
-              ))}
+          <div
+            key={g.title}
+            className="rounded-2xl border border-[#E1E7EE] bg-white p-5 shadow-sm transition hover:border-[#0795DC]/40 hover:shadow-md flex flex-col justify-between"
+          >
+            <div>
+              <div className="flex items-center justify-between border-b border-[#F0F4F8] pb-3">
+                <h3 className="flex items-center gap-2.5 font-extrabold text-sm sm:text-base text-[#0B2A47]">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#E1F1FA] text-[#0A5C91]">
+                    <Icon name={FACILITY_ICON[g.icon] ?? "building"} className="h-4 w-4" />
+                  </span>
+                  <span>{g.title}</span>
+                </h3>
+                <span className="rounded-md bg-[#F4F7FA] px-2 py-0.5 text-[11px] font-bold text-[#627282]">
+                  {g.items.length}
+                </span>
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                {g.items.map((i) => (
+                  <span
+                    key={i}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-1.5 text-xs font-semibold text-[#334155] transition hover:border-[#0795DC] hover:bg-[#F0F9FF] hover:text-[#0A5C91]"
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#0795DC]" />
+                    <span>{i}</span>
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
         ))}
       </div>
-      {p.notAvailable.length > 0 && <p className="mt-6 text-sm text-[#707E8F]">Not available: {p.notAvailable.join(", ")}.</p>}
+
+      {p.notAvailable.length > 0 && (
+        <div className="mt-6 rounded-xl border border-[#FDE8EF] bg-[#FFF5F8] p-4 text-xs sm:text-sm text-[#C8104F]">
+          <strong>Not available:</strong> {p.notAvailable.join(", ")}.
+        </div>
+      )}
     </div>
   );
 }

@@ -6,12 +6,17 @@ User & Password Administration for VidyaVista:
 """
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Group, User
 from django.urls import reverse
 from django.utils.html import format_html
 
 try:
     admin.site.unregister(User)
+except admin.sites.NotRegistered:
+    pass
+
+try:
+    admin.site.unregister(Group)
 except admin.sites.NotRegistered:
     pass
 

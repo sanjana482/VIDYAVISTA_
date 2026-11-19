@@ -1,4 +1,4 @@
-﻿@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,650;0,9..144,750;1,9..144,560&family=Outfit:wght@400;500;600;700;800&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,650;0,9..144,750;1,9..144,560&family=Outfit:wght@400;500;600;700;800&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -538,3 +538,11 @@ img { max-width: 100%; }
 .vv-prose th, .vv-prose td { border: 1px solid #d6dde5; padding: 0.6rem 0.8rem; text-align: left; }
 .vv-prose th { background: #eef4fa; color: #0b2a47; }
 .vv-prose img { margin-top: 1.5rem; border-radius: 1rem; max-width: 100%; height: auto; }
+
+
+/* Mobile bottom nav safe padding */
+@media (max-width: 767px) {
+  body {
+    padding-bottom: 4.5rem;
+  }
+}

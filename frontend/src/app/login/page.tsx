@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import AuthShowcase from "./AuthShowcase";
 import { fetchCaptcha, portalApi, setPortalSession } from "../lib/portalApi";
 
 function LoginPortalInner() {
@@ -37,7 +38,14 @@ function LoginPortalInner() {
 
   const [role, setRole] = useState<"parent" | "school">(initialRole);
   const [mode, setMode] = useState<"login" | "register" | "forgot">(initialMode);
-  const [mobileStep, setMobileStep] = useState<"showcase" | "form">(searchParams.get("step") === "form" || initialMode === "register" ? "form" : "showcase");
+  const [mobileView, setMobileView] = useState<"welcome" | "form">("welcome");
+
+  const handleStartAuth = (targetMode: "login" | "register") => {
+    setMode(targetMode);
+    setMobileView("form");
+    setError("");
+    setInfoMsg("");
+  };
 
   // Forgot / Reset Password state
   const [forgotEmail, setForgotEmail] = useState("");
@@ -113,7 +121,9 @@ function LoginPortalInner() {
     const reqMode = searchParams.get("mode");
 
     if (reqRole === "school") setRole("school");
+    else if (reqRole === "parent") setRole("parent");
     if (reqMode === "register") setMode("register");
+    else if (reqMode === "login") setMode("login");
 
     if (sName) {
       setInstitutionName(sName);
@@ -576,268 +586,128 @@ function LoginPortalInner() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F7FA] text-[#12304A]">
-      <Navbar />
+    <div className="min-h-screen bg-white lg:bg-[#F4F7FA] text-[#12304A]">
+      {/* Desktop Navbar */}
+      <div className="hidden lg:block">
+        <Navbar />
+      </div>
 
-      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:py-12">
-        <div className="vv-rise overflow-hidden rounded-[2rem] border border-[#E2E8F0] bg-white shadow-2xl shadow-[#0B2A47]/8 grid lg:grid-cols-2">
-          {/* Left Column: Clean Dribbble-Style Showcase */}
-          {/* On Mobile: Visible when mobileStep === 'showcase' */}
-          <div
-            className={`relative flex-col p-6 sm:p-8 lg:p-10 transition-colors duration-700 min-h-full ${
-              mobileStep === "showcase" ? "flex" : "hidden"
-            } lg:flex ${
-              role === "parent"
-                ? "bg-gradient-to-b from-[#FCFDFE] via-[#FFF8FA] to-[#FDF2F5]"
-                : "bg-gradient-to-b from-[#EBF5FB] via-[#F3F8FC] to-[#E6F0F8]"
-            }`}
-          >
-            {/* Sticky showcase container that stays pinned at the top regardless of form height */}
-            <div className="w-full flex flex-col items-center lg:sticky lg:top-8">
-              {/* Mobile Role Switcher (Shown on Mobile Showcase so user can toggle Parent vs School directly) */}
-              <div className="w-full grid grid-cols-2 gap-2 rounded-2xl bg-white/80 p-1.5 mb-5 shadow-sm border border-slate-200/60 lg:hidden">
-                <button
-                  type="button"
-                  onClick={() => { setRole("parent"); setError(""); setInfoMsg(""); }}
-                  className={`inline-flex h-10 items-center justify-center gap-2 rounded-xl px-3 text-xs font-extrabold transition-all duration-200 ${
-                    role === "parent"
-                      ? "bg-[#F43F5E] text-white shadow-sm"
-                      : "text-[#5C6A7B] hover:text-[#0B2A47]"
-                  }`}
-                >
-                  <UserRound className="h-4 w-4 shrink-0" />
-                  <span>Parent / Student</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setRole("school"); setError(""); setInfoMsg(""); }}
-                  className={`inline-flex h-10 items-center justify-center gap-2 rounded-xl px-3 text-xs font-extrabold transition-all duration-200 ${
-                    role === "school"
-                      ? "bg-[#0B2A47] text-white shadow-sm"
-                      : "text-[#5C6A7B] hover:text-[#0B2A47]"
-                  }`}
-                >
-                  <School className="h-4 w-4 shrink-0" />
-                  <span>School / Institution</span>
-                </button>
-              </div>
+      {/* Mobile Top Header on Login: Corner Back Arrow + Logo + Role Pill */}
+      <div className="sticky top-0 z-30 flex items-center justify-between border-b border-slate-200/80 bg-white/95 px-4 py-3 backdrop-blur-md lg:hidden">
+        <button
+          type="button"
+          onClick={() => {
+            if (mobileView === "form") {
+              setMobileView("welcome");
+            } else if (typeof window !== "undefined" && window.history.length > 1) {
+              router.back();
+            } else {
+              router.push("/");
+            }
+          }}
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-[#F8FAFC] text-[#0B2A47] shadow-sm transition hover:bg-slate-100 active:scale-95"
+          aria-label="Back"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
 
-              {/* Top Portal Badge */}
-              <div className="w-full flex items-center justify-between mb-4 sm:mb-6">
-                <span
-                  className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-extrabold uppercase tracking-wider shadow-sm transition-colors duration-300 ${
-                    role === "parent"
-                      ? "bg-white text-[#F43F5E] border border-[#FEE2E8]"
-                      : "bg-white text-[#0A5C91] border border-[#CFE4F5]"
-                  }`}
-                >
-                  <Sparkles className="h-3.5 w-3.5" />
-                  <span>{role === "parent" ? "Parent & Student Portal" : "Institution Partner Portal"}</span>
-                </span>
-              </div>
+        <Link href="/" className="flex items-center" aria-label="VidyaVista home">
+          <img
+            src="/logo.png"
+            alt="VidyaVista - Discover | Learn | Grow"
+            className="h-7 w-auto object-contain"
+          />
+        </Link>
 
-              {/* Centered Illustration with Gentle Float Animation */}
-              <div className="w-full flex flex-col items-center text-center">
-                <div className="vv-float-soft relative mx-auto w-full max-w-[340px] sm:max-w-[380px] h-[210px] sm:h-[260px] flex items-center justify-center">
-                  {role === "parent" ? (
-                    <div className="relative h-full w-full overflow-hidden rounded-2xl transition-all duration-500 flex items-center justify-center">
-                      <img
-                        src="/images/auth-illustration.jpg"
-                        alt="Happy family walking to school"
-                        className="max-h-full max-w-full object-contain filter drop-shadow-md"
-                      />
-                    </div>
-                  ) : (
-                    <div className="relative h-full w-full overflow-hidden rounded-2xl transition-all duration-500 flex items-center justify-center">
-                      <img
-                        src="/images/institution-illustration.svg"
-                        alt="Modern school campus"
-                        className="max-h-full max-w-full object-contain filter drop-shadow-md"
-                      />
-                    </div>
-                  )}
-                </div>
+        <span
+          className={`rounded-full px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider ${
+            role === "school"
+              ? "border border-sky-100 bg-sky-50 text-[#0A5C91]"
+              : "border border-rose-100 bg-rose-50 text-[#EC0E58]"
+          }`}
+        >
+          {role === "school" ? "School" : "Parent"}
+        </span>
+      </div>
 
-                {/* Title & 1-line Subtitle */}
-                <h2 className="mt-4 sm:mt-5 text-2xl sm:text-3xl font-extrabold tracking-tight text-[#0B2A47]">
-                  {role === "parent" ? "Find the Right Fit" : "Campus & Partner Growth"}
-                </h2>
-                <p className="mt-2 max-w-sm text-xs sm:text-sm text-[#5C6A7B] leading-relaxed">
-                  {role === "parent"
-                    ? "Explore top-rated day & boarding schools for your child's bright future across India."
-                    : "Connect with verified parents, showcase your school & manage admissions effortlessly."}
-                </p>
-
-                {/* Dribbble Carousel Pagination Dots */}
-                <div className="mt-4 flex items-center justify-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setRole("parent")}
-                    aria-label="Parent portal"
-                    className={`h-2 rounded-full transition-all duration-300 ${
-                      role === "parent" ? "w-6 bg-[#F43F5E]" : "w-2 bg-slate-300 hover:bg-slate-400"
-                    }`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setRole("school")}
-                    aria-label="Institution portal"
-                    className={`h-2 rounded-full transition-all duration-300 ${
-                      role === "school" ? "w-6 bg-[#0A7BBF]" : "w-2 bg-slate-300 hover:bg-slate-400"
-                    }`}
-                  />
-                </div>
-
-                {/* Mobile Bottom Action Buttons (Shown on mobile as per user requirement) */}
-                <div className="w-full mt-6 pt-2 space-y-2.5 lg:hidden">
-                  {role === "parent" ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => { setMode("login"); setMobileStep("form"); }}
-                        className="vv-btn w-full h-12 rounded-xl bg-gradient-to-r from-[#F43F5E] to-[#FB7185] text-white font-extrabold shadow-lg shadow-[#F43F5E]/30 flex items-center justify-center gap-2 text-sm transition hover:brightness-105 active:scale-[0.98]"
-                      >
-                        <span>Continue to Parent Login</span>
-                        <ArrowRight className="h-4 w-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { setMode("register"); setMobileStep("form"); }}
-                        className="w-full py-2 text-center text-xs font-bold text-[#F43F5E] hover:underline"
-                      >
-                        New Parent? Create an Account &rarr;
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => { setMode("login"); setMobileStep("form"); }}
-                        className="vv-btn w-full h-12 rounded-xl bg-gradient-to-r from-[#0B2A47] to-[#0A5C91] text-white font-extrabold shadow-lg shadow-[#0B2A47]/30 flex items-center justify-center gap-2 text-sm transition hover:brightness-105 active:scale-[0.98]"
-                      >
-                        <span>Continue to Institution Login</span>
-                        <ArrowRight className="h-4 w-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { setMode("register"); setMobileStep("form"); }}
-                        className="w-full py-2 text-center text-xs font-bold text-[#0A5C91] hover:underline"
-                      >
-                        School Owner? Register Profile &rarr;
-                      </button>
-                    </>
-                  )}
-                </div>
-
-                {/* Desktop Subtle Trust Line */}
-                <div className="mt-6 w-full text-center text-[11px] font-semibold text-[#8896A6] hidden lg:block">
-                  Trusted by 10,000+ Schools & 5 Lakh+ Parents
-                </div>
-              </div>
-            </div>
+      <main className="w-full p-0 lg:mx-auto lg:max-w-6xl lg:px-6 lg:py-12">
+        <div className="vv-rise grid w-full min-h-[calc(100vh-60px)] lg:min-h-0 grid-cols-1 overflow-hidden rounded-none border-0 bg-white shadow-none lg:grid-cols-2 lg:rounded-[2rem] lg:border lg:border-[#E2E8F0] lg:shadow-2xl lg:shadow-[#0B2A47]/8">
+          {/* Left Column: Animated Showcase & Carousel */}
+          {/* On Mobile: Visible when mobileView === 'welcome', hidden when mobileView === 'form' */}
+          <div className={`${mobileView === "welcome" ? "flex" : "hidden"} w-full flex-col lg:flex`}>
+            <AuthShowcase role={role} onStartAuth={handleStartAuth} />
           </div>
 
           {/* Right Column: Auth Card */}
-          {/* On Mobile: Visible when mobileStep === 'form' */}
-          <div
-            className={`flex-col justify-between p-6 sm:p-8 lg:p-10 bg-white ${
-              mobileStep === "form" ? "flex" : "hidden"
-            } lg:flex`}
-          >
-            {/* Mobile Back Button to Overview */}
-            <div className="mb-4 lg:hidden flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => setMobileStep("showcase")}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-[#F8FAFC] px-3 py-1.5 text-xs font-bold text-[#5C6A7B] hover:text-[#0B2A47] transition active:scale-95"
-              >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                <span>Back to Overview</span>
-              </button>
-              <span className={`text-[11px] font-bold uppercase tracking-wider ${role === "parent" ? "text-[#F43F5E]" : "text-[#0A5C91]"}`}>
-                {role === "parent" ? "Parent Portal" : "Institution Portal"}
-              </span>
-            </div>
-
-            {/* Role Switcher */}
-            <div className="grid grid-cols-2 gap-2 rounded-2xl bg-[#F1F5F9] p-1.5 mb-6">
-              <button
-                type="button"
-                onClick={() => { setRole("parent"); setError(""); setInfoMsg(""); }}
-                className={`inline-flex h-11 items-center justify-center gap-2 rounded-xl px-4 text-xs sm:text-sm font-extrabold transition-all duration-200 ${
-                  role === "parent"
-                    ? "bg-[#F43F5E] text-white shadow-md shadow-[#F43F5E]/25 scale-[1.02]"
-                    : "text-[#5C6A7B] hover:text-[#0B2A47]"
-                }`}
-              >
-                <UserRound className="h-4 w-4 shrink-0" />
-                <span>Parent / Student</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => { setRole("school"); setError(""); setInfoMsg(""); }}
-                className={`inline-flex h-11 items-center justify-center gap-2 rounded-xl px-4 text-xs sm:text-sm font-extrabold transition-all duration-200 ${
-                  role === "school"
-                    ? "bg-[#0B2A47] text-white shadow-md shadow-[#0B2A47]/25 scale-[1.02]"
-                    : "text-[#5C6A7B] hover:text-[#0B2A47]"
-                }`}
-              >
-                <School className="h-4 w-4 shrink-0" />
-                <span>School / Institution</span>
-              </button>
-            </div>
-
-            {/* Mode Tabs: Sign In vs Register vs Forgot */}
-            <div className="flex border-b border-[#E2E8F0]">
-              <button
-                type="button"
-                onClick={() => { setMode("login"); setError(""); setInfoMsg(""); }}
-                className={`flex-1 border-b-2 pb-3 text-sm font-bold transition ${
-                  mode === "login"
-                    ? role === "parent"
-                      ? "border-[#F43F5E] text-[#F43F5E]"
-                      : "border-[#0B2A47] text-[#0B2A47]"
-                    : "border-transparent text-[#64748B] hover:text-[#0B2A47]"
-                }`}
-              >
-                Sign In to Existing Account
-              </button>
-              <button
-                type="button"
-                onClick={() => { setMode("register"); setError(""); setInfoMsg(""); }}
-                className={`flex-1 border-b-2 pb-3 text-sm font-bold transition ${
-                  mode === "register"
-                    ? role === "parent"
-                      ? "border-[#F43F5E] text-[#F43F5E]"
-                      : "border-[#0B2A47] text-[#0B2A47]"
-                    : "border-transparent text-[#64748B] hover:text-[#0B2A47]"
-                }`}
-              >
-                {role === "school" ? "Register School Owner Profile" : "Create New Parent Account"}
-              </button>
-              {mode === "forgot" && (
+          {/* On Mobile: Visible when mobileView === 'form', hidden when mobileView === 'welcome' */}
+          <div className={`${mobileView === "form" ? "flex" : "hidden"} w-full flex-col justify-between bg-white p-5 sm:p-8 lg:flex lg:p-10`}>
+            <div>
+              {/* Mobile Back Button inside form view */}
+              <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3 lg:hidden">
                 <button
                   type="button"
-                  className={`flex-1 border-b-2 pb-3 text-sm font-bold ${
-                    role === "parent" ? "border-[#F43F5E] text-[#F43F5E]" : "border-[#0A5C91] text-[#0A5C91]"
+                  onClick={() => setMobileView("welcome")}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-[#F8FAFC] px-3.5 py-1.5 text-xs font-bold text-[#5C6A7B] shadow-sm transition hover:text-[#0B2A47] active:scale-95"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  <span>Back to Overview</span>
+                </button>
+                <span className={`text-[11px] font-extrabold uppercase tracking-wider ${role === "parent" ? "text-[#F43F5E]" : "text-[#1F6FD1]"}`}>
+                  {role === "school" ? "Institution Portal" : "Parent Portal"}
+                </span>
+              </div>
+
+              {/* Mode Tabs: Sign In vs Register vs Forgot (Exclusively for designated role, no role switcher) */}
+              <div className="flex border-b border-[#E2E8F0] mb-6">
+                <button
+                  type="button"
+                  onClick={() => { setMode("login"); setError(""); setInfoMsg(""); }}
+                  className={`flex-1 border-b-2 pb-3.5 text-sm sm:text-base font-bold transition ${
+                    mode === "login"
+                      ? role === "parent"
+                        ? "border-[#F43F5E] text-[#0B2A47]"
+                        : "border-[#1F6FD1] text-[#0B2A47]"
+                      : "border-transparent text-[#64748B] hover:text-[#0B2A47]"
                   }`}
                 >
-                  Reset Password
+                  Sign in
                 </button>
+                <button
+                  type="button"
+                  onClick={() => { setMode("register"); setError(""); setInfoMsg(""); }}
+                  className={`flex-1 border-b-2 pb-3.5 text-sm sm:text-base font-bold transition ${
+                    mode === "register"
+                      ? role === "parent"
+                        ? "border-[#F43F5E] text-[#0B2A47]"
+                        : "border-[#1F6FD1] text-[#0B2A47]"
+                      : "border-transparent text-[#64748B] hover:text-[#0B2A47]"
+                  }`}
+                >
+                  {role === "school" ? "Register school owner" : "Create account"}
+                </button>
+                {mode === "forgot" && (
+                  <button
+                    type="button"
+                    className={`flex-1 border-b-2 pb-3.5 text-sm sm:text-base font-bold ${
+                      role === "parent" ? "border-[#F43F5E] text-[#0B2A47]" : "border-[#1F6FD1] text-[#0B2A47]"
+                    }`}
+                  >
+                    Reset Password
+                  </button>
+                )}
+              </div>
+
+              {error && (
+                <div className="vv-pop mb-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+                  {error}
+                </div>
               )}
-            </div>
 
-            {error && (
-              <div className="vv-pop mt-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
-                {error}
-              </div>
-            )}
-
-            {infoMsg && (
-              <div className="vv-pop mt-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
-                {infoMsg}
-              </div>
-            )}
+              {infoMsg && (
+                <div className="vv-pop mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
+                  {infoMsg}
+                </div>
+              )}
 
             {/* 1. SIGN IN FORM (WITH CAPTCHA) */}
             {mode === "login" && (
@@ -1466,12 +1336,19 @@ function LoginPortalInner() {
                 </button>
               </form>
             )}
+            </div>
+
+            {/* Note at bottom of right card */}
+            <div className="mt-8 pt-4 border-t border-[#F1F5F9] flex items-center gap-2 text-xs text-[#64748B]">
+              <ShieldCheck className="h-4 w-4 shrink-0 text-[#14915A]" />
+              <span>Your details are encrypted and never shared with unauthorized parties.</span>
+            </div>
           </div>
         </div>
       </main>
 
             {/* Sleek Short 1-Line Footer (removes huge footer as requested) */}
-      <footer className="py-6 text-center text-xs font-semibold text-slate-500">
+      <footer className="hidden lg:block py-6 text-center text-xs font-semibold text-slate-500">
         <p>
           &copy; {new Date().getFullYear()} VidyaVista. All rights reserved. &middot;{" "}
           <Link href="/about" className="hover:underline hover:text-slate-700">About Us</Link> &middot;{" "}

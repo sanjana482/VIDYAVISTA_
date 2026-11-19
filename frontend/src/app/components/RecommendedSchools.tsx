@@ -1,10 +1,12 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { typeRank } from "../lib/preferences";
+import { normalizeType, readPreference, PREF_EVENT } from "../lib/preferences";
+import { typePath } from "../lib/links";
+import { openLocationPicker } from "../lib/places";
 import type { School } from "../data/schools";
-import { BOARD_LABEL } from "../data/schools";
+import { BOARD_LABEL, stateFor } from "../data/schools";
 import { schoolPath } from "../lib/seo";
 import { feeRange, lakh } from "../data/profile";
 import Icon, { Stars } from "./Icon";
@@ -27,9 +29,98 @@ const toCard = (s: School) => ({
 });
 
 export default function RecommendedSchools({ list = [], allSchools = [] }: { list?: School[]; allSchools?: School[] }) {
-  const pool = list.length > 0 ? list : allSchools.slice(0, 15);
-  const schools = pool.map(toCard);
+  const [pref, setPref] = useState(readPreference());
+
+  useEffect(() => {
+    const sync = () => setPref(readPreference());
+    sync();
+    window.addEventListener(PREF_EVENT, sync);
+    return () => window.removeEventListener(PREF_EVENT, sync);
+  }, []);
+
+  const pool = allSchools.length > 0 ? allSchools : list;
+  const activeType = pref ? normalizeType(pref.type) : "Boarding School";
+  const isBoarding = activeType === "Boarding School";
+  const activeLoc = (pref?.location || "").trim().toLowerCase();
+
+  let matches: School[] = [];
+  if (isBoarding) {
+    const boardingSchools = pool.filter((s) => s.type === "Boarding School");
+    if (activeLoc) {
+      const stateMatches = boardingSchools.filter(
+        (s) => stateFor(s).toLowerCase() === activeLoc || s.city.toLowerCase() === activeLoc
+      );
+      if (stateMatches.length >= 4) {
+        matches = stateMatches;
+      } else {
+        const otherBoarding = boardingSchools.filter(
+          (s) => stateFor(s).toLowerCase() !== activeLoc && s.city.toLowerCase() !== activeLoc
+        );
+        matches = [...stateMatches, ...otherBoarding];
+      }
+    } else {
+      matches = boardingSchools;
+    }
+  } else {
+    const typeSchools = pool.filter((s) => s.type !== "Boarding School");
+    if (activeLoc) {
+      const cityMatches = typeSchools.filter(
+        (s) => s.city.toLowerCase() === activeLoc || (s.area && s.area.toLowerCase() === activeLoc)
+      );
+      if (cityMatches.length >= 4) {
+        matches = cityMatches;
+      } else {
+        const stateMatches = typeSchools.filter(
+          (s) =>
+            s.city.toLowerCase() !== activeLoc &&
+            (!s.area || s.area.toLowerCase() !== activeLoc) &&
+            stateFor(s).toLowerCase() === activeLoc
+        );
+        const otherDay = typeSchools.filter(
+          (s) =>
+            s.city.toLowerCase() !== activeLoc &&
+            (!s.area || s.area.toLowerCase() !== activeLoc) &&
+            stateFor(s).toLowerCase() !== activeLoc
+        );
+        matches = [...cityMatches, ...stateMatches, ...otherDay];
+      }
+    } else {
+      matches = typeSchools;
+    }
+  }
+
+  // Prioritize high rating and reviews
+  matches.sort((a, b) => (b.rating || 0) - (a.rating || 0) || (b.reviews || 0) - (a.reviews || 0));
+
+  // Ensure minimum 4 schools matching type strictly
+  const seen = new Set(matches.map((s) => s.id));
+  if (matches.length < 4) {
+    const fallbackPool = isBoarding
+      ? pool.filter((s) => s.type === "Boarding School")
+      : pool.filter((s) => s.type !== "Boarding School");
+    for (const s of fallbackPool) {
+      if (!seen.has(s.id)) {
+        seen.add(s.id);
+        matches.push(s);
+        if (matches.length >= 4) break;
+      }
+    }
+  }
+
+  const selectedList = matches.slice(0, Math.max(4, Math.min(12, matches.length)));
+  const schools = selectedList.map(toCard);
   const router = useRouter();
+
+  const handleExploreAll = () => {
+    const p = readPreference();
+    const type = p ? normalizeType(p.type) : "Boarding School";
+    if (p?.location && type) {
+      router.push(typePath(type, p.location));
+    } else {
+      openLocationPicker(type);
+    }
+  };
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const [selectedSchools, setSelectedSchools] = useState<number[]>([]);
 
@@ -193,6 +284,18 @@ export default function RecommendedSchools({ list = [], allSchools = [] }: { lis
             </button>
           </div>
         )}
+
+        {/* Explore All Schools Button */}
+        <div className="relative mt-8 text-center">
+          <button
+            type="button"
+            onClick={handleExploreAll}
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#0B2A47] to-[#1E4366] px-6 py-3 text-xs sm:text-sm font-extrabold text-white shadow-md shadow-[#0B2A47]/15 transition hover:-translate-y-0.5 hover:shadow-lg vv-btn"
+          >
+            Explore All Schools
+            <Icon name="arrowUpRight" className="h-4 w-4" />
+          </button>
+        </div>
       </div>
     </section>
   );

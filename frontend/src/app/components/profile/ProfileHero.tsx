@@ -202,14 +202,21 @@ export default function ProfileHero({ school: s, intro, phoneHref, stats }: Prop
         </div>
 
         {/* Key facts */}
-        <dl className="mt-10 grid gap-px overflow-hidden rounded-3xl border border-[#E1E7EE] bg-[#E1E7EE] shadow-sm sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
           {stats.map((f) => (
-            <div key={f.label} className="bg-white px-6 py-5">
-              <dt className="text-[11px] font-extrabold uppercase tracking-wider text-[#5C6A7B]">{f.label}</dt>
-              <dd className="mt-2 text-xl font-extrabold text-[#0B2A47]">{f.value}</dd>
+            <div
+              key={f.label}
+              className="rounded-2xl border border-[#E1E7EE] bg-white p-4 sm:p-5 shadow-sm transition hover:border-[#0795DC]/40 hover:shadow-md flex flex-col justify-center"
+            >
+              <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-[#687789]">
+                {f.label}
+              </span>
+              <p className="mt-1.5 text-base sm:text-lg lg:text-xl font-extrabold text-[#0B2A47] truncate" title={f.value}>
+                {f.value}
+              </p>
             </div>
           ))}
-        </dl>
+        </div>
       </div>
 
       {toast && (

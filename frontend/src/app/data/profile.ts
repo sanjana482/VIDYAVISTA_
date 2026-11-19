@@ -106,6 +106,64 @@ export function feeSlabs(s: School, session: "2027-28" | "2026-27"): FeeSlab[] {
   });
 }
 
+export function groupFacilities(items: string[]): { title: string; icon: string; items: string[] }[] {
+  if (!items || items.length === 0) return [];
+
+  const CATEGORY_DEFS = [
+    {
+      title: "Academics & Digital Learning",
+      icon: "book",
+      keywords: ["smart class", "computer", "science", "robotics", "language", "library", "reading", "wifi", "e-learning", "lab", "auditorium", "media room"],
+    },
+    {
+      title: "Sports & Fitness",
+      icon: "trophy",
+      keywords: ["sport", "playground", "swimming", "gym", "yoga", "skating", "horse", "taekwondo", "karate", "cricket", "football", "basketball", "badminton", "tennis", "athletics", "outdoor", "indoor"],
+    },
+    {
+      title: "Arts & Co-Curricular",
+      icon: "palette",
+      keywords: ["music", "dance", "drama", "art", "craft", "debate", "gardening", "picnic", "excursion", "hobby", "activity"],
+    },
+    {
+      title: "Safety, Health & Care",
+      icon: "shield",
+      keywords: ["cctv", "gps", "tracking", "medical", "doctor", "nurse", "washroom", "ramp", "security", "guard", "hygiene", "fire"],
+    },
+    {
+      title: "Campus & Infrastructure",
+      icon: "building",
+      keywords: ["transport", "bus", "cafeteria", "canteen", "meal", "food", "dining", "hostel", "boarding", "day care", "alumni", "campus", "ac", "air condition"],
+    },
+  ];
+
+  const assigned = new Set<string>();
+  const groups: { title: string; icon: string; items: string[] }[] = [];
+
+  for (const cat of CATEGORY_DEFS) {
+    const matched: string[] = [];
+    for (const item of items) {
+      if (assigned.has(item)) continue;
+      const lower = item.toLowerCase();
+      if (cat.keywords.some((k) => lower.includes(k))) {
+        matched.push(item);
+        assigned.add(item);
+      }
+    }
+    if (matched.length > 0) {
+      groups.push({ title: cat.title, icon: cat.icon, items: matched });
+    }
+  }
+
+  // Any remaining facilities that didn't match keywords
+  const leftovers = items.filter((item) => !assigned.has(item));
+  if (leftovers.length > 0) {
+    groups.push({ title: "General Facilities", icon: "building", items: leftovers });
+  }
+
+  return groups;
+}
+
 export function feeRange(s: School) {
   const a = feeSlabs(s, "2027-28").map((x) => x.annual).filter((n) => Number.isFinite(n) && n > 0);
   const lo = s.feeMin || (a.length ? Math.min(...a) : s.fee || 0);
@@ -168,8 +226,8 @@ const facilitiesList: string[] = Array.isArray(s.facilities)
         `Parents choose ${s.name} for its ${s.board} curriculum, ${boarding ? "residential and day options" : "convenient day-school routine"}, and facilities such as ${(facilitiesList.slice(0, 3).join(", ") || "school facilities").toLowerCase()}.`,
       ];
 
-  // facilities = exactly the ones ticked in the admin (grouped under one heading)
-  const facilities = facilitiesList.length ? [{ title: "Facilities available", icon: "building", items: facilitiesList }] : [];
+  // facilities = grouped logically by domain (Academics, Sports, Arts, Safety, Infrastructure)
+  const facilities = groupFacilities(facilitiesList);
   const notAvailable: string[] = [];
 
   const admissionAuto = isDelhi
