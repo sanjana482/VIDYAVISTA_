@@ -81,7 +81,7 @@ const FEE_PRESETS = [
 function FilterGroup({ title, children }: { title: string; children: React.ReactNode }) {
   const [open, setOpen] = useState(true);
   return (
-    <div className="border-t border-[#E1E7EE] py-5 first:border-t-0 first:pt-0">
+    <div className="border-t border-[#E1E7EE] py-3 first:border-t-0 first:pt-0">
       <button
         type="button"
         onClick={() => setOpen(!open)}
@@ -91,7 +91,7 @@ function FilterGroup({ title, children }: { title: string; children: React.React
         {title}
         <span className={`text-[#0A7BBF] transition ${open ? "" : "-rotate-90"}`}>⌄</span>
       </button>
-      {open && <div className="mt-3 space-y-1">{children}</div>}
+      {open && <div className="mt-2 space-y-0.5">{children}</div>}
     </div>
   );
 }
@@ -481,8 +481,8 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
     "h-11 w-full rounded-xl border border-[#D6DDE5] bg-white px-3 text-sm text-[#0B2A47] outline-none placeholder:text-[#8896A6] focus:border-[#0795DC] focus:ring-4 focus:ring-[#0795DC]/15";
 
   return (
-    <section id="results" data-page="listing" className="relative z-10 scroll-mt-24 bg-white py-10 sm:py-12">
-        <div className="mx-auto grid max-w-[1720px] grid-cols-[minmax(0,1fr)] gap-8 px-4 sm:px-6 lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)] 2xl:grid-cols-[340px_minmax(0,1fr)] lg:px-8 xl:px-12">
+    <section id="results" data-page="listing" className="relative z-10 scroll-mt-24 bg-white py-6 sm:py-8">
+        <div className="mx-auto grid max-w-[1720px] grid-cols-[minmax(0,1fr)] gap-6 px-4 sm:px-6 lg:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)] 2xl:grid-cols-[300px_minmax(0,1fr)] lg:px-8 xl:px-12">
           {/* ---------- Filters ---------- */}
         <aside>
           <button
@@ -499,7 +499,7 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
             onClick={(e) => { if (e.target === e.currentTarget) setShowFilters(false); }}
           >
             <div className="flex h-full w-[90%] max-w-sm flex-col bg-white shadow-2xl lg:h-auto lg:max-h-[calc(100vh-7.5rem)] lg:w-auto lg:max-w-none lg:rounded-2xl lg:border lg:border-[#E1E7EE] lg:shadow-lg lg:shadow-[#0B2A47]/5">
-              <div className="flex items-center justify-between gap-3 border-b border-[#E1E7EE] px-5 py-4">
+              <div className="flex items-center justify-between gap-3 border-b border-[#E1E7EE] px-4 py-3">
                 <h2 className="flex items-center gap-2 text-lg font-extrabold text-[#0B2A47]"><Icon name="filters" className="h-5 w-5" /> Filters</h2>
                 <div className="flex items-center gap-3">
                   <button type="button" onClick={clearAll} className="vv-wiggle-host inline-flex items-center gap-1.5 text-sm font-semibold text-[#EC0E58] hover:text-[#C8104F]">
@@ -511,7 +511,7 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-5 py-5">
+              <div className="flex-1 overflow-y-auto px-4 py-3.5">
                 {isBoarding || (!isDay && !isPlay) ? (
                   <>
                     <FilterGroup title="State">
@@ -560,11 +560,11 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
                 </FilterGroup>
               </div>
 
-              <div className="border-t border-[#E1E7EE] p-4">
+              <div className="border-t border-[#E1E7EE] p-3">
                 <button
                   type="button"
                   onClick={apply}
-                  className="w-full rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] py-3.5 text-sm font-extrabold text-white shadow-lg shadow-[#0A5C91]/25 transition hover:-translate-y-0.5 vv-btn"
+                  className="w-full rounded-lg bg-gradient-to-r from-[#0A5C91] to-[#0795DC] py-2.5 text-xs sm:text-sm font-extrabold text-white shadow-md shadow-[#0A5C91]/20 transition hover:-translate-y-0.5 vv-btn"
                 >
                   Apply filters
                 </button>
@@ -577,7 +577,7 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
         <div className="min-w-0">
   <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h2 className="text-3xl font-extrabold tracking-tight text-[#0B2A47]">{heading}</h2>
+              <h2 className="text-2xl sm:text-[26px] font-extrabold tracking-tight text-[#0B2A47]">{heading}</h2>
               <p className="mt-1 text-sm text-[#707E8F]">
                 Showing {results.length} of {schools.length} schools
               </p>
@@ -587,7 +587,7 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
               <select
                 value={sort}
                 onChange={(e) => { setSort(e.target.value); setPage(1); }}
-                className="h-11 rounded-xl border border-[#D6DDE5] bg-white px-4 font-semibold text-[#0B2A47] outline-none focus:border-[#0795DC] focus:ring-4 focus:ring-[#0795DC]/15"
+                className="h-9 sm:h-10 rounded-lg border border-[#D6DDE5] bg-white px-3 text-xs sm:text-sm font-semibold text-[#0B2A47] outline-none focus:border-[#0795DC] focus:ring-2 focus:ring-[#0795DC]/15"
               >
                 <option value="recommended">Recommended</option>
                 <option value="rating">Highest rated</option>
@@ -597,7 +597,7 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
             </label>
           </div>
 
-          <div className="mt-6 space-y-5">
+          <div className="mt-4 space-y-3.5">
             {loading ? (
               Array.from({ length: 4 }).map((_, i) => (
                 <SchoolSkeletonCard key={i} />
@@ -628,15 +628,15 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
               visible.map((s) => (
               <article
                 key={s.id}
-                className="vv-ribbon-host vv-card group relative min-w-0 overflow-hidden rounded-3xl border border-[#E1E7EE] bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-transparent hover:shadow-2xl hover:shadow-[#0795DC]/15 sm:p-5"
+                className="vv-ribbon-host vv-card group relative min-w-0 overflow-hidden rounded-2xl border border-[#E1E7EE] bg-white p-3.5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-transparent hover:shadow-xl hover:shadow-[#0795DC]/15 sm:p-4"
               >
                 {/* 1. flowing gradient border */}
                 <span aria-hidden className="vv-card-ring" />
                 {/* 2. glowing pill on the left edge, grows from the centre */}
                 <span aria-hidden className="pointer-events-none absolute left-0 top-1/2 h-0 w-1.5 -translate-y-1/2 rounded-r-full bg-gradient-to-b from-[#EC0E58] to-[#0795DC] opacity-0 shadow-[0_0_14px_rgba(236,14,88,0.55)] transition-all duration-500 ease-out group-hover:h-3/5 group-hover:opacity-100" />
-                <div className="grid grid-cols-[minmax(0,1fr)] gap-5 md:grid-cols-[280px_minmax(0,1fr)] xl:min-h-[220px] xl:grid-cols-[300px_minmax(0,1fr)_250px] 2xl:grid-cols-[320px_minmax(0,1fr)_260px]">
+                <div className="grid grid-cols-[minmax(0,1fr)] gap-4 md:grid-cols-[240px_minmax(0,1fr)] xl:min-h-[190px] xl:grid-cols-[260px_minmax(0,1fr)_230px] 2xl:grid-cols-[270px_minmax(0,1fr)_240px]">
                   {/* Photo: Single Cover Image */}
-                  <div className="relative h-52 w-full overflow-hidden rounded-2xl bg-[#E6F4FC] md:h-full md:min-h-[220px]">
+                  <div className="relative h-44 w-full overflow-hidden rounded-xl bg-[#E6F4FC] md:h-full md:min-h-[190px]">
                     <img src={s.image} alt={`${s.name} campus`} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110" />
                     <Watermark />
                     {s.isFeatured && <CornerRibbon label="Featured" radius="1rem" />}
@@ -659,7 +659,7 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
                   {/* Details */}
                   <div className="flex min-w-0 flex-col justify-between py-0.5">
                     <div>
-                      <h3 className="text-lg font-extrabold leading-snug text-[#0B2A47] sm:text-xl" title={s.name}>
+                      <h3 className="text-base font-extrabold leading-snug text-[#0B2A47] sm:text-lg" title={s.name}>
                         <Link href={schoolPath(s)} className="transition-colors duration-300 group-hover:text-[#0A7BBF]">{s.name}</Link>
                       </h3>
                       <p className="mt-1.5 line-clamp-1 text-sm text-[#707E8F]">
@@ -692,7 +692,7 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
                       {s.fee > 0 ? (
                         <>
                           <p className="text-xs text-[#707E8F]">Annual tuition from</p>
-                          <p className="text-3xl font-extrabold text-[#0B2A47]">{formatFee(s.fee)}</p>
+                          <p className="text-2xl font-extrabold text-[#0B2A47]">{formatFee(s.fee)}</p>
                           <p className="text-xs text-[#8896A6]">per year · indicative</p>
                         </>
                       ) : (
@@ -705,7 +705,7 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
                     </div>
                     <a
                       href={`tel:${s.phone}`}
-                      className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl border-2 border-[#0795DC] px-4 text-sm font-extrabold text-[#0A7BBF] transition hover:bg-[#0795DC] hover:text-white xl:mt-0"
+                      className="mt-3 inline-flex h-9 w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg border-2 border-[#0795DC] px-3 text-xs sm:text-[13px] font-extrabold text-[#0A7BBF] transition hover:bg-[#0795DC] hover:text-white xl:mt-0"
                     >
                       <Icon name="phone" className="h-4 w-4" /> Call Now
                     </a>
@@ -713,7 +713,7 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
                 </div>
 
                 {/* Footer row */}
-                <div className="mt-5 flex flex-col gap-4 border-t border-[#E1E7EE] pt-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="mt-3.5 flex flex-col gap-3 border-t border-[#E1E7EE] pt-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
                     <label className="flex cursor-pointer items-center gap-3 whitespace-nowrap text-sm font-semibold text-[#4E5A68]">
                       <input type="checkbox" checked={compare.includes(s.id)} onChange={() => toggleCompare(s.id)} className="h-4 w-4 accent-[#EC0E58]" />
@@ -721,14 +721,14 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
                     </label>
                     <span className="hidden items-center gap-1.5 whitespace-nowrap text-xs text-[#707E8F] sm:flex"><Icon name="school" className="h-4 w-4" /> Campus visits available</span>
                   </div>
-                  <div className="grid w-full grid-cols-2 gap-3 sm:w-auto sm:grid-cols-[140px_140px]">
-                    <Link href={schoolPath(s)} className="inline-flex h-11 items-center justify-center whitespace-nowrap rounded-xl border border-[#D6DDE5] px-4 text-sm font-bold text-[#0B2A47] transition hover:border-[#0795DC] hover:text-[#0A7BBF]">
+                  <div className="grid w-full grid-cols-2 gap-2.5 sm:w-auto sm:grid-cols-[125px_125px]">
+                    <Link href={schoolPath(s)} className="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-lg border border-[#D6DDE5] px-3 text-xs sm:text-[13px] font-bold text-[#0B2A47] transition hover:border-[#0795DC] hover:text-[#0A7BBF]">
                       View School
                     </Link>
                     <button
                       type="button"
                       onClick={() => setEnquireSchool(s)}
-                      className="vv-btn inline-flex h-11 items-center justify-center whitespace-nowrap rounded-xl bg-[#EC0E58] px-4 text-sm font-extrabold text-white shadow-md shadow-[#EC0E58]/25 transition hover:-translate-y-0.5 hover:bg-[#C8104F]"
+                      className="vv-btn inline-flex h-9 items-center justify-center whitespace-nowrap rounded-lg bg-[#EC0E58] px-3.5 text-xs sm:text-[13px] font-extrabold text-white shadow-sm shadow-[#EC0E58]/25 transition hover:-translate-y-0.5 hover:bg-[#C8104F]"
                     >
                       Enquire &rarr;
                     </button>

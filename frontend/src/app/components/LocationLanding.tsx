@@ -1,4 +1,4 @@
-// Server-rendered landing page for one state or one city (/schools-in/<city>, /schools-in/state/<state>).
+﻿// Server-rendered landing page for one state or one city (/schools-in/<city>, /schools-in/state/<state>).
 // Title, description, photos and FAQs come from /admin/locations; defaults are generated when nothing is saved.
 import ClampedText from "./ClampedText";
 import Link from "next/link";
@@ -69,7 +69,7 @@ export default function LocationLanding({ kind, name, state, list, all, content 
   }
 
   return (
-    <main className="min-h-screen bg-white">
+    <main data-page="listing" className="min-h-screen bg-white">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(schema) }} />
       <Navbar />
 

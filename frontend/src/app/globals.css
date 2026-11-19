@@ -404,18 +404,31 @@ img { max-width: 100%; }
 }
 @media (prefers-reduced-motion: reduce) { .vv-rate-card { transform: none; } }
 
-/* ---------- desktop: comfortable 110% scale feel by default ---------- */
+/* ---------- desktop: comfortable 110% scale feel by default on Home ---------- */
 @media (min-width: 1024px) {
   html {
     font-size: 106%;
+  }
+  /* 90% zoom for listing & compare pages as requested */
+  [data-page="listing"] #results,
+  [data-page="listing"] > section,
+  [data-page="compare"] section,
+  #results {
+    zoom: 0.9;
   }
 }
 @media (min-width: 1280px) {
   html {
     font-size: 110%;
   }
+  /* 90% zoom for listing & compare pages as requested */
+  [data-page="listing"] #results,
+  [data-page="listing"] > section,
+  [data-page="compare"] section,
+  #results {
+    zoom: 0.9;
+  }
 }
-
 /* ---------- find schools by board: cards slide up one by one, lift + tilt on hover, bar fills, middle card grows on phones ---------- */
 .vv-board-item { scale: calc(1 - var(--p, 0) * 0.07); transition: scale 0.2s linear; }
 .vv-bcard {

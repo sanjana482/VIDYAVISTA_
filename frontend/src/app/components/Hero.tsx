@@ -218,7 +218,7 @@ export default function Hero({ schools = [] }: { schools?: SearchSchool[] }) {
               className="art-trail"
               d="M-40 600 C120 640 260 520 340 470 C420 420 470 520 400 540 C330 560 340 430 470 390 C650 340 800 380 960 250 C1060 170 1140 120 1260 90"
             />
-            <g className="art-plane" transform="scale(1.02)">
+            <g className="art-plane" transform="scale(0.68)">
               <path d="M22 0L-22 -17L-12 0L-22 17Z" />
               <path className="fold" d="M-12 0L22 0M-12 0L-7 9" />
               <animateMotion dur="15s" repeatCount="indefinite" rotate="auto">
