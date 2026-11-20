@@ -44,7 +44,7 @@ export default function LocationReviews({
   const [disliked, setDisliked] = useState<Record<number, boolean>>({});
   const [reported, setReported] = useState<Record<number, boolean>>({});
 
-  // Fetch live reviews for this place (state or city) from the API
+  // Fetch real reviews for this place (state or city) from the API
   useEffect(() => {
     if (!place) return;
     let mounted = true;
@@ -71,7 +71,7 @@ export default function LocationReviews({
     };
   }, [place]);
 
-  // Merge reviews from school props (SSR) with live reviews from API
+  // Merge real reviews from school props with live reviews from API
   const allReviews = useMemo(() => {
     const fromSchools: LocationReviewItem[] = schools.flatMap((s) =>
       (s.reviewList ?? []).map((r) => ({
@@ -79,7 +79,7 @@ export default function LocationReviews({
         role: r.role || "Parent",
         rating: r.rating || 5,
         text: r.text,
-        date: r.date || "2 months ago",
+        date: r.date || "Recent",
         schoolName: s.name,
         schoolUrl: schoolPath(s),
       }))
@@ -93,45 +93,11 @@ export default function LocationReviews({
       }
     });
 
-    const merged = Array.from(map.values()).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-
-    // If no reviews found in DB, generate realistic representative reviews for top schools of this place
-    if (merged.length === 0 && schools.length > 0) {
-      const topSchools = schools.slice(0, 3);
-      const defaults: LocationReviewItem[] = [
-        {
-          name: "Krish Pandey",
-          rating: 5,
-          date: "2 months ago",
-          schoolName: topSchools[0]?.name || "Leading School",
-          schoolUrl: topSchools[0] ? schoolPath(topSchools[0]) : "#",
-          text: "The school kind of feels like Hogwarts with big open grounds and pretty much every facility a kid could want.",
-        },
-        {
-          name: "Shree Gowda",
-          rating: 4,
-          date: "2 months ago",
-          schoolName: topSchools[1]?.name || topSchools[0]?.name || "Reputed Institution",
-          schoolUrl: topSchools[1] ? schoolPath(topSchools[1]) : (topSchools[0] ? schoolPath(topSchools[0]) : "#"),
-          text: "Our kids' dorm parents feel like surrogate family to them. The house mothers are specially kind to the kids.",
-        },
-      ];
-      if (topSchools[2]) {
-        defaults.push({
-          name: "Ananya Sen",
-          rating: 5,
-          date: "3 months ago",
-          schoolName: topSchools[2].name,
-          schoolUrl: schoolPath(topSchools[2]),
-          text: "Exceptional academic environment, empathetic teachers, and stellar sports coaching throughout the term.",
-        });
-      }
-      return defaults;
-    }
-
-    return merged;
+    // Only real reviews: if no real reviews exist, allReviews is empty
+    return Array.from(map.values()).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
   }, [schools, liveReviews]);
 
+  // If there are no real reviews, do not render this section at all!
   if (!place || allReviews.length === 0) return null;
 
   const typeLabel = type
@@ -159,7 +125,7 @@ export default function LocationReviews({
     <section aria-label={headingTitle} className="bg-[#EEF2F6] py-10 sm:py-14">
       <div className="mx-auto max-w-4xl px-4 sm:px-6">
         <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 sm:p-10 shadow-sm">
-          {/* Centered Heading exactly as shown in screenshot */}
+          {/* Centered Heading */}
           <h2 className="text-xl sm:text-2xl font-bold text-[#1E293B] text-center">
             {headingTitle}
           </h2>
@@ -189,7 +155,7 @@ export default function LocationReviews({
                     </div>
                   </div>
                   <span className="shrink-0 text-xs text-[#94A3B8] font-normal">
-                    {r.date || "2 months ago"}
+                    {r.date || "Recent"}
                   </span>
                 </div>
 

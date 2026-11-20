@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useListingParams, type ListingInitial } from "../lib/useListingParams";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { BOARDS, BOARD_LABEL, GENDERS, TYPES, citiesOf, formatFee, stateFor, statesOf, type School } from "../data/schools";
 import {
   clearPreference,
@@ -255,6 +256,8 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
   const [sort, setSort] = useState(params.get("sort") === "rating" ? "rating" : "recommended");
   const [page, setPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   const [compare, setCompare] = useState<number[]>([]);
   const [enquireSchool, setEnquireSchool] = useState<School | null>(null);
   const [loading, setLoading] = useState(true);
@@ -339,27 +342,29 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
     savePreference({ type: heroType, location });
   }
 
-  // Multi-choice toggle for state, city, area, board, cls
-  const toggleMulti = (key: "state" | "city" | "area" | "board" | "cls", value: string) =>
+  // State is SINGLE-CHOICE (a listing page represents one state at a time).
+  // Click the same state again to clear it.
+  const pickState = (stateName: string) =>
+    setDraft((d) => {
+      const on = d.state[0] === stateName;
+      const nextState = on ? [] : [stateName];
+      // Reset cities/areas when state changes
+      let next: Filters = { ...d, state: nextState, city: [], area: [] };
+      return next;
+    });
+
+  // Multi-choice toggle for city, area, board, cls
+  const toggleMulti = (key: "city" | "area" | "board" | "cls", value: string) =>
     setDraft((d) => {
       const cur = d[key] || [];
       const on = cur.includes(value);
       const nextArr = on ? cur.filter((x) => x !== value) : [...cur, value];
       let next: Filters = { ...d, [key]: nextArr };
 
-      if (key === "state") {
-        if (nextArr.length > 0) {
-          const allowedCities = new Set(
-            schools.filter((s) => nextArr.includes(stateFor(s))).map((s) => s.city)
-          );
-          next = { ...next, city: next.city.filter((c) => allowedCities.has(c)) };
-        }
-      }
-
       if (key === "city" && !on) {
         const st = stateFor(schools.find((x) => x.city === value) ?? { city: value });
-        if (st && !next.state.includes(st)) {
-          next = { ...next, state: [...next.state, st] };
+        if (st && (!next.state.length || !next.state.includes(st))) {
+          next = { ...next, state: [st] };
         }
       }
 
@@ -479,9 +484,19 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
   function apply() {
     setApplied(draft);
     syncCookie(draft);
-    syncUrl(draft);
     setPage(1);
     setShowFilters(false);
+
+    // If state or city changed and this is a place route, navigate smoothly
+    const newPlace = draft.city[0] || draft.state[0];
+    const oldPlace = applied.city[0] || applied.state[0];
+    if (newPlace && oldPlace && newPlace.toLowerCase() !== oldPlace.toLowerCase()) {
+      const type = draft.type[0] || "Boarding School";
+      router.push(typePath(type, newPlace));
+      return;
+    }
+
+    syncUrl(draft);
     document.getElementById("results")?.scrollIntoView({ behavior: "smooth" });
   }
   // "Clear all" removes board / gender / fees / class ... but keeps the school type (and the city for day / play schools),
@@ -570,51 +585,40 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
         <div className="mx-auto grid max-w-[1720px] grid-cols-[minmax(0,1fr)] gap-6 px-4 sm:px-6 lg:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)] 2xl:grid-cols-[300px_minmax(0,1fr)] lg:px-8 xl:px-12">
           {/* ---------- Filters ---------- */}
         <aside>
+          {/* Mobile trigger button */}
           <button
             type="button"
-            onClick={() => setShowFilters(!showFilters)}
+            onClick={() => setShowFilters(true)}
             className="sticky top-[84px] z-30 mb-4 flex w-full items-center justify-between rounded-xl border border-[#D6DDE5] bg-white px-4 py-3.5 text-sm font-extrabold text-[#0A5C91] shadow-sm lg:hidden"
           >
-            <span className="flex items-center gap-2"><Icon name="filters" className="h-4 w-4" /> Filters{activeCount > 0 && <span className="rounded-full bg-[#EC0E58] px-2 py-0.5 text-[11px] text-white">{activeCount}</span>}</span> <span className="text-xs font-semibold text-[#707E8F]">{results.length} schools</span>
+            <span className="flex items-center gap-2">
+              <Icon name="filters" className="h-4 w-4" /> Filters
+              {activeCount > 0 && (
+                <span className="rounded-full bg-[#EC0E58] px-2 py-0.5 text-[11px] text-white font-bold">
+                  {activeCount}
+                </span>
+              )}
+            </span>
+            <span className="text-xs font-semibold text-[#707E8F]">{results.length} schools</span>
           </button>
 
-          {/* phone: the filters slide in as a full-height fixed panel with z-[150] (above bottom navigation bar); desktop: sticky sidebar */}
-          <div
-            className={`${showFilters ? "fixed inset-0 z-[150] flex bg-[#0B2A47]/60 backdrop-blur-sm" : "hidden"} lg:sticky lg:top-24 lg:block`}
-            onClick={(e) => { if (e.target === e.currentTarget) setShowFilters(false); }}
-          >
-            <div className="flex h-full w-full max-w-sm flex-col bg-white shadow-2xl sm:max-w-md lg:h-auto lg:max-h-[calc(100vh-7.5rem)] lg:w-auto lg:max-w-none lg:rounded-2xl lg:border lg:border-[#E1E7EE] lg:shadow-lg lg:shadow-[#0B2A47]/5">
-              {/* Sticky Top Header */}
-              <div className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-[#E1E7EE] bg-white px-4 py-3.5">
-                <h2 className="flex items-center gap-2 text-base sm:text-lg font-extrabold text-[#0B2A47]">
+          {/* Desktop Sticky Sidebar */}
+          <div className="hidden lg:sticky lg:top-24 lg:block">
+            <div className="flex flex-col bg-white rounded-2xl border border-[#E1E7EE] shadow-lg shadow-[#0B2A47]/5">
+              <div className="flex items-center justify-between gap-3 border-b border-[#E1E7EE] px-4 py-3">
+                <h2 className="flex items-center gap-2 text-base font-extrabold text-[#0B2A47]">
                   <Icon name="filters" className="h-5 w-5 text-[#0A7BBF]" /> Filters
-                  {activeCount > 0 && (
-                    <span className="rounded-full bg-[#EC0E58] px-2 py-0.5 text-xs text-white font-bold">
-                      {activeCount}
-                    </span>
-                  )}
                 </h2>
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={clearAll}
-                    className="vv-wiggle-host inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[#EC0E58] hover:text-[#C8104F]"
-                  >
-                    <Icon name="trash" className="vv-wiggle h-4 w-4" /> Clear all
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Close filters"
-                    onClick={() => setShowFilters(false)}
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-[#EEF3F8] text-[#0B2A47] hover:bg-[#DDE7F0] transition lg:hidden"
-                  >
-                    <Icon name="x" className="h-5 w-5" />
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={clearAll}
+                  className="vv-wiggle-host inline-flex items-center gap-1.5 text-xs font-semibold text-[#EC0E58] hover:text-[#C8104F]"
+                >
+                  <Icon name="trash" className="vv-wiggle h-4 w-4" /> Clear all
+                </button>
               </div>
 
-              {/* Scrollable Middle Filters */}
-              <div className="flex-1 overflow-y-auto px-4 py-3.5 space-y-1">
+              <div className="max-h-[calc(100vh-14rem)] overflow-y-auto px-4 py-3.5 space-y-1">
                 {isBoarding || (!isDay && !isPlay) ? (
                   <>
                     <FilterGroup title="State">
@@ -622,9 +626,9 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
                         noun="states"
                         searchable
                         options={stateOpts}
-                        values={draft.state}
-                        onToggle={(v) => toggleMulti("state", v)}
-                        multi
+                        value={draft.state[0]}
+                        onPick={(v) => pickState(v)}
+                        multi={false}
                       />
                     </FilterGroup>
                     <FilterGroup title={draft.state.length === 1 ? `City in ${draft.state[0]}` : "City"}>
@@ -741,27 +745,200 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
                 </FilterGroup>
               </div>
 
-              {/* Sticky Bottom Bar with Apply button (Sticky and always visible on mobile, above bottom bar) */}
-              <div className="sticky bottom-0 z-20 border-t border-[#E1E7EE] bg-white p-3.5 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(11,42,71,0.08)]">
-                <div className="flex items-center gap-2.5">
-                  <button
-                    type="button"
-                    onClick={apply}
-                    className="flex-1 rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] py-3 text-sm font-extrabold text-white shadow-md shadow-[#0A5C91]/25 transition hover:brightness-105 active:scale-[0.99] vv-btn"
-                  >
-                    Apply Filters
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowFilters(false)}
-                    className="rounded-xl border border-[#D6DDE5] bg-[#F8FAFC] px-4 py-3 text-sm font-bold text-[#4E5A68] hover:bg-[#EEF3F8] transition lg:hidden"
-                  >
-                    Cancel
-                  </button>
-                </div>
+              <div className="border-t border-[#E1E7EE] p-3">
+                <button
+                  type="button"
+                  onClick={apply}
+                  className="w-full rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] py-2.5 text-sm font-extrabold text-white shadow-md shadow-[#0A5C91]/20 transition hover:-translate-y-0.5 vv-btn"
+                >
+                  Apply filters
+                </button>
               </div>
             </div>
           </div>
+
+          {/* Mobile Full-Screen Sticky Drawer Portal (mounted to document.body, z-[250]) */}
+          {mounted && showFilters && createPortal(
+            <div className="fixed inset-0 z-[250] flex flex-col justify-end bg-black/60 backdrop-blur-sm lg:hidden">
+              <div
+                className="absolute inset-0"
+                onClick={() => setShowFilters(false)}
+              />
+              <div className="relative flex max-h-[92dvh] w-full flex-col rounded-t-3xl bg-white shadow-2xl overflow-hidden animate-fadeIn">
+                {/* Header: sticky top */}
+                <div className="shrink-0 border-b border-[#E1E7EE] bg-white px-5 pt-3 pb-3.5">
+                  <div className="mx-auto mb-2.5 h-1.5 w-12 rounded-full bg-[#CBD5E1]" />
+                  <div className="flex items-center justify-between gap-3">
+                    <h2 className="flex items-center gap-2 text-base sm:text-lg font-extrabold text-[#0B2A47]">
+                      <Icon name="filters" className="h-5 w-5 text-[#0A7BBF]" /> Filters
+                      {activeCount > 0 && (
+                        <span className="rounded-full bg-[#EC0E58] px-2 py-0.5 text-xs text-white font-bold">
+                          {activeCount}
+                        </span>
+                      )}
+                    </h2>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={clearAll}
+                        className="text-xs font-semibold text-[#EC0E58] hover:text-[#C8104F]"
+                      >
+                        Clear all
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="Close filters"
+                        onClick={() => setShowFilters(false)}
+                        className="flex h-9 w-9 items-center justify-center rounded-full bg-[#EEF3F8] text-[#0B2A47] hover:bg-[#DDE7F0]"
+                      >
+                        <Icon name="x" className="h-5 w-5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Body: scrollable */}
+                <div className="flex-1 overflow-y-auto px-5 py-4 space-y-1">
+                  {isBoarding || (!isDay && !isPlay) ? (
+                    <>
+                      <FilterGroup title="State">
+                        <FilterList
+                          noun="states"
+                          searchable
+                          options={stateOpts}
+                          value={draft.state[0]}
+                          onPick={(v) => pickState(v)}
+                          multi={false}
+                        />
+                      </FilterGroup>
+                      <FilterGroup title={draft.state.length === 1 ? `City in ${draft.state[0]}` : "City"}>
+                        <FilterList
+                          noun="cities"
+                          searchable
+                          options={cityOpts}
+                          values={draft.city}
+                          onToggle={(v) => toggleMulti("city", v)}
+                          multi
+                        />
+                      </FilterGroup>
+                    </>
+                  ) : (
+                    <>
+                      <FilterGroup title="City">
+                        <FilterList
+                          noun="cities"
+                          searchable
+                          options={cityOpts}
+                          values={draft.city}
+                          onToggle={(v) => toggleMulti("city", v)}
+                          multi
+                        />
+                      </FilterGroup>
+                      <FilterGroup title={draft.city.length === 1 ? `Area in ${draft.city[0]}` : "Area / Locality"}>
+                        <FilterList
+                          noun="areas"
+                          searchable
+                          options={areaOpts}
+                          values={draft.area}
+                          onToggle={(v) => toggleMulti("area", v)}
+                          multi
+                        />
+                      </FilterGroup>
+                    </>
+                  )}
+
+                  <FilterGroup title="School type">
+                    {TYPES.map((c) => (
+                      <Radio
+                        key={c}
+                        label={c}
+                        checked={draft.type[0] === c}
+                        onPick={() => pick("type", c)}
+                      />
+                    ))}
+                  </FilterGroup>
+
+                  <FilterGroup title="Class">
+                    <FilterList
+                      noun="classes"
+                      options={classOpts}
+                      values={draft.cls}
+                      onToggle={(v) => toggleMulti("cls", v)}
+                      limit={6}
+                      multi
+                    />
+                  </FilterGroup>
+
+                  <FilterGroup title="Annual fees">
+                    <div className="grid grid-cols-2 gap-2 pb-2">
+                      <input
+                        inputMode="numeric"
+                        placeholder="Min ₹"
+                        value={draft.min}
+                        onChange={(e) => setDraft({ ...draft, min: e.target.value.replace(/\D/g, "") })}
+                        className={numInput}
+                      />
+                      <input
+                        inputMode="numeric"
+                        placeholder="Max ₹"
+                        value={draft.max}
+                        onChange={(e) => setDraft({ ...draft, max: e.target.value.replace(/\D/g, "") })}
+                        className={numInput}
+                      />
+                    </div>
+                    {FEE_PRESETS.map((p) => (
+                      <Check
+                        key={p.label}
+                        label={p.label}
+                        checked={draft.max === p.max && !draft.min}
+                        onChange={() => setDraft({ ...draft, min: "", max: draft.max === p.max ? "" : p.max })}
+                      />
+                    ))}
+                  </FilterGroup>
+
+                  <FilterGroup title="School board">
+                    {BOARDS.map((c) => (
+                      <label
+                        key={c}
+                        className="flex cursor-pointer items-center gap-3 rounded-lg px-1 py-2 text-sm text-[#4E5A68] transition hover:bg-[#F1F8FC]"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={draft.board.includes(c)}
+                          onChange={() => toggleMulti("board", c)}
+                          className="h-4 w-4 rounded accent-[#0795DC]"
+                        />
+                        <span className="flex-1 text-xs sm:text-sm">{BOARD_LABEL[c] || c}</span>
+                      </label>
+                    ))}
+                  </FilterGroup>
+
+                  <FilterGroup title="Gender">
+                    {GENDERS.map((c) => (
+                      <Radio
+                        key={c}
+                        label={c}
+                        checked={draft.gender[0] === c}
+                        onPick={() => pick("gender", c)}
+                      />
+                    ))}
+                  </FilterGroup>
+                </div>
+
+                {/* Footer: ALWAYS PINNED AND VISIBLE WITH APPLY BUTTON */}
+                <div className="shrink-0 border-t border-[#E1E7EE] bg-white p-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-[0_-6px_20px_rgba(11,42,71,0.12)]">
+                  <button
+                    type="button"
+                    onClick={apply}
+                    className="w-full rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] py-3.5 text-sm sm:text-base font-extrabold text-white shadow-md active:scale-[0.99] transition hover:brightness-105"
+                  >
+                    Apply Filters {results.length > 0 ? `(${results.length} schools)` : ""}
+                  </button>
+                </div>
+              </div>
+            </div>,
+            document.body
+          )}
         </aside>
 
         {/* ---------- Results ---------- */}
