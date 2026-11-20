@@ -55,7 +55,7 @@ export default function Navbar() {
       <header className="sticky top-0 z-[100] border-b border-[#D6DDE5]/80 bg-white/95 shadow-[0_6px_24px_rgba(12,50,54,0.05)] backdrop-blur-xl">
         <nav className="mx-auto flex min-h-[80px] max-w-[1280px] items-center justify-between px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-2">
-            {/* Mobile Back Button for iPhone & mobile where hardware back is absent */}
+            {/* Mobile Back Arrow Button */}
             {pathname !== "/" && (
               <button
                 type="button"
@@ -66,13 +66,12 @@ export default function Navbar() {
                     router.push("/");
                   }
                 }}
-                aria-label="Back"
-                className="inline-flex md:hidden items-center gap-1 rounded-xl border border-[#D6DDE5] bg-white px-2.5 py-1.5 text-xs font-bold text-[#0B2A47] hover:border-[#0795DC] hover:text-[#0A7BBF] transition shadow-sm active:scale-95 shrink-0"
+                aria-label="Go back"
+                className="inline-flex md:hidden h-9 w-9 items-center justify-center rounded-xl border border-[#D6DDE5] bg-white text-[#0B2A47] hover:border-[#0795DC] hover:text-[#0A7BBF] transition shadow-sm active:scale-90 shrink-0"
               >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M15 19l-7-7 7-7" />
                 </svg>
-                <span>Back</span>
               </button>
             )}
 
