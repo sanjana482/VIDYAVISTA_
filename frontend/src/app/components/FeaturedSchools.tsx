@@ -31,6 +31,18 @@ function getMonogram(name: string): string {
   return name.slice(0, 2).toUpperCase();
 }
 
+function cleanGrades(g?: string): string {
+  if (!g) return "-";
+  const m = g.match(/^0?(\d+)-([A-Za-z]+)$/i);
+  if (m) {
+    const start = m[1];
+    const month = m[2].toLowerCase();
+    const end = month === 'dec' ? '12' : month === 'oct' ? '10' : month === 'nov' ? '11' : month === 'sep' ? '9' : month === 'aug' ? '8' : month === 'jul' ? '7' : month === 'jun' ? '6' : month === 'may' ? '5' : month === 'apr' ? '4' : month === 'mar' ? '3' : month === 'feb' ? '2' : month === 'jan' ? '1' : month;
+    return `Class ${start} – Class ${end}`;
+  }
+  return g;
+}
+
 const toCard = (s: School, i: number) => ({
   id: s.id,
   href: schoolPath(s),
@@ -39,7 +51,7 @@ const toCard = (s: School, i: number) => ({
   type: s.type,
   gender: s.gender,
   location: `${s.area}, ${s.city}`,
-  grades: s.grades || "-",
+  grades: cleanGrades(s.grades),
   fees: feeText(s),
   image: s.image,
   logo: s.logo || s.logoUrl || s.logo_url,
@@ -295,7 +307,7 @@ export default function FeaturedSchools({ list = [], allSchools = [] }: { list?:
                 {...(active ? {} : ({ inert: "" } as object))}
               >
                 {/* Photo container */}
-                <div className="relative h-44 sm:h-52 md:h-full md:w-[38%] shrink-0 overflow-hidden bg-slate-100">
+                <div className="relative h-40 sm:h-52 md:h-full md:w-[38%] shrink-0 overflow-hidden bg-slate-100">
                   <img
                     src={school.image}
                     alt={`${school.name} campus`}
@@ -324,7 +336,7 @@ export default function FeaturedSchools({ list = [], allSchools = [] }: { list?:
                 </div>
 
                 {/* Details container */}
-                <div className="flex flex-1 flex-col justify-between p-4 sm:p-5">
+                <div className="flex flex-1 flex-col justify-between p-3.5 sm:p-5">
                   <div>
                     {/* Tags */}
                     <div className="flex flex-wrap items-center gap-1.5">
@@ -359,7 +371,7 @@ export default function FeaturedSchools({ list = [], allSchools = [] }: { list?:
                     </div>
 
                     {/* Grades & Fees compact box */}
-                    <div className="mt-3 grid grid-cols-2 gap-2 rounded-xl bg-[#F4F7F9] p-2.5 sm:p-3 border border-[#E8EFF4]">
+                    <div className="mt-2.5 grid grid-cols-2 gap-2 rounded-xl bg-[#F4F7F9] p-2 sm:p-2.5 border border-[#E8EFF4]">
                       <div>
                         <p className="text-[10px] font-bold uppercase tracking-wider text-[#89938B]">Grades</p>
                         <p className="mt-0.5 text-xs font-bold text-[#404A56] truncate">{school.grades}</p>
@@ -372,7 +384,7 @@ export default function FeaturedSchools({ list = [], allSchools = [] }: { list?:
                   </div>
 
                   {/* Actions row */}
-                  <div className="mt-4 flex items-center justify-between gap-3 border-t border-[#E8EFF4] pt-3">
+                  <div className="mt-3 flex items-center justify-between gap-3 border-t border-[#E8EFF4] pt-2.5">
                     <label className="flex cursor-pointer items-center gap-1.5 text-xs font-semibold text-[#5C6A7B] hover:text-[#0B2A47]">
                       <input
                         type="checkbox"

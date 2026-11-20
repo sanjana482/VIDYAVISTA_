@@ -360,8 +360,8 @@ img { max-width: 100%; }
 @keyframes vv-sheen { from { translate: -120px 0; opacity: 0; } 30% { opacity: 1; } to { translate: 120px 0; opacity: 0; } }
 
 /* ---------- featured carousel: elegant size, smooth coverflow ---------- */
-.vv-stage { position: relative; height: 32rem; }
-@media (min-width: 640px) { .vv-stage { height: 24rem; } }
+.vv-stage { position: relative; height: 24.5rem; }
+@media (min-width: 640px) { .vv-stage { height: 23rem; } }
 @media (min-width: 768px) { .vv-stage { height: 21rem; } }
 @media (min-width: 1024px) { .vv-stage { height: 20rem; } }
 .vv-slide {

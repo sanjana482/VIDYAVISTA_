@@ -54,14 +54,37 @@ export default function Navbar() {
     <>
       <header className="sticky top-0 z-[100] border-b border-[#D6DDE5]/80 bg-white/95 shadow-[0_6px_24px_rgba(12,50,54,0.05)] backdrop-blur-xl">
         <nav className="mx-auto flex min-h-[80px] max-w-[1280px] items-center justify-between px-4 sm:px-6 lg:px-8 py-4">
-          {/* Logo */}
-          <Link href="/" className="flex items-center" aria-label="VidyaVista home">
+          <div className="flex items-center gap-2">
+            {/* Mobile Back Button for iPhone & mobile where hardware back is absent */}
+            {pathname !== "/" && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== "undefined" && window.history.length > 1) {
+                    router.back();
+                  } else {
+                    router.push("/");
+                  }
+                }}
+                aria-label="Back"
+                className="inline-flex md:hidden items-center gap-1 rounded-xl border border-[#D6DDE5] bg-white px-2.5 py-1.5 text-xs font-bold text-[#0B2A47] hover:border-[#0795DC] hover:text-[#0A7BBF] transition shadow-sm active:scale-95 shrink-0"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                </svg>
+                <span>Back</span>
+              </button>
+            )}
+
+            {/* Logo */}
+            <Link href="/" className="flex items-center" aria-label="VidyaVista home">
             <img
               src="/logo.png"
               alt="VidyaVista - Discover | Learn | Grow"
               className="h-8 w-auto object-contain sm:h-9 transition hover:opacity-95"
             />
           </Link>
+          </div>
 
           {/* Desktop Navigation Links */}
           <div className="hidden items-center gap-6 lg:gap-8 md:flex">
