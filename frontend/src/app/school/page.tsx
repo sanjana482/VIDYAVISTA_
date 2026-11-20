@@ -23,6 +23,7 @@ import {
   LogOut,
   Mail,
   MapPin,
+  Menu,
   MessageSquare,
   Eye,
   EyeOff,
@@ -71,6 +72,7 @@ type TabKey = "dashboard" | "school_setup" | "leads" | "wizard" | "plans" | "inv
 export default function SchoolPortalPage() {
   const router = useRouter();
   const [tab, setTab] = useState<TabKey>("dashboard");
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
@@ -739,6 +741,192 @@ export default function SchoolPortalPage() {
         </div>
 
 
+
+        {/* Mobile Navigation Header & Swipeable Tabs */}
+        <div className="lg:hidden mb-4 space-y-2.5">
+          <div className="flex items-center justify-between gap-2 rounded-2xl border border-[#D6DDE5] bg-white p-3 shadow-sm">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#E1F1FA] text-[#0A5C91]">
+                {tab === "dashboard" && <LayoutDashboard className="h-5 w-5" />}
+                {tab === "school_setup" && <Building2 className="h-5 w-5" />}
+                {tab === "leads" && <Inbox className="h-5 w-5" />}
+                {tab === "wizard" && <FileEdit className="h-5 w-5" />}
+                {tab === "plans" && <CreditCard className="h-5 w-5" />}
+                {tab === "invoices" && <FileText className="h-5 w-5" />}
+                {tab === "reviews" && <Star className="h-5 w-5" />}
+                {tab === "password" && <KeyRound className="h-5 w-5" />}
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[#707E8F]">Active Section</p>
+                <h2 className="text-sm font-extrabold text-[#0B2A47] truncate">
+                  {tab === "dashboard" && "Dashboard Overview"}
+                  {tab === "school_setup" && (schoolApproved ? "Linked School Status" : "Add or Claim School")}
+                  {tab === "leads" && `Admission Leads (${stats?.totalLeads ?? 0})`}
+                  {tab === "wizard" && "Edit School Profile (10 Steps)"}
+                  {tab === "plans" && "Plans & Lead Top-ups"}
+                  {tab === "invoices" && `GST Invoices (${invoices.length})`}
+                  {tab === "reviews" && `Parent Reviews (${school?.reviews?.length ?? 0})`}
+                  {tab === "password" && "Change Password"}
+                </h2>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setMobileNavOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-[#0A5C91] px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#084873] active:scale-95 transition shrink-0"
+            >
+              <Menu className="h-4 w-4" />
+              <span>Menu</span>
+            </button>
+          </div>
+
+          {/* Quick Horizontal Swipe Tabs */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs no-scrollbar">
+            {[
+              { key: "dashboard", label: "Overview", icon: LayoutDashboard },
+              { key: "school_setup", label: "School Status", icon: Building2 },
+              { key: "leads", label: `Leads (${stats?.totalLeads ?? 0})`, icon: Inbox },
+              { key: "wizard", label: "Edit Profile", icon: FileEdit },
+              { key: "plans", label: "Plans", icon: CreditCard },
+              { key: "invoices", label: `Invoices (${invoices.length})`, icon: FileText },
+              { key: "reviews", label: "Reviews", icon: Star },
+              { key: "password", label: "Password", icon: KeyRound },
+            ].map((t) => {
+              const IconC = t.icon;
+              const isActive = tab === t.key;
+              return (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => setTab(t.key as TabKey)}
+                  className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2 font-bold transition shadow-sm ${
+                    isActive
+                      ? "bg-[#0A5C91] text-white"
+                      : "border border-[#D6DDE5] bg-white text-[#4E5A68] hover:text-[#0B2A47]"
+                  }`}
+                >
+                  <IconC className="h-3.5 w-3.5" />
+                  <span>{t.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Mobile Slide-Over Drawer */}
+        {mobileNavOpen && (
+          <div className="fixed inset-0 z-[120] lg:hidden">
+            <div
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+              onClick={() => setMobileNavOpen(false)}
+            />
+            <div className="fixed inset-y-0 right-0 w-[85%] max-w-sm bg-white p-5 shadow-2xl overflow-y-auto animate-in slide-in-from-right duration-200">
+              <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-4">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0A5C91] text-white font-bold text-xs">
+                    VV
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-extrabold text-[#0B2A47] text-sm">Institution Portal</h3>
+                    <p className="text-xs text-[#707E8F] truncate">{account?.institutionName || "My School"}</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setMobileNavOpen(false)}
+                  className="rounded-xl border border-[#D6DDE5] p-2 text-[#4E5A68] hover:bg-[#F1F5F9]"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Profile Completion */}
+              <div className="my-4 rounded-2xl bg-[#F0F8FF] p-3.5">
+                <div className="flex items-center justify-between text-xs font-bold text-[#0A5C91]">
+                  <span>Profile Completion</span>
+                  <span>{account?.profileCompletion ?? 20}%</span>
+                </div>
+                <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-[#D6DDE5]">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#0A5C91] to-[#0795DC]"
+                    style={{ width: `${account?.profileCompletion ?? 20}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Navigation Items */}
+              <nav className="space-y-1">
+                {(
+                  [
+                    { key: "dashboard", label: "Dashboard Overview", icon: LayoutDashboard },
+                    {
+                      key: "school_setup",
+                      label: schoolApproved ? "Linked School Status" : "Add or Claim School",
+                      icon: Building2,
+                      badge: account?.schoolLinkStatus === "pending_claim" || account?.schoolLinkStatus === "pending_new" ? "Pending" : undefined,
+                    },
+                    { key: "leads", label: `Admission Leads (${stats?.totalLeads ?? 0})`, icon: Inbox },
+                    {
+                      key: "wizard",
+                      label: "Edit School Profile (10 Steps)",
+                      icon: FileEdit,
+                      badge: account?.editApprovalStatus === "pending" ? "In Review" : undefined,
+                    },
+                    { key: "plans", label: "Plans & Lead Top-ups", icon: CreditCard },
+                    { key: "invoices", label: `GST Invoices (${invoices.length})`, icon: FileText },
+                    { key: "reviews", label: `Parent Reviews (${school?.reviews?.length ?? 0})`, icon: Star },
+                    { key: "password", label: "Change Password", icon: KeyRound },
+                  ] as const
+                ).map((item) => {
+                  const IconComp = item.icon;
+                  const isAct = tab === item.key;
+                  return (
+                    <button
+                      key={item.key}
+                      type="button"
+                      onClick={() => {
+                        setTab(item.key as TabKey);
+                        setMobileNavOpen(false);
+                      }}
+                      className={`flex w-full items-center justify-between rounded-xl px-4 py-3 text-left text-sm font-semibold transition ${
+                        isAct
+                          ? "bg-[#0A5C91] text-white shadow-sm"
+                          : "text-[#4E5A68] hover:bg-[#F1F5F9] hover:text-[#0B2A47]"
+                      }`}
+                    >
+                      <span className="flex items-center gap-2.5">
+                        <IconComp className="h-4 w-4 shrink-0" />
+                        <span>{item.label}</span>
+                      </span>
+                      {"badge" in item && item.badge && (
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                            isAct ? "bg-white/20 text-white" : "bg-amber-100 text-amber-800"
+                          }`}
+                        >
+                          {item.badge}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearPortalSession();
+                    router.push("/login?role=school");
+                  }}
+                  className="mt-4 flex w-full items-center gap-2.5 rounded-xl px-4 py-3 text-left text-sm font-semibold text-rose-600 transition hover:bg-rose-50"
+                >
+                  <LogOut className="h-4 w-4 shrink-0" />
+                  <span>Sign Out</span>
+                </button>
+              </nav>
+            </div>
+          </div>
+        )}
 
         {/* Main Grid: Sidebar + Active View */}
         <div className="mt-4 lg:mt-8 grid gap-6 lg:grid-cols-12">

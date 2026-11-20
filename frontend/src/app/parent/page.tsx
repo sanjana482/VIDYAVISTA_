@@ -26,6 +26,7 @@ import {
   LogOut,
   Mail,
   MapPin,
+  Menu,
   MessageSquare,
   Phone,
   Search,
@@ -164,6 +165,7 @@ function getApplicationTracker(e: any, profile: any) {
 export default function ParentPortalPage() {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("dashboard");
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState("");
 
@@ -300,6 +302,163 @@ export default function ParentPortalPage() {
       {/* Main Container */}
       <div className="mx-auto grid max-w-[1720px] gap-6 px-4 sm:px-6 py-6 sm:py-8 lg:grid-cols-12 lg:px-8 xl:px-12 pb-28 lg:pb-8">
 
+
+        {/* Mobile Navigation Header & Swipeable Tabs */}
+        <div className="lg:hidden col-span-12 mb-2 space-y-2.5">
+          <div className="flex items-center justify-between gap-2 rounded-2xl border border-[#D6DDE5] bg-white p-3 shadow-sm">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#E1F1FA] text-[#0A5C91]">
+                {tab === "dashboard" && <LayoutDashboard className="h-5 w-5" />}
+                {tab === "enquiries" && <Mail className="h-5 w-5" />}
+                {tab === "shortlisted" && <Heart className="h-5 w-5 text-[#EC0E58]" />}
+                {tab === "reviews" && <Star className="h-5 w-5 text-[#E99A24]" />}
+                {tab === "preferences" && <SlidersHorizontal className="h-5 w-5" />}
+                {tab === "password" && <KeyRound className="h-5 w-5" />}
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[#707E8F]">Active Section</p>
+                <h2 className="text-sm font-extrabold text-[#0B2A47] truncate">
+                  {tab === "dashboard" && "Dashboard Overview"}
+                  {tab === "enquiries" && `Admission Applications (${enquiries.length})`}
+                  {tab === "shortlisted" && `Shortlisted Schools (${shortlisted.length})`}
+                  {tab === "reviews" && `My School Reviews (${reviews.length})`}
+                  {tab === "preferences" && "Education Preferences"}
+                  {tab === "password" && "Account Security"}
+                </h2>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setMobileNavOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-[#0A5C91] px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#084873] active:scale-95 transition shrink-0"
+            >
+              <Menu className="h-4 w-4" />
+              <span>Menu</span>
+            </button>
+          </div>
+
+          {/* Quick Horizontal Swipe Tabs */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs no-scrollbar">
+            {[
+              { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+              { id: "enquiries", label: `Applications (${enquiries.length})`, icon: Mail },
+              { id: "shortlisted", label: `Shortlisted (${shortlisted.length})`, icon: Heart },
+              { id: "reviews", label: `Reviews (${reviews.length})`, icon: Star },
+              { id: "preferences", label: "Preferences", icon: SlidersHorizontal },
+              { id: "password", label: "Password", icon: KeyRound },
+            ].map((t) => {
+              const IconC = t.icon;
+              const isActive = tab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => handleTabChange(t.id as Tab)}
+                  className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2 font-bold transition shadow-sm ${
+                    isActive
+                      ? "bg-[#0A5C91] text-white"
+                      : "border border-[#D6DDE5] bg-white text-[#4E5A68] hover:text-[#0B2A47]"
+                  }`}
+                >
+                  <IconC className="h-3.5 w-3.5" />
+                  <span>{t.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Mobile Slide-Over Drawer for Parent Portal */}
+        {mobileNavOpen && (
+          <div className="fixed inset-0 z-[120] lg:hidden">
+            <div
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+              onClick={() => setMobileNavOpen(false)}
+            />
+            <div className="fixed inset-y-0 right-0 w-[85%] max-w-sm bg-white p-5 shadow-2xl overflow-y-auto animate-in slide-in-from-right duration-200">
+              <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-4">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#0A5C91] to-[#0795DC] text-white font-bold text-xs">
+                    {(profile?.parentName || "P").slice(0, 1).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-extrabold text-[#0B2A47] text-sm truncate">{profile?.parentName || "Parent Portal"}</h3>
+                    <p className="text-xs text-[#707E8F] truncate">{profile?.studentName ? `Student: ${profile.studentName}` : "Parent Account"}</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setMobileNavOpen(false)}
+                  className="rounded-xl border border-[#D6DDE5] p-2 text-[#4E5A68] hover:bg-[#F1F5F9]"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Profile Completion */}
+              <div className="my-4 rounded-2xl bg-[#F0F8FF] p-3.5">
+                <div className="flex items-center justify-between text-xs font-bold text-[#0A5C91]">
+                  <span>Profile Completion</span>
+                  <span>{profile?.profileCompletion ?? 70}%</span>
+                </div>
+                <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-[#D6DDE5]">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#0A5C91] to-[#0795DC]"
+                    style={{ width: `${profile?.profileCompletion ?? 70}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Navigation Items */}
+              <nav className="space-y-1">
+                {[
+                  { id: "dashboard", label: "Dashboard Overview", icon: LayoutDashboard },
+                  { id: "enquiries", label: `Admission Applications (${enquiries.length})`, icon: Mail },
+                  { id: "shortlisted", label: `Shortlisted Schools (${shortlisted.length})`, icon: Heart },
+                  { id: "reviews", label: `My School Reviews (${reviews.length})`, icon: Star },
+                  { id: "preferences", label: "Education Preferences", icon: SlidersHorizontal },
+                  { id: "password", label: "Account Security & Password", icon: KeyRound },
+                ].map((item) => {
+                  const IconComp = item.icon;
+                  const isAct = tab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        handleTabChange(item.id as Tab);
+                        setMobileNavOpen(false);
+                      }}
+                      className={`flex w-full items-center justify-between rounded-xl px-4 py-3 text-left text-sm font-semibold transition ${
+                        isAct
+                          ? "bg-[#0A5C91] text-white shadow-sm"
+                          : "text-[#4E5A68] hover:bg-[#F1F5F9] hover:text-[#0B2A47]"
+                      }`}
+                    >
+                      <span className="flex items-center gap-2.5">
+                        <IconComp className="h-4 w-4 shrink-0" />
+                        <span>{item.label}</span>
+                      </span>
+                    </button>
+                  );
+                })}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearPortalSession();
+                    router.push("/login?role=parent");
+                  }}
+                  className="mt-4 flex w-full items-center gap-2.5 rounded-xl px-4 py-3 text-left text-sm font-semibold text-rose-600 transition hover:bg-rose-50"
+                >
+                  <LogOut className="h-4 w-4 shrink-0" />
+                  <span>Sign Out</span>
+                </button>
+              </nav>
+            </div>
+          </div>
+        )}
 
         {/* Left Sidebar (Desktop) */}
         <aside className="hidden lg:block space-y-4 lg:col-span-3">
