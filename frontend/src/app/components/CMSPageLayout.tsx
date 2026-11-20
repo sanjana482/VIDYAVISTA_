@@ -13,7 +13,19 @@ export default function CMSPageLayout({
   children?: React.ReactNode;
 }) {
   if (!page) {
-    return <>{children}</>;
+    return (
+      <main className="min-h-screen bg-white">
+        <Navbar />
+        {children ? (
+          children
+        ) : (
+          <section className="bg-gradient-to-b from-[#EEF4FA] to-white py-16 text-center">
+            <h1 className="text-3xl font-black text-[#0B2A47]">Loading Content...</h1>
+          </section>
+        )}
+        <Footer />
+      </main>
+    );
   }
 
   const updatedDate = page.updated_at
@@ -60,17 +72,17 @@ export default function CMSPageLayout({
             />
           )}
 
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="mt-6 flex flex-wrap gap-3">
             <Link
               href="/schools"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#0795DC] px-6 py-3 text-sm font-bold text-white shadow-md hover:bg-[#0A5C91] transition"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#0795DC] px-5 py-3 text-sm font-bold text-white shadow-md hover:bg-[#0A5C91] transition"
             >
-              <span>Explore Schools</span>
+              <span>Explore All Schools</span>
               <span>&rarr;</span>
             </Link>
             <Link
               href="/compare"
-              className="inline-flex items-center gap-2 rounded-xl border border-[#CBD5E1] bg-white px-5 py-3 text-sm font-bold text-[#0B2A47] hover:bg-slate-50 transition"
+              className="inline-flex items-center gap-2 rounded-xl border border-[#D6DDE5] bg-white px-5 py-3 text-sm font-bold text-[#0B2A47] hover:border-[#0795DC] transition"
             >
               <span>Compare Schools</span>
             </Link>
@@ -78,60 +90,71 @@ export default function CMSPageLayout({
         </div>
       </section>
 
-      {/* Structured Sections */}
+      {/* Main Content Sections */}
       {page.sections && page.sections.length > 0 && (
-        <section className="py-12 border-b border-[#EEF4FA]">
-          <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8 space-y-6">
-            {page.sections.map((sec, idx) => (
-              <div
-                key={idx}
-                className="rounded-2xl bg-white p-6 sm:p-8 border border-[#E1E7EE] shadow-sm hover:border-[#0795DC]/40 transition"
-              >
-                <h2 className="text-xl sm:text-2xl font-bold text-[#0B2A47]">
-                  {sec.title}
-                </h2>
-                {sec.body && (
-                  <p className="mt-3 text-sm sm:text-base text-[#4E5A68] leading-relaxed whitespace-pre-line">
+        <section className="py-12 sm:py-16">
+          <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
+            <div className="grid gap-8 lg:grid-cols-2">
+              {page.sections.map((sec, idx) => (
+                <div
+                  key={idx}
+                  className="rounded-2xl border border-[#E1E7EE] bg-white p-6 sm:p-8 shadow-sm hover:border-[#0795DC]/40 transition"
+                >
+                  <div className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#E1F1FA] text-xs font-bold text-[#0A5C91] mb-3">
+                    0{idx + 1}
+                  </div>
+                  <h3 className="text-xl font-bold text-[#0B2A47]">
+                    {sec.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-[#4E5A68]">
                     {sec.body}
                   </p>
-                )}
-                {sec.points && sec.points.length > 0 && (
-                  <ul className="mt-4 space-y-2.5">
-                    {sec.points.map((pt, pIdx) => (
-                      <li key={pIdx} className="flex items-start gap-2.5 text-sm sm:text-base text-[#2C3847]">
-                        <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#0795DC]"></span>
-                        <span>{pt}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Children or Extra Custom Blocks */}
-      {children}
-
-      {/* FAQs */}
-      {page.faqs && page.faqs.length > 0 && (
-        <section className="py-14 bg-[#F8FBFE] border-t border-[#E1E7EE]">
-          <div className="mx-auto max-w-[1000px] px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl sm:text-3xl font-black text-[#0B2A47] text-center mb-8">
-              Frequently Asked Questions
-            </h2>
-            <div className="space-y-4">
-              {page.faqs.map((faq, fIdx) => (
-                <div key={fIdx} className="rounded-xl bg-white p-6 border border-[#E1E7EE] shadow-xs">
-                  <h3 className="text-base sm:text-lg font-bold text-[#0B2A47]">{faq.q}</h3>
-                  <p className="mt-2 text-sm sm:text-base text-[#4E5A68] leading-relaxed">{faq.a}</p>
+                  {sec.points && sec.points.length > 0 && (
+                    <ul className="mt-4 space-y-2 border-t border-[#F1F5F9] pt-4">
+                      {sec.points.map((pt, pIdx) => (
+                        <li key={pIdx} className="flex items-start gap-2 text-xs sm:text-sm text-[#4E5A68]">
+                          <span className="text-[#0795DC] mt-0.5 font-bold">&#10003;</span>
+                          <span>{pt}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               ))}
             </div>
           </div>
         </section>
       )}
+
+      {/* FAQs Section */}
+      {page.faqs && page.faqs.length > 0 && (
+        <section className="py-12 bg-[#F8FBFE] border-t border-[#E1E7EE]">
+          <div className="mx-auto max-w-[1000px] px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0B2A47]">
+                Frequently Asked Questions
+              </h2>
+            </div>
+            <div className="space-y-4">
+              {page.faqs.map((faq, fIdx) => (
+                <div
+                  key={fIdx}
+                  className="rounded-xl border border-[#D6DDE5] bg-white p-5 shadow-sm"
+                >
+                  <h4 className="font-bold text-[#0B2A47] text-base">
+                    {faq.q}
+                  </h4>
+                  <p className="mt-2 text-sm text-[#4E5A68] leading-relaxed">
+                    {faq.a}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {children}
 
       <Footer />
     </main>

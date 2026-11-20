@@ -75,7 +75,8 @@ class SchoolViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if self.action == 'list':
             qs = School.objects.select_related('owner').prefetch_related(
-                'school_accounts'
+                'school_accounts',
+                Prefetch('review_items', queryset=Review.objects.filter(is_approved=True).order_by('-created_at'))
             )
         else:
             qs = School.objects.select_related('owner').prefetch_related(
@@ -159,8 +160,42 @@ class ReviewViewSet(viewsets.GenericViewSet):
     def list(self, request, *args, **kwargs):
         school_id = request.query_params.get('schoolId') or request.query_params.get('school')
         slug_val = request.query_params.get('slug')
+        state = request.query_params.get('state')
+        city = request.query_params.get('city')
+        place = request.query_params.get('place')
+
         if not school_id and not slug_val:
-            return Response({'ok': True, 'data': [], 'breakdown': {}, 'parameters': {}})
+            reviews_qs = Review.objects.filter(is_approved=True).select_related('school')
+            if state:
+                clean_state = state.replace('-', ' ').strip()
+                reviews_qs = reviews_qs.filter(Q(school__state__iexact=state) | Q(school__state__iexact=clean_state))
+            elif city:
+                clean_city = city.replace('-', ' ').strip()
+                reviews_qs = reviews_qs.filter(Q(school__city__iexact=city) | Q(school__city__iexact=clean_city))
+            elif place:
+                clean_place = place.replace('-', ' ').strip()
+                reviews_qs = reviews_qs.filter(
+                    Q(school__state__iexact=place) | Q(school__state__iexact=clean_place) |
+                    Q(school__city__iexact=place) | Q(school__city__iexact=clean_place)
+                )
+
+            data = [
+                {
+                    'id': r.id,
+                    'name': r.name,
+                    'role': r.role,
+                    'rating': r.rating,
+                    'text': r.text,
+                    'date': r.created_at.date().isoformat(),
+                    'schoolId': r.school.school_id,
+                    'schoolName': r.school.name,
+                    'schoolSlug': r.school.slug,
+                    'schoolCity': r.school.city,
+                    'schoolState': r.school.state,
+                }
+                for r in reviews_qs.order_by('-created_at')[:20]
+            ]
+            return Response({'ok': True, 'data': data, 'breakdown': {}, 'parameters': {}})
 
         school = None
         # 1. Exact lookup by slug if provided
