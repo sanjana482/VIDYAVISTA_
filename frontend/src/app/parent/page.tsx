@@ -303,69 +303,52 @@ export default function ParentPortalPage() {
       <div className="mx-auto grid max-w-[1720px] gap-6 px-4 sm:px-6 py-6 sm:py-8 lg:grid-cols-12 lg:px-8 xl:px-12 pb-28 lg:pb-8">
 
 
-        {/* Mobile Navigation Header & Swipeable Tabs */}
-        <div className="lg:hidden col-span-12 mb-2 space-y-2.5">
-          <div className="flex items-center justify-between gap-2 rounded-2xl border border-[#D6DDE5] bg-white p-3 shadow-sm">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#E1F1FA] text-[#0A5C91]">
-                {tab === "dashboard" && <LayoutDashboard className="h-5 w-5" />}
-                {tab === "enquiries" && <Mail className="h-5 w-5" />}
-                {tab === "shortlisted" && <Heart className="h-5 w-5 text-[#EC0E58]" />}
-                {tab === "reviews" && <Star className="h-5 w-5 text-[#E99A24]" />}
-                {tab === "preferences" && <SlidersHorizontal className="h-5 w-5" />}
-                {tab === "password" && <KeyRound className="h-5 w-5" />}
-              </div>
-              <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-[#707E8F]">Active Section</p>
-                <h2 className="text-sm font-extrabold text-[#0B2A47] truncate">
-                  {tab === "dashboard" && "Dashboard Overview"}
-                  {tab === "enquiries" && `Admission Applications (${enquiries.length})`}
-                  {tab === "shortlisted" && `Shortlisted Schools (${shortlisted.length})`}
-                  {tab === "reviews" && `My School Reviews (${reviews.length})`}
-                  {tab === "preferences" && "Education Preferences"}
-                  {tab === "password" && "Account Security"}
-                </h2>
-              </div>
+        {/* Mobile Sticky Navigation Menubar (Parent Portal) */}
+        <div className="lg:hidden col-span-12 sticky top-[64px] sm:top-[80px] z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-2.5 bg-white/95 backdrop-blur-md border-b border-[#D6DDE5] shadow-sm mb-3">
+          <div className="flex items-center gap-2">
+            {/* Horizontal Scrollable Tabs */}
+            <div
+              className="flex-1 flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth touch-pan-x min-w-0 py-0.5"
+              style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}
+            >
+              {[
+                { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+                { id: "enquiries", label: `Applications (${enquiries.length})`, icon: Mail },
+                { id: "shortlisted", label: `Shortlisted (${shortlisted.length})`, icon: Heart },
+                { id: "reviews", label: `Reviews (${reviews.length})`, icon: Star },
+                { id: "preferences", label: "Preferences", icon: SlidersHorizontal },
+                { id: "password", label: "Password", icon: KeyRound },
+              ].map((t) => {
+                const IconC = t.icon;
+                const isActive = tab === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => handleTabChange(t.id as Tab)}
+                    className={`shrink-0 inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3.5 py-2 text-xs font-bold transition shadow-xs active:scale-95 ${
+                      isActive
+                        ? "bg-[#0A5C91] text-white shadow-sm ring-1 ring-[#0A5C91]"
+                        : "border border-[#D6DDE5] bg-white text-[#4E5A68] hover:text-[#0B2A47] hover:border-[#0A5C91]"
+                    }`}
+                  >
+                    <IconC className="h-3.5 w-3.5 shrink-0" />
+                    <span>{t.label}</span>
+                  </button>
+                );
+              })}
             </div>
 
+            {/* All Menu Button */}
             <button
               type="button"
               onClick={() => setMobileNavOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-[#0A5C91] px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#084873] active:scale-95 transition shrink-0"
+              className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-[#F0F4F8] hover:bg-[#E1F1FA] border border-[#D6DDE5] px-3 py-2 text-xs font-bold text-[#0A5C91] shadow-xs active:scale-95"
+              title="All Navigation Menu"
             >
-              <Menu className="h-4 w-4" />
-              <span>Menu</span>
+              <Menu className="h-4 w-4 shrink-0" />
+              <span className="font-extrabold">Menu</span>
             </button>
-          </div>
-
-          {/* Quick Horizontal Swipe Tabs */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs no-scrollbar">
-            {[
-              { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-              { id: "enquiries", label: `Applications (${enquiries.length})`, icon: Mail },
-              { id: "shortlisted", label: `Shortlisted (${shortlisted.length})`, icon: Heart },
-              { id: "reviews", label: `Reviews (${reviews.length})`, icon: Star },
-              { id: "preferences", label: "Preferences", icon: SlidersHorizontal },
-              { id: "password", label: "Password", icon: KeyRound },
-            ].map((t) => {
-              const IconC = t.icon;
-              const isActive = tab === t.id;
-              return (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => handleTabChange(t.id as Tab)}
-                  className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2 font-bold transition shadow-sm ${
-                    isActive
-                      ? "bg-[#0A5C91] text-white"
-                      : "border border-[#D6DDE5] bg-white text-[#4E5A68] hover:text-[#0B2A47]"
-                  }`}
-                >
-                  <IconC className="h-3.5 w-3.5" />
-                  <span>{t.label}</span>
-                </button>
-              );
-            })}
           </div>
         </div>
 

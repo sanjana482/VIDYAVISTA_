@@ -742,75 +742,54 @@ export default function SchoolPortalPage() {
 
 
 
-        {/* Mobile Navigation Header & Swipeable Tabs */}
-        <div className="lg:hidden mb-4 space-y-2.5">
-          <div className="flex items-center justify-between gap-2 rounded-2xl border border-[#D6DDE5] bg-white p-3 shadow-sm">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#E1F1FA] text-[#0A5C91]">
-                {tab === "dashboard" && <LayoutDashboard className="h-5 w-5" />}
-                {tab === "school_setup" && <Building2 className="h-5 w-5" />}
-                {tab === "leads" && <Inbox className="h-5 w-5" />}
-                {tab === "wizard" && <FileEdit className="h-5 w-5" />}
-                {tab === "plans" && <CreditCard className="h-5 w-5" />}
-                {tab === "invoices" && <FileText className="h-5 w-5" />}
-                {tab === "reviews" && <Star className="h-5 w-5" />}
-                {tab === "password" && <KeyRound className="h-5 w-5" />}
-              </div>
-              <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-[#707E8F]">Active Section</p>
-                <h2 className="text-sm font-extrabold text-[#0B2A47] truncate">
-                  {tab === "dashboard" && "Dashboard Overview"}
-                  {tab === "school_setup" && (schoolApproved ? "Linked School Status" : "Add or Claim School")}
-                  {tab === "leads" && `Admission Leads (${stats?.totalLeads ?? 0})`}
-                  {tab === "wizard" && "Edit School Profile (10 Steps)"}
-                  {tab === "plans" && "Plans & Lead Top-ups"}
-                  {tab === "invoices" && `GST Invoices (${invoices.length})`}
-                  {tab === "reviews" && `Parent Reviews (${school?.reviews?.length ?? 0})`}
-                  {tab === "password" && "Change Password"}
-                </h2>
-              </div>
+        {/* Mobile Sticky Navigation Menubar (School Portal) */}
+        <div className="lg:hidden sticky top-[64px] sm:top-[80px] z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-2.5 bg-white/95 backdrop-blur-md border-b border-[#D6DDE5] shadow-sm my-3">
+          <div className="flex items-center gap-2">
+            {/* Horizontal Scrollable Tabs */}
+            <div
+              className="flex-1 flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth touch-pan-x min-w-0 py-0.5"
+              style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}
+            >
+              {[
+                { key: "dashboard", label: "Overview", icon: LayoutDashboard },
+                { key: "school_setup", label: schoolApproved ? "School Status" : "Add/Claim School", icon: Building2 },
+                { key: "leads", label: `Leads (${stats?.totalLeads ?? 0})`, icon: Inbox },
+                { key: "wizard", label: "Edit Profile", icon: FileEdit },
+                { key: "plans", label: "Plans", icon: CreditCard },
+                { key: "invoices", label: `Invoices (${invoices.length})`, icon: FileText },
+                { key: "reviews", label: `Reviews (${school?.reviews?.length ?? 0})`, icon: Star },
+                { key: "password", label: "Password", icon: KeyRound },
+              ].map((t) => {
+                const IconC = t.icon;
+                const isActive = tab === t.key;
+                return (
+                  <button
+                    key={t.key}
+                    type="button"
+                    onClick={() => setTab(t.key as TabKey)}
+                    className={`shrink-0 inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3.5 py-2 text-xs font-bold transition shadow-xs active:scale-95 ${
+                      isActive
+                        ? "bg-[#0A5C91] text-white shadow-sm ring-1 ring-[#0A5C91]"
+                        : "border border-[#D6DDE5] bg-white text-[#4E5A68] hover:text-[#0B2A47] hover:border-[#0A5C91]"
+                    }`}
+                  >
+                    <IconC className="h-3.5 w-3.5 shrink-0" />
+                    <span>{t.label}</span>
+                  </button>
+                );
+              })}
             </div>
 
+            {/* All Menu Button */}
             <button
               type="button"
               onClick={() => setMobileNavOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-[#0A5C91] px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#084873] active:scale-95 transition shrink-0"
+              className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-[#F0F4F8] hover:bg-[#E1F1FA] border border-[#D6DDE5] px-3 py-2 text-xs font-bold text-[#0A5C91] shadow-xs active:scale-95"
+              title="All Navigation Menu"
             >
-              <Menu className="h-4 w-4" />
-              <span>Menu</span>
+              <Menu className="h-4 w-4 shrink-0" />
+              <span className="font-extrabold">Menu</span>
             </button>
-          </div>
-
-          {/* Quick Horizontal Swipe Tabs */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs no-scrollbar">
-            {[
-              { key: "dashboard", label: "Overview", icon: LayoutDashboard },
-              { key: "school_setup", label: "School Status", icon: Building2 },
-              { key: "leads", label: `Leads (${stats?.totalLeads ?? 0})`, icon: Inbox },
-              { key: "wizard", label: "Edit Profile", icon: FileEdit },
-              { key: "plans", label: "Plans", icon: CreditCard },
-              { key: "invoices", label: `Invoices (${invoices.length})`, icon: FileText },
-              { key: "reviews", label: "Reviews", icon: Star },
-              { key: "password", label: "Password", icon: KeyRound },
-            ].map((t) => {
-              const IconC = t.icon;
-              const isActive = tab === t.key;
-              return (
-                <button
-                  key={t.key}
-                  type="button"
-                  onClick={() => setTab(t.key as TabKey)}
-                  className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2 font-bold transition shadow-sm ${
-                    isActive
-                      ? "bg-[#0A5C91] text-white"
-                      : "border border-[#D6DDE5] bg-white text-[#4E5A68] hover:text-[#0B2A47]"
-                  }`}
-                >
-                  <IconC className="h-3.5 w-3.5" />
-                  <span>{t.label}</span>
-                </button>
-              );
-            })}
           </div>
         </div>
 
