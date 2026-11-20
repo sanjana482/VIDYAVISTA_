@@ -299,58 +299,58 @@ export default function ParentPortalPage() {
         </div>
       )}
 
-      {/* Main Container */}
-      <div className="mx-auto grid max-w-[1720px] gap-6 px-4 sm:px-6 py-6 sm:py-8 lg:grid-cols-12 lg:px-8 xl:px-12 pb-28 lg:pb-8">
-
-
-        {/* Mobile Sticky Navigation Menubar (Parent Portal) */}
-        <div className="lg:hidden col-span-12 sticky top-[64px] sm:top-[80px] z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-2.5 bg-white/95 backdrop-blur-md border-b border-[#D6DDE5] shadow-sm mb-3">
-          <div className="flex items-center gap-2">
-            {/* Horizontal Scrollable Tabs */}
-            <div
-              className="flex-1 flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth touch-pan-x min-w-0 py-0.5"
-              style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}
-            >
-              {[
-                { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-                { id: "enquiries", label: `Applications (${enquiries.length})`, icon: Mail },
-                { id: "shortlisted", label: `Shortlisted (${shortlisted.length})`, icon: Heart },
-                { id: "reviews", label: `Reviews (${reviews.length})`, icon: Star },
-                { id: "preferences", label: "Preferences", icon: SlidersHorizontal },
-                { id: "password", label: "Password", icon: KeyRound },
-              ].map((t) => {
-                const IconC = t.icon;
-                const isActive = tab === t.id;
-                return (
-                  <button
-                    key={t.id}
-                    type="button"
-                    onClick={() => handleTabChange(t.id as Tab)}
-                    className={`shrink-0 inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3.5 py-2 text-xs font-bold transition shadow-xs active:scale-95 ${
-                      isActive
-                        ? "bg-[#0A5C91] text-white shadow-sm ring-1 ring-[#0A5C91]"
-                        : "border border-[#D6DDE5] bg-white text-[#4E5A68] hover:text-[#0B2A47] hover:border-[#0A5C91]"
-                    }`}
-                  >
-                    <IconC className="h-3.5 w-3.5 shrink-0" />
-                    <span>{t.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* All Menu Button */}
-            <button
-              type="button"
-              onClick={() => setMobileNavOpen(true)}
-              className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-[#F0F4F8] hover:bg-[#E1F1FA] border border-[#D6DDE5] px-3 py-2 text-xs font-bold text-[#0A5C91] shadow-xs active:scale-95"
-              title="All Navigation Menu"
-            >
-              <Menu className="h-4 w-4 shrink-0" />
-              <span className="font-extrabold">Menu</span>
-            </button>
+      {/* Mobile Sticky Navigation Menubar (Parent Portal - Flush Under Navbar) */}
+      <div className="lg:hidden sticky top-[64px] sm:top-[80px] z-30 w-full bg-white/95 backdrop-blur-md border-b border-[#D6DDE5] shadow-xs">
+        <div className="flex items-center gap-2 px-3 sm:px-6 py-2">
+          {/* Horizontal Scrollable Tabs */}
+          <div
+            className="flex-1 flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth touch-pan-x min-w-0 py-0.5"
+            style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}
+          >
+            {[
+              { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+              { id: "enquiries", label: `Applications (${enquiries.length})`, icon: Mail },
+              { id: "shortlisted", label: `Shortlisted (${shortlisted.length})`, icon: Heart },
+              { id: "reviews", label: `Reviews (${reviews.length})`, icon: Star },
+              { id: "preferences", label: "Preferences", icon: SlidersHorizontal },
+              { id: "password", label: "Password", icon: KeyRound },
+            ].map((t) => {
+              const IconC = t.icon;
+              const isActive = tab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => handleTabChange(t.id as Tab)}
+                  className={`shrink-0 flex-shrink-0 inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3.5 py-2 text-xs font-bold transition shadow-xs active:scale-95 ${
+                    isActive
+                      ? "bg-[#0A5C91] text-white shadow-sm ring-1 ring-[#0A5C91]"
+                      : "border border-[#D6DDE5] bg-white text-[#4E5A68] hover:text-[#0B2A47] hover:border-[#0A5C91]"
+                  }`}
+                >
+                  <IconC className="h-3.5 w-3.5 shrink-0" />
+                  <span>{t.label}</span>
+                </button>
+              );
+            })}
           </div>
+
+          {/* All Menu Button */}
+          <button
+            type="button"
+            onClick={() => setMobileNavOpen(true)}
+            className="shrink-0 flex-shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-[#F0F4F8] hover:bg-[#E1F1FA] border border-[#D6DDE5] px-3 py-2 text-xs font-bold text-[#0A5C91] shadow-xs active:scale-95"
+            title="All Navigation Menu"
+          >
+            <Menu className="h-4 w-4 shrink-0" />
+            <span className="font-extrabold">Menu</span>
+          </button>
         </div>
+      </div>
+
+      {/* Main Container */}
+      <div className="mx-auto grid max-w-[1720px] gap-6 px-4 sm:px-6 py-4 sm:py-8 grid-cols-1 lg:grid-cols-12 lg:px-8 xl:px-12 pb-28 lg:pb-8 w-full">
+
 
         {/* Mobile Slide-Over Drawer for Parent Portal */}
         {mobileNavOpen && (
@@ -530,7 +530,7 @@ export default function ParentPortalPage() {
         </aside>
 
         {/* Main Content Area */}
-        <main className="space-y-6 lg:col-span-9">
+        <main className="space-y-6 col-span-1 lg:col-span-9 w-full min-w-0">
           {tab === "dashboard" && (
             <>
               {/* Education Preference Summary Block */}
@@ -822,7 +822,7 @@ export default function ParentPortalPage() {
                         {/* 2. Visual Stepper Timeline */}
                         <div className="px-5 py-6 sm:px-8">
                           <div className="relative">
-                            <div className="grid grid-cols-2 gap-y-6 gap-x-2 sm:grid-cols-4 sm:gap-2">
+                            <div className="grid grid-cols-4 gap-1 sm:gap-2">
                               {trk.stages.map((st, idx) => {
                                 const isDone = st.status === "completed";
                                 const isCurrent = st.status === "current";
@@ -832,7 +832,7 @@ export default function ParentPortalPage() {
                                     {/* Desktop Connecting Line */}
                                     {idx < trk.stages.length - 1 && (
                                       <div
-                                        className={`hidden sm:block absolute top-4 left-1/2 w-full h-1 -z-0 ${
+                                        className={`absolute top-3.5 sm:top-4 left-1/2 w-full h-0.5 sm:h-1 -z-0 ${
                                           trk.stages[idx + 1].status === "rejected"
                                             ? "bg-rose-400"
                                             : trk.stages[idx + 1].status === "completed" || trk.stages[idx + 1].status === "current"
@@ -844,7 +844,7 @@ export default function ParentPortalPage() {
 
                                     {/* Circle Icon */}
                                     <div
-                                      className={`relative z-10 flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition ${
+                                      className={`relative z-10 flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full text-xs font-bold transition ${
                                         isStageRejected
                                           ? "bg-rose-600 text-white shadow-md ring-4 ring-rose-200"
                                           : isDone
@@ -867,7 +867,7 @@ export default function ParentPortalPage() {
 
                                     {/* Labels */}
                                     <p
-                                      className={`mt-2 text-xs font-extrabold ${
+                                      className={`mt-1.5 text-[10px] sm:text-xs font-extrabold leading-tight line-clamp-2 px-0.5 ${
                                         isStageRejected
                                           ? "text-rose-700"
                                           : isCurrent
@@ -880,7 +880,7 @@ export default function ParentPortalPage() {
                                       {st.label}
                                     </p>
                                     <span
-                                      className={`mt-0.5 text-[11px] font-semibold ${
+                                      className={`mt-0.5 text-[9px] sm:text-[11px] font-semibold truncate max-w-full ${
                                         isStageRejected
                                           ? "rounded-full bg-rose-100 px-2.5 py-0.5 text-rose-800 font-bold"
                                           : isCurrent

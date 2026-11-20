@@ -30,16 +30,13 @@ export default function Navbar() {
   }, [pathname]);
 
   const goSchools = () => {
-    const pref = readPreference();
-    const type = pref ? normalizeType(pref.type) : "";
-    if (pref?.location && type) router.push(typePath(type, pref.location));
-    else openLocationPicker();
+    router.push("/schools");
   };
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
 
   const mainLinks = [
     { name: "Home", href: "/" },
-    { name: "Schools", href: "/#browse" },
+    { name: "Schools", href: "/schools" },
     { name: "Compare", href: "/compare" },
     { name: "Blog", href: "/blog" },
   ];

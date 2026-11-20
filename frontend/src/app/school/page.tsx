@@ -908,7 +908,7 @@ export default function SchoolPortalPage() {
         )}
 
         {/* Main Grid: Sidebar + Active View */}
-        <div className="mt-4 lg:mt-8 grid gap-6 lg:grid-cols-12">
+        <div className="mt-4 lg:mt-8 grid gap-6 grid-cols-1 lg:grid-cols-12 w-full min-w-0">
           {/* Sidebar Menu (Desktop) */}
           <aside className="hidden lg:block lg:col-span-3">
             <div className="rounded-3xl border border-[#D6DDE5] bg-white p-4 shadow-sm">
@@ -993,7 +993,7 @@ export default function SchoolPortalPage() {
           </aside>
 
           {/* Main Content Area */}
-          <section className="space-y-6 lg:col-span-9">
+          <section className="space-y-6 col-span-1 lg:col-span-9 w-full min-w-0">
             {/* 3-STAGE APPROVAL STATUS TRACKER BANNER (Only on Dashboard once approved) */}
             {(!ownerApproved || !schoolApproved || tab === "dashboard") && (
             <div className="vv-rise rounded-3xl border border-[#D6DDE5] bg-white p-6 shadow-sm">
