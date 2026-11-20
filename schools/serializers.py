@@ -1,7 +1,7 @@
 import re
 
 from rest_framework import serializers
-from .models import ADMISSION_STATUS, Enquiry, LocationPage, Review, School
+from .models import ADMISSION_STATUS, Enquiry, LocationPage, CMSPage, Review, School
 
 
 def file_or_url(request, file_field, url):
@@ -21,14 +21,17 @@ ADMISSION_LABEL = dict(ADMISSION_STATUS)
 
 
 def _approved(obj, limit):
-    """Approved reviews. Uses the prefetched list if the view provided it (no extra query)."""
+    """Approved reviews."""
     rows = getattr(obj, 'approved_reviews', None)
     if rows is None:
         reviews = getattr(obj, '_prefetched_objects_cache', {}).get('review_items')
         if reviews is not None:
             rows = [r for r in reviews if getattr(r, 'is_approved', False)]
         else:
-            return []
+            try:
+                rows = list(obj.review_items.filter(is_approved=True).order_by('-created_at')[:limit])
+            except Exception:
+                rows = []
     return [
         {'name': r.name, 'role': r.role, 'rating': r.rating, 'text': r.text, 'date': r.created_at.date().isoformat()}
         for r in rows[:limit]
@@ -140,13 +143,8 @@ class SchoolSerializer(serializers.ModelSerializer):
         data.update(_admission(obj))
         data['profile'] = prof
 
-        # ---- verified badge
-        is_ver = (
-            getattr(obj, 'verified', False)
-            or (obj.owner is not None and getattr(obj.owner, 'approval_status', '') == 'approved')
-            or (hasattr(obj, 'school_accounts') and obj.school_accounts.filter(status='approved', school_link_status='approved').exists())
-        )
-        data['verified'] = bool(is_ver)
+        # ---- verified badge: Only True if school is claimed by an owner
+        data['verified'] = bool(obj.is_claimed)
 
         # ---- approved parent reviews (latest 10)
         data['reviewList'] = [
@@ -181,13 +179,8 @@ class SchoolListSerializer(serializers.ModelSerializer):
         data['logoUrl'] = logo_val
         data['logo_url'] = logo_val
         data['photos'] = getattr(obj, 'photo_count', 0) or obj.photos
-        sa_list = list(obj.school_accounts.all()) if hasattr(obj, 'school_accounts') else []
-        is_ver = (
-            getattr(obj, 'verified', False)
-            or (obj.owner is not None and getattr(obj.owner, 'approval_status', '') == 'approved')
-            or any(getattr(sa, 'status', '') == 'approved' and getattr(sa, 'school_link_status', '') == 'approved' for sa in sa_list)
-        )
-        data['verified'] = bool(is_ver)
+        # ---- verified badge: Only True if school is claimed by an owner
+        data['verified'] = bool(obj.is_claimed)
         data['reviewList'] = _approved(obj, 3)
         data.update(_admission(obj))
         return data
@@ -277,3 +270,14 @@ class LocationSerializer(serializers.ModelSerializer):
         if rows:
             data['faqs'] = rows
         return data
+
+
+class CMSPageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CMSPage
+        fields = [
+            'id', 'slug', 'title', 'category', 'subtitle',
+            'meta_title', 'meta_description', 'canonical_url',
+            'content_html', 'sections', 'faqs', 'is_published',
+            'created_at', 'updated_at'
+        ]

@@ -83,6 +83,7 @@ JAZZMIN_SETTINGS = {
     "site_logo_classes": "img-fluid",
     "site_icon": "schools/img/logo.png",
     "show_ui_builder": False,
+    "changeform_format": "single",
     "custom_css": "schools/css/custom_admin.css",
     "navigation_expanded": True,
     "order_with_respect_to": [
@@ -130,7 +131,8 @@ JAZZMIN_SETTINGS = {
         "schools.shortlist": "fas fa-bookmark",
         "schools.leadmessage": "fas fa-comments",
         "schools.review": "fas fa-star",
-        "schools.locationpage": "fas fa-map-marker-alt",
+        "schools.locationpage": "fas fa-map-marked-alt",
+        "schools.cmspage": "fas fa-file-alt",
         "schools.emailotp": "fas fa-shield-alt",
         "schools.blogpost": "fas fa-newspaper",
         "auth": "fas fa-users-cog",

@@ -8,8 +8,13 @@ import { typePlural } from "../lib/links";
 export const APPLIED_EVENT = "vv-applied";
 export type AppliedInfo = { type: string; place: string; board: string };
 
-export const headingFor = ({ type, place, board }: AppliedInfo) =>
-  `${board ? `${BOARD_LABEL[board] ?? board} ` : ""}${typePlural(type)}${place ? ` in ${place}` : ""}`;
+export const cleanPlaceName = (p: string) =>
+  (p || "").replace(/^(boarding|day|play)?\s*schools?\s*in\s*/i, "").trim();
+
+export const headingFor = ({ type, place, board }: AppliedInfo) => {
+  const p = cleanPlaceName(place);
+  return `${board ? `${BOARD_LABEL[board] ?? board} ` : ""}${typePlural(type)}${p ? ` in ${p}` : ""}`;
+};
 
 export default function PlaceHeading({ initial, description }: { initial: AppliedInfo; description?: string }) {
   const [cur, setCur] = useState<AppliedInfo>(initial);

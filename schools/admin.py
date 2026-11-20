@@ -1,3 +1,4 @@
+import re
 import csv
 import json
 from datetime import timedelta
@@ -7,6 +8,8 @@ from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
+from django.db.models import Q
+from django.utils.text import slugify
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
@@ -17,7 +20,7 @@ from django.utils.html import format_html
 from . import importer
 from .models import (
     FACILITY_CHOICES, Coupon, EmailOTP, Enquiry, FeeComponent, Invoice, LeadMessage,
-    LocationFAQ, LocationHighlight, LocationPage, Owner, ParentProfile,
+    LocationFAQ, LocationHighlight, LocationPage, CMSPage, Owner, ParentProfile,
     Plan, Review, School, SchoolAccount, SchoolAward, SchoolFAQ,
     BranchClaim, SchoolHighlight, SchoolMembership, SchoolPhoto, SchoolVideo, Shortlist,
     BlogPost, CounsellorLead,
@@ -1567,18 +1570,47 @@ class CouponAdmin(admin.ModelAdmin):
 
 
 
+class SchoolClaimFilter(admin.SimpleListFilter):
+    title = 'School Claim Status'
+    parameter_name = 'school_claim'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('claimed', '✓ Claimed Schools (Has Owner)'),
+            ('unclaimed', '⚠ Unclaimed Schools (No Owner)'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'claimed':
+            return queryset.filter(
+                Q(school__owner__isnull=False) |
+                Q(school__school_accounts__school_link_status='approved') |
+                Q(school__branch_claims__status='approved')
+            ).distinct()
+        if self.value() == 'unclaimed':
+            return queryset.exclude(
+                Q(school__owner__isnull=False) |
+                Q(school__school_accounts__school_link_status='approved') |
+                Q(school__branch_claims__status='approved')
+            )
+        return queryset
+
+
 @admin.register(Enquiry)
 class EnquiryAdmin(admin.ModelAdmin):
     list_display = (
         'id', 'parentName', 'childName', 'className', 'schoolName',
+        'school_claim_badge',
         'mobile', 'school_lead_badge', 'is_unlocked', 'credit_used', 'status', 'created_at',
     )
-    list_filter = ('school_status', 'is_unlocked', 'status', 'created_at', 'city')
+    list_filter = (SchoolClaimFilter, 'school_status', 'is_unlocked', 'status', 'created_at', 'city')
     search_fields = ('parentName', 'childName', 'schoolName', 'mobile', 'email', 'city')
     autocomplete_fields = ('school', 'parent_user')
+    readonly_fields = ('school_claim_info', 'created_at', 'updated_at')
     actions = ['unlock_lead_free', 'refund_credit_to_school']
     fields = (
         ('school', 'schoolId', 'schoolName'),
+        'school_claim_info',
         ('parent_user', 'parentName', 'relation'),
         ('childName', 'className', 'session'),
         ('mobile', 'email', 'city'),
@@ -1587,7 +1619,63 @@ class EnquiryAdmin(admin.ModelAdmin):
         ('school_note', 'followup_date'),
         ('rejection_reason', 'review_reason'),
         ('status', 'adminNote'),
+        ('created_at', 'updated_at'),
     )
+
+    @admin.display(description='School Claim Status')
+    def school_claim_badge(self, obj):
+        if obj.is_school_claimed:
+            owner = obj.school_owner_name
+            tooltip = f"Claimed by {owner}" if owner else "Claimed School"
+            owner_label = f" ({owner[:12]}..)" if len(owner) > 14 else (f" ({owner})" if owner else "")
+            return format_html(
+                '<span title="{}" style="background:#dcfce7;color:#15803d;border:1px solid #86efac;'
+                'padding:3px 8px;border-radius:6px;font-weight:700;font-size:11px;white-space:nowrap;display:inline-block;">'
+                '<i class="fas fa-check-circle" style="margin-right:4px;"></i>Claimed{}</span>',
+                tooltip,
+                owner_label,
+            )
+        return format_html(
+            '<span title="Unclaimed School - No registered owner yet" style="background:#fef3c7;color:#b45309;border:1px solid #fde68a;'
+            'padding:3px 8px;border-radius:6px;font-weight:700;font-size:11px;white-space:nowrap;display:inline-block;">'
+            '<i class="fas fa-exclamation-triangle" style="margin-right:4px;"></i>Unclaimed</span>'
+        )
+
+    @admin.display(description='School Claim Details')
+    def school_claim_info(self, obj):
+        if not obj.school:
+            return format_html(
+                '<div style="padding:10px 14px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;color:#92400e;max-width:650px;">'
+                '<strong>⚠ School Not Directly Linked in Database</strong><br/>'
+                'This enquiry was submitted for <em>{}</em>, but has no direct foreign key to a School record. It is treated as <strong>Unclaimed</strong>.'
+                '</div>',
+                obj.schoolName
+            )
+        school_url = reverse('admin:schools_school_change', args=[obj.school.pk])
+        if obj.is_school_claimed:
+            owner_name = obj.school_owner_name
+            return format_html(
+                '<div style="padding:10px 14px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;color:#065f46;max-width:650px;">'
+                '<div style="font-weight:700;font-size:13px;margin-bottom:4px;">'
+                '<i class="fas fa-check-circle" style="color:#059669;margin-right:6px;"></i>Claimed School (Registered Owner / Portal Account)</div>'
+                '<div style="font-size:12px;line-height:1.6;">'
+                '&bull; School: <a href="{}" target="_blank" style="font-weight:700;color:#065f46;text-decoration:underline;">{} (ID: {})</a><br/>'
+                '&bull; Owner / Contact: <strong>{}</strong><br/>'
+                '&bull; Lead Delivery: Eligible for School Owner Portal lead management.'
+                '</div></div>',
+                school_url, obj.school.name, obj.school.pk,
+                owner_name or 'Verified School Admin'
+            )
+        return format_html(
+            '<div style="padding:10px 14px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;color:#92400e;max-width:650px;">'
+            '<div style="font-weight:700;font-size:13px;margin-bottom:4px;">'
+            '<i class="fas fa-exclamation-triangle" style="color:#d97706;margin-right:6px;"></i>Unclaimed School (No Registered Owner)</div>'
+            '<div style="font-size:12px;line-height:1.6;">'
+            '&bull; School: <a href="{}" target="_blank" style="font-weight:700;color:#92400e;text-decoration:underline;">{} (ID: {})</a><br/>'
+            '&bull; Opportunity: This lead belongs to an unclaimed school. VidyaVista admin can outreach to this school management to claim their profile!'
+            '</div></div>',
+            school_url, obj.school.name, obj.school.pk
+        )
 
     @admin.display(description='School Lead Status')
     def school_lead_badge(self, obj):
@@ -1650,6 +1738,17 @@ class LocationAdmin(admin.ModelAdmin):
     search_fields = ('name', 'state', 'slug')
     inlines = [LocationHighlightInline, LocationFAQInline]
 
+    def get_search_results(self, request, queryset, search_term):
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        if search_term:
+            cleaned = re.sub(r'\b(best|boarding|day|play|school|schools|in|top|with|fees|annual|lakh)\b', '', search_term, flags=re.I).strip()
+            if cleaned and len(cleaned) >= 2:
+                extra = self.model.objects.filter(
+                    Q(name__icontains=cleaned) | Q(state__icontains=cleaned) | Q(slug__icontains=slugify(cleaned))
+                )
+                queryset = (queryset | extra).distinct()
+        return queryset, use_distinct
+
     @admin.display(boolean=True, description='Has Content')
     def has_content(self, obj):
         return bool(obj.description or obj.highlight_items.exists() or obj.faq_items.exists())
@@ -1658,7 +1757,6 @@ class LocationAdmin(admin.ModelAdmin):
         ('Location Details', {'fields': ('kind', 'name', 'slug', 'state', 'show_on_home', 'isActive')}),
         ('Page SEO & Description', {'fields': ('title', 'metaTitle', 'description')}),
         ('Hero Card Image', {'fields': ('image', 'image_url')}),
-        ('Legacy Data', {'fields': ('photos', 'faqs'), 'classes': ('collapse',)}),
     )
 
 
@@ -1962,3 +2060,30 @@ class CounsellorLeadAdmin(admin.ModelAdmin):
 
 
 from . import blog_admin  # noqa: E402,F401  (registers Blog posts in the admin)
+
+
+@admin.register(CMSPage)
+class CMSPageAdmin(admin.ModelAdmin):
+    list_display = ('title', 'slug', 'category', 'meta_title', 'is_published', 'updated_at')
+    list_filter = ('category', 'is_published', 'updated_at')
+    list_editable = ('is_published',)
+    search_fields = ('title', 'slug', 'meta_title', 'meta_description', 'content_html')
+    prepopulated_fields = {'slug': ('title',)}
+    fieldsets = (
+        ('1. Page Identity & URL', {
+            'fields': (('title', 'slug'), ('category', 'is_published'), 'subtitle'),
+            'description': 'Page title will be shown as main H1 heading on the website.'
+        }),
+        ('2. SEO & Meta Tags (Google Search Ranking)', {
+            'fields': (('meta_title', 'canonical_url'), 'meta_description'),
+            'description': 'Keep meta title under 60 chars and description under 160 chars for best Google click-through rate.'
+        }),
+        ('3. Main Editorial Body', {
+            'fields': ('content_html',),
+            'description': 'Primary content or overview text shown at the top of the page.'
+        }),
+        ('4. Structured Sections & FAQs', {
+            'fields': ('sections', 'faqs'),
+            'description': 'JSON array of sections (e.g. [{"title": "Step 1", "body": "...", "points": ["..."]}]) and FAQs ([{"q": "...", "a": "..."}]).'
+        }),
+    )

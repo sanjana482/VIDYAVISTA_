@@ -7,8 +7,8 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
-from .models import School, Enquiry, LocationPage, Review, ParentProfile, CounsellorLead
-from .serializers import SchoolSerializer, SchoolListSerializer, EnquirySerializer, LocationSerializer, ReviewSerializer
+from .models import School, Enquiry, LocationPage, CMSPage, Review, ParentProfile, CounsellorLead
+from .serializers import SchoolSerializer, SchoolListSerializer, EnquirySerializer, LocationSerializer, CMSPageSerializer, ReviewSerializer
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -358,3 +358,26 @@ def location_index(request):
         n['cities'] = sorted(n['cities'].values(), key=lambda c: -c['count'])
         out.append(n)
     return Response({'data': out})
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def cms_page_list(request):
+    """GET /api/cms-pages/ -> List all published informational pages."""
+    category = request.GET.get('category')
+    qs = CMSPage.objects.filter(is_published=True)
+    if category:
+        qs = qs.filter(category=category)
+    serializer = CMSPageSerializer(qs, many=True)
+    return Response({'data': serializer.data})
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def cms_page_detail(request, slug):
+    """GET /api/cms-pages/<slug>/ -> Single page with SEO meta, sections & FAQs."""
+    page = CMSPage.objects.filter(slug=slug, is_published=True).first()
+    if not page:
+        return Response({'detail': f'Page /{slug} not found'}, status=404)
+    serializer = CMSPageSerializer(page)
+    return Response({'data': serializer.data})

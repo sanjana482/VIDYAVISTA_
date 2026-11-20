@@ -78,6 +78,8 @@ export type AdminEnquiry = {
   preference?: { type?: string; location?: string };
   status: EnquiryStatus;
   createdAt: string;
+  isClaimed?: boolean;
+  ownerName?: string;
 };
 
 export type Paged<T, M = object> = { data: T[]; meta: { total: number; page: number; limit: number; pages: number } & M };

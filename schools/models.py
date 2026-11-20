@@ -236,6 +236,50 @@ class School(models.Model):
         if ct and slugify(ct):
             LocationPage.objects.get_or_create(kind='city', slug=slugify(ct), defaults={'name': ct, 'state': st})
 
+    @property
+    def is_claimed(self):
+        """Returns True if the school has an owner or approved school account / claim."""
+        if self.owner_id is not None:
+            return True
+        try:
+            if self.school_accounts.filter(school_link_status='approved').exists():
+                return True
+        except Exception:
+            pass
+        try:
+            if hasattr(self, 'branch_claims') and self.branch_claims.filter(status='approved').exists():
+                return True
+        except Exception:
+            pass
+        return False
+
+    @property
+    def owner_display_name(self):
+        """Returns the human-readable name of the school owner / administrator."""
+        if self.owner and self.owner.name:
+            return self.owner.name
+        try:
+            sa = self.school_accounts.filter(school_link_status='approved').first()
+            if sa:
+                return (sa.contact_person or 
+                        (sa.owner_record.name if sa.owner_record else '') or 
+                        sa.institution_name or 
+                        (sa.user.get_full_name() if hasattr(sa, 'user') and sa.user else '') or 
+                        (sa.user.username if hasattr(sa, 'user') and sa.user else ''))
+        except Exception:
+            pass
+        try:
+            if hasattr(self, 'branch_claims'):
+                bc = self.branch_claims.filter(status='approved').select_related('account', 'account__user').first()
+                if bc and bc.account:
+                    return (bc.account.contact_person or 
+                            bc.account.institution_name or 
+                            (bc.account.user.get_full_name() if hasattr(bc.account, 'user') and bc.account.user else '') or 
+                            (bc.account.user.username if hasattr(bc.account, 'user') and bc.account.user else ''))
+        except Exception:
+            pass
+        return ""
+
     def __str__(self):
         return f"{self.name} ({self.city})" if self.city else self.name
 
@@ -452,6 +496,36 @@ class Enquiry(models.Model):
             return f"{name[:1]}****@{dom}"
         return "hidden@email.com"
 
+    @property
+    def is_school_claimed(self):
+        """Returns True if the associated school is claimed by an owner."""
+        if not self.school:
+            if self.schoolId:
+                s = School.objects.filter(Q(school_id=self.schoolId) | Q(pk=self.schoolId)).first()
+                if s:
+                    return s.is_claimed
+            if self.schoolName:
+                s = School.objects.filter(name__iexact=self.schoolName.strip()).first()
+                if s:
+                    return s.is_claimed
+            return False
+        return self.school.is_claimed
+
+    @property
+    def school_owner_name(self):
+        """Returns the owner or verified representative's name if claimed."""
+        if not self.school:
+            if self.schoolId:
+                s = School.objects.filter(Q(school_id=self.schoolId) | Q(pk=self.schoolId)).first()
+                if s:
+                    return s.owner_display_name
+            if self.schoolName:
+                s = School.objects.filter(name__iexact=self.schoolName.strip()).first()
+                if s:
+                    return s.owner_display_name
+            return ""
+        return self.school.owner_display_name
+
     def __str__(self):
         return f'{self.parentName} -> {self.schoolName} ({self.className or "Enquiry"})'
 
@@ -478,6 +552,8 @@ class LocationPage(models.Model):
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=['kind', 'slug'], name='unique_location_kind_slug')]
+        verbose_name = 'City & State SEO Page'
+        verbose_name_plural = 'City & State SEO Pages (Rankings)'
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -1135,3 +1211,40 @@ class CounsellorLead(models.Model):
     def __str__(self):
         return f"{self.name} ({self.mobile}) - {self.child_class or 'Counselling'}"
 
+
+
+class CMSPage(models.Model):
+    """Informational, resource, and marketing pages editable via admin."""
+    PAGE_CATEGORIES = [
+        ('resources', 'Admission Resources'),
+        ('explore', 'Explore & Guides'),
+        ('company', 'About VidyaVista'),
+        ('support', 'Help & Support'),
+    ]
+    slug = models.SlugField('Page URL Slug', max_length=150, unique=True, db_index=True,
+                            help_text='e.g. admission-guide, documents-required, about, parents-guide')
+    title = models.CharField('Page Heading (H1)', max_length=240)
+    category = models.CharField('Category', max_length=30, choices=PAGE_CATEGORIES, default='resources')
+    subtitle = models.CharField('Subtitle / Tagline', max_length=300, blank=True, default='')
+    meta_title = models.CharField('SEO Meta Title', max_length=120, blank=True, default='',
+                                  help_text='Recommended under 60 characters for best Google click-through.')
+    meta_description = models.CharField('SEO Meta Description', max_length=320, blank=True, default='',
+                                        help_text='Recommended under 160 characters.')
+    canonical_url = models.CharField('Canonical URL', max_length=300, blank=True, default='',
+                                     help_text='Default is the page path, e.g. /admission-guide')
+    content_html = models.TextField('Main Page Content / Overview', blank=True, default='')
+    sections = models.JSONField('Structured Content Sections', default=list, blank=True,
+                                help_text='List of section blocks: [{"title": "Step 1", "body": "...", "points": ["..."]}]')
+    faqs = models.JSONField('FAQs', default=list, blank=True,
+                            help_text='List of FAQs: [{"q": "...", "a": "..."}]')
+    is_published = models.BooleanField('Published', default=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['category', 'slug']
+        verbose_name = 'Website CMS Page'
+        verbose_name_plural = 'Website CMS & Info Pages'
+
+    def __str__(self):
+        return f"{self.title} (/{self.slug})"

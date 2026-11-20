@@ -1,0 +1,479 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_modify jazzmin %}
+{% get_jazzmin_settings request as jazzmin_settings %}
+{% get_jazzmin_ui_tweaks as jazzmin_ui %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'vendor/select2/css/select2.min.css' %}">
+    <style>
+      /* 0. Global Scroll & Sticky Unblockers: Menu bar & tabs bar stay sticky together */
+      html {
+        overflow-y: auto !important;
+        overflow-x: clip !important;
+        height: auto !important;
+        min-height: 100% !important;
+      }
+      body {
+        overflow: visible !important;
+        height: auto !important;
+        min-height: 100% !important;
+        position: relative !important;
+      }
+      .app-wrapper,
+      .app-main,
+      .app-content,
+      #content-main,
+      form {
+        overflow: visible !important;
+      }
+      .app-main {
+        height: auto !important;
+        flex: none !important;
+        max-width: 100% !important;
+      }
+
+      /* Sticky Top Navbar (Menu bar with Logo and User Info) */
+      .app-header,
+      .main-header,
+      #jazzy-navbar {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 1030 !important;
+        background: rgba(255, 255, 255, 0.98) !important;
+        backdrop-filter: blur(12px) !important;
+        border-bottom: 1px solid #E2E8F0 !important;
+      }
+
+      /* 1. Full width layout - No right sidebar squishing */
+      .vv-form-container {
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+      #jazzy-actions {
+        display: none !important;
+      }
+      .col-12.col-lg-9 {
+        width: 100% !important;
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+      }
+      .col-12.col-lg-3 {
+        display: none !important;
+      }
+
+      /* 2. Sleek, Ultra-Compact Top Sticky Bar */
+      .vv-top-sticky-bar {
+        position: sticky;
+        top: 56px;
+        z-index: 1010;
+        background: rgba(255, 255, 255, 0.96);
+        backdrop-filter: blur(10px);
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        padding: 6px 14px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 16px rgba(11, 42, 71, 0.06);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: nowrap; /* Single line: no wrapping */
+      }
+      .vv-scrollspy-nav {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        overflow-x: auto;
+        padding: 2px 0;
+        flex: 1 1 auto;
+        min-width: 0;
+        scrollbar-width: none;
+      }
+      .vv-scrollspy-nav::-webkit-scrollbar {
+        display: none;
+      }
+      .vv-scrollspy-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 13px;
+        border-radius: 99px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #475569;
+        background: #F1F5F9;
+        border: 1px solid #E2E8F0;
+        white-space: nowrap;
+        text-decoration: none !important;
+        transition: all 0.15s ease;
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+      .vv-scrollspy-pill:hover {
+        background: #E2E8F0;
+        color: #0B2A47;
+      }
+      .vv-scrollspy-pill.active {
+        background: #0795DC !important;
+        color: #ffffff !important;
+        border-color: #0795DC !important;
+        box-shadow: 0 2px 8px rgba(7, 149, 220, 0.35);
+      }
+
+      /* Compact Quick Actions in Top Bar */
+      .vv-compact-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 0 0 auto;
+      }
+      .vv-compact-actions .submit-row {
+        position: static !important;
+        bottom: auto !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        border: none !important;
+        margin: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+      }
+      .vv-compact-actions .btn,
+      .vv-compact-actions input[type="submit"] {
+        padding: 5px 12px !important;
+        font-size: 12px !important;
+        font-weight: 700 !important;
+        border-radius: 8px !important;
+        line-height: 1.4 !important;
+        white-space: nowrap !important;
+        border: none !important;
+      }
+      .vv-compact-actions input[type="submit"][name="_save"] {
+        background: #10B981 !important;
+        color: #ffffff !important;
+        box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3) !important;
+      }
+      .vv-compact-actions input[type="submit"][name="_continue"] {
+        background: #0A5C91 !important;
+        color: #ffffff !important;
+      }
+      /* Hide secondary actions in top bar to keep it sleek and compact */
+      .vv-compact-actions input[type="submit"][name="_addanother"],
+      .vv-compact-actions a.deletelink,
+      .vv-compact-actions .object-tools {
+        display: none !important;
+      }
+
+      /* 3. Section Card Styling */
+      .card {
+        border-radius: 14px !important;
+        border: 1px solid #E2E8F0 !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.03) !important;
+        margin-bottom: 24px !important;
+      }
+      .card-header {
+        background: #F8FAFC !important;
+        border-bottom: 1px solid #E2E8F0 !important;
+        font-weight: 800 !important;
+        font-size: 15px !important;
+        color: #0B2A47 !important;
+        padding: 12px 20px !important;
+        border-top-left-radius: 14px !important;
+        border-top-right-radius: 14px !important;
+      }
+      .card-body {
+        padding: 20px 24px !important;
+      }
+
+      /* 4. Full-Featured Bottom Sticky Action Bar */
+      .vv-bottom-bar {
+        position: sticky;
+        bottom: 12px;
+        z-index: 1005;
+        background: rgba(255, 255, 255, 0.96);
+        backdrop-filter: blur(10px);
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        padding: 10px 20px;
+        box-shadow: 0 -4px 20px rgba(11, 42, 71, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 16px;
+      }
+      .vv-bottom-bar .submit-row {
+        position: static !important;
+        bottom: auto !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        border: none !important;
+        margin: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        gap: 10px !important;
+        width: 100% !important;
+      }
+      .vv-bottom-bar .btn,
+      .vv-bottom-bar input[type="submit"] {
+        padding: 8px 18px !important;
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        border-radius: 10px !important;
+        line-height: 1.4 !important;
+        white-space: nowrap !important;
+        border: none !important;
+      }
+      .vv-bottom-bar input[type="submit"][name="_save"] {
+        background: #10B981 !important;
+        color: #ffffff !important;
+        box-shadow: 0 3px 10px rgba(16, 185, 129, 0.3) !important;
+      }
+      .vv-bottom-bar input[type="submit"][name="_continue"] {
+        background: #0A5C91 !important;
+        color: #ffffff !important;
+      }
+      .vv-bottom-bar input[type="submit"][name="_addanother"] {
+        background: #0795DC !important;
+        color: #ffffff !important;
+      }
+      .vv-bottom-bar a.deletelink,
+      .vv-bottom-bar .btn-danger {
+        background: #EF4444 !important;
+        color: #ffffff !important;
+        margin-right: auto !important; /* Push Delete to far left */
+      }
+      .vv-bottom-bar .object-tools a {
+        background: #F1F5F9 !important;
+        color: #475569 !important;
+        border: 1px solid #CBD5E1 !important;
+        padding: 8px 14px !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        border-radius: 8px !important;
+      }
+    </style>
+{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <script type="text/javascript" src="{% url 'admin:jsi18n' %}"></script>
+    {{ media }}
+{% endblock %}
+
+{% block coltype %}colM{% endblock %}
+
+{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} change-form{% endblock %}
+
+{% if not is_popup %}
+    {% block breadcrumbs %}
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'admin:index' %}">{% trans 'Home' %}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a></li>
+            <li class="breadcrumb-item">
+                {% if has_view_permission %}
+                    <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+                {% else %}
+                    {{ opts.verbose_name_plural|capfirst }}
+                {% endif %}
+            </li>
+            <li class="breadcrumb-item active">
+                {% if add %}
+                    {% blocktrans with name=opts.verbose_name %}Add {{ name }}{% endblocktrans %}
+                {% else %}
+                    {{ original|truncatewords:"18" }}
+                {% endif %}
+            </li>
+        </ol>
+    {% endblock %}
+{% endif %}
+
+{% block content_title %} {{ opts.verbose_name_plural|capfirst }} {% endblock %}
+
+{% block content %}
+
+    <div id="content-main" class="col-12">
+        <form {% if has_file_field %}enctype="multipart/form-data" {% endif %}action="{{ form_url }}" method="post" id="{{ opts.model_name }}_form" novalidate>
+            {% csrf_token %}
+            {% block form_top %}{% endblock %}
+
+            {% if errors %}
+                <div class="alert alert-danger">
+                    {% if errors|length == 1 %}
+                        {% trans "Please correct the error below." %}
+                    {% else %}
+                        {% trans "Please correct the errors below." %}
+                    {% endif %}
+                </div>
+                {% for error in adminform.form.non_field_errors %}
+                    <div class="alert alert-danger alert-dismissible">
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        <i class="icon fa fa-ban"></i>{{ error|capfirst }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Top Sticky Navigation & Quick Actions Bar -->
+            <div class="vv-top-sticky-bar">
+                <div class="vv-scrollspy-nav" id="vv-scrollspy-nav">
+                    <!-- Javascript populates section navigation pills here -->
+                </div>
+                <div class="vv-compact-actions">
+                    {% submit_row %}
+                </div>
+            </div>
+
+            <!-- Main Form Content (100% Full Width, Linear Vertical Layout) -->
+            <div class="row">
+                {% if is_popup %}<input type="hidden" name="{{ is_popup_var }}" value="1">{% endif %}
+                {% if to_field %}<input type="hidden" name="{{ to_field_var }}" value="{{ to_field }}">{% endif %}
+
+                <div class="col-12 vv-form-container">
+                    {% get_changeform_template adminform as changeform_template %}
+                    {% include changeform_template %}
+                </div>
+
+                {% block admin_change_form_document_ready %}
+                    <script type="text/javascript" id="django-admin-form-add-constants" src="{% static 'admin/js/change_form.js' %}" {% if adminform and add %}data-model-name="{{ opts.model_name }}"{% endif %}></script>
+                {% endblock %}
+
+                {% prepopulated_fields_js %}
+            </div>
+
+            <!-- Bottom Full Sticky Action Bar -->
+            <div class="vv-bottom-bar">
+                {% submit_row %}
+                {% if change and not is_popup %}
+                    <div class="object-tools d-inline-flex gap-1 ms-2">
+                        {% change_form_object_tools %}
+                    </div>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+{% endblock %}
+
+{% block extrajs %}
+    {{ block.super }}
+    <script type="text/javascript" src="{% static 'vendor/select2/js/select2.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'jazzmin/js/change_form.js' %}"></script>
+    {% if jazzmin_settings.related_modal_active %}
+    <script type="text/javascript" src="{% static 'jazzmin/plugins/bootstrap-show-modal/bootstrap-show-modal.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'jazzmin/js/related-modal.js' %}"></script>
+    {% endif %}
+
+    <script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        const nav = document.getElementById('vv-scrollspy-nav');
+        if (!nav) return;
+
+        const formContainer = document.querySelector('.vv-form-container');
+        if (!formContainer) return;
+
+        // Select top-level fieldset cards and inlines only (no nested child cards)
+        const candidates = formContainer.querySelectorAll('.card, .inline-group');
+        const validSections = [];
+        const seenTitles = new Set();
+
+        candidates.forEach((el, idx) => {
+            // Skip elements that are nested inside an inline row
+            if (el.closest('.inline-related') || el.classList.contains('empty-form')) return;
+
+            // Find section header
+            let header = el.querySelector('.card-header, h2, h3, legend');
+            let text = header ? header.innerText.trim().replace(/^[\d\.\s]+/, '').split('\n')[0].trim() : '';
+            if (!text && el.id) {
+                text = el.id.replace(/[-_]group$/i, '').replace(/_/g, ' ');
+            }
+            if (!text || text.length < 2 || text.toLowerCase().includes('filter')) return;
+
+            const lower = text.toLowerCase();
+            if (seenTitles.has(lower)) return;
+            seenTitles.add(lower);
+
+            const secId = 'vv-sec-' + idx;
+            el.id = secId;
+            validSections.push({ el: el, id: secId, title: text });
+
+            const pill = document.createElement('a');
+            pill.href = '#' + secId;
+            pill.className = 'vv-scrollspy-pill' + (validSections.length === 1 ? ' active' : '');
+            pill.innerText = text;
+
+            pill.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.getElementById(secId);
+                if (target) {
+                    const navBar = document.querySelector('.vv-top-sticky-bar');
+                    const navHeight = navBar ? navBar.offsetHeight : 50;
+                    const appHeader = document.querySelector('.app-header') || document.querySelector('.main-header');
+                    const headerHeight = appHeader ? appHeader.offsetHeight : 56;
+                    const totalOffset = navHeight + headerHeight + 16;
+
+                    const rect = target.getBoundingClientRect();
+                    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                    const targetY = rect.top + scrollTop - totalOffset;
+
+                    window.scrollTo({
+                        top: Math.max(0, targetY),
+                        behavior: 'smooth'
+                    });
+                }
+            });
+            nav.appendChild(pill);
+        });
+
+        // Safe ScrollSpy: Uses window scroll event without calling p.scrollIntoView() which locks window scroll
+        let isTicking = false;
+        window.addEventListener('scroll', function() {
+            if (!isTicking) {
+                window.requestAnimationFrame(function() {
+                    updateScrollSpy();
+                    isTicking = false;
+                });
+                isTicking = true;
+            }
+        }, { passive: true });
+
+        function updateScrollSpy() {
+            if (!validSections.length) return;
+
+            const navBar = document.querySelector('.vv-top-sticky-bar');
+            const navHeight = navBar ? navBar.offsetHeight : 50;
+            const appHeader = document.querySelector('.app-header') || document.querySelector('.main-header');
+            const headerHeight = appHeader ? appHeader.offsetHeight : 56;
+            const triggerPoint = headerHeight + navHeight + 30;
+
+            let activeId = validSections[0].id;
+            for (let i = 0; i < validSections.length; i++) {
+                const rect = validSections[i].el.getBoundingClientRect();
+                if (rect.top <= triggerPoint) {
+                    activeId = validSections[i].id;
+                } else {
+                    break;
+                }
+            }
+
+            const pills = nav.querySelectorAll('.vv-scrollspy-pill');
+            pills.forEach(p => {
+                if (p.getAttribute('href') === '#' + activeId) {
+                    if (!p.classList.contains('active')) {
+                        p.classList.add('active');
+                        // Scroll horizontal nav container smoothly without ever touching vertical window scroll!
+                        const navRect = nav.getBoundingClientRect();
+                        const pillRect = p.getBoundingClientRect();
+                        const offset = pillRect.left - navRect.left - (navRect.width / 2) + (pillRect.width / 2);
+                        nav.scrollBy({ left: offset, behavior: 'smooth' });
+                    }
+                } else {
+                    p.classList.remove('active');
+                }
+            });
+        }
+    });
+    </script>
+{% endblock %}

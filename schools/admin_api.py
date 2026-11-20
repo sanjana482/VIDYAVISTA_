@@ -10,11 +10,13 @@ from datetime import timedelta
 
 from django.contrib.auth import authenticate, get_user_model
 from django.core.files.storage import default_storage
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Case, When
 from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.text import slugify
-from rest_framework.decorators import api_view, permission_classes, throttle_classes
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.decorators import api_view, authentication_classes, permission_classes, throttle_classes
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
@@ -387,6 +389,8 @@ def enquiry_json(e):
         'className': e.className, 'session': e.session, 'parentName': e.parentName, 'relation': e.relation,
         'mobile': e.mobile, 'email': e.email, 'city': e.city, 'note': e.note, 'adminNote': e.adminNote,
         'source': e.source, 'preference': e.preference or {}, 'status': e.status, 'createdAt': e.created_at.isoformat(),
+        'isClaimed': e.is_school_claimed,
+        'ownerName': e.school_owner_name,
     }
 
 
@@ -401,6 +405,18 @@ def _enquiry_filter(p, with_status=True):
         qs = qs.filter(created_at__date__lte=p['to'])
     if with_status and p.get('status'):
         qs = qs.filter(status=p['status'])
+    if p.get('claim') == 'claimed':
+        qs = qs.filter(
+            Q(school__owner__isnull=False) |
+            Q(school__school_accounts__school_link_status='approved') |
+            Q(school__branch_claims__status='approved')
+        ).distinct()
+    elif p.get('claim') == 'unclaimed':
+        qs = qs.exclude(
+            Q(school__owner__isnull=False) |
+            Q(school__school_accounts__school_link_status='approved') |
+            Q(school__branch_claims__status='approved')
+        )
     return qs
 
 
@@ -428,10 +444,16 @@ def enquiries_export(request):
     resp = HttpResponse(content_type='text/csv; charset=utf-8')
     resp.write('\ufeff')
     w = csv.writer(resp)
-    w.writerow(['Date', 'Status', 'Parent', 'Mobile', 'Email', 'School', 'Child', 'Class', 'Session', 'City', 'Note', 'Admin note'])
+    w.writerow(['Date', 'Status', 'Claim Status', 'School Owner', 'Parent', 'Mobile', 'Email', 'School', 'Child', 'Class', 'Session', 'City', 'Note', 'Admin note'])
     for e in _enquiry_filter(request.query_params):
-        w.writerow([timezone.localtime(e.created_at).strftime('%Y-%m-%d %H:%M'), e.status, e.parentName, e.mobile, e.email,
-                    e.schoolName, e.childName, e.className, e.session, e.city, e.note, e.adminNote])
+        w.writerow([
+            timezone.localtime(e.created_at).strftime('%Y-%m-%d %H:%M'),
+            e.status,
+            'Claimed' if e.is_school_claimed else 'Unclaimed',
+            e.school_owner_name,
+            e.parentName, e.mobile, e.email,
+            e.schoolName, e.childName, e.className, e.session, e.city, e.note, e.adminNote
+        ])
     return resp
 
 
@@ -604,3 +626,71 @@ def api_exception_handler(exc, context):
         detail = resp.data.get('detail')
         resp.data['message'] = str(detail) if detail else 'Please check the form and try again'
     return resp
+
+
+# ------------------------------------------------------------------ admin search autocomplete
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, JWTAuthentication])
+@permission_classes([AllowAny])
+def search_autocomplete(request):
+    user = request.user
+    if not (user and user.is_authenticated and user.is_staff):
+        return Response({'results': []}, status=403)
+
+    raw_query = (request.GET.get('q') or '').strip()
+    model = (request.GET.get('model') or '').strip().lower()
+
+    if not raw_query or len(raw_query) < 1:
+        return Response({'results': []})
+
+    # Smart phrase cleaner
+    cleaned = re.sub(
+        r'\b(best|top|boarding|day|play|school|schools|in|with|annual|fees|under|lakh|for|2027|2028|admission|compare|and|curriculum|review|reviews|cbse|icse|ib|state|city|to)\b',
+        ' ', raw_query, flags=re.IGNORECASE
+    ).strip()
+    cleaned_place = re.sub(r'[\d\u20b9,–\-]', ' ', cleaned).strip()
+    cleaned_place = ' '.join(cleaned_place.split())
+    effective_q = cleaned_place if len(cleaned_place) >= 2 else (cleaned if len(cleaned) >= 2 else raw_query)
+
+    results = []
+
+    # 1. LocationPage (City & State SEO Pages)
+    if model in ('locationpage', 'location') or not model:
+        locs = LocationPage.objects.filter(
+            Q(name__icontains=effective_q) | Q(state__icontains=effective_q) | Q(slug__icontains=slugify(effective_q))
+        ).order_by(
+            Case(When(kind='state', then=0), default=1),
+            'name'
+        )[:8]
+
+        for loc in locs:
+            has_cnt = bool(loc.description or loc.highlight_items.exists() or loc.faq_items.exists())
+            results.append({
+                'id': loc.id,
+                'title': loc.name,
+                'subtitle': f"{loc.kind.title()}" + (f" in {loc.state}" if loc.state and loc.kind == 'city' else " (Whole State)"),
+                'badge': loc.kind.upper(),
+                'badge_color': '#0795DC' if loc.kind == 'state' else '#10B981',
+                'url': f"/admin/schools/locationpage/{loc.id}/change/",
+                'has_content': has_cnt,
+                'model': 'locationpage',
+            })
+
+    # 2. School
+    if (model in ('school', '') and len(results) < 8):
+        schools = School.objects.filter(
+            Q(name__icontains=effective_q) | Q(city__icontains=effective_q) | Q(state__icontains=effective_q)
+        ).order_by('-rating', 'name')[:(8 - len(results))]
+
+        for s in schools:
+            results.append({
+                'id': s.id,
+                'title': s.name,
+                'subtitle': f"{s.city}, {s.state} • {s.board or 'CBSE'}",
+                'badge': 'CLAIMED' if s.is_claimed else 'UNCLAIMED',
+                'badge_color': '#10B981' if s.is_claimed else '#64748B',
+                'url': f"/admin/schools/school/{s.id}/change/",
+                'model': 'school',
+            })
+
+    return Response({'results': results, 'query': raw_query, 'effective': effective_q})

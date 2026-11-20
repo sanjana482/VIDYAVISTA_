@@ -24,6 +24,7 @@ function Detail({ label, value }: { label: string; value?: string }) {
 export default function EnquiriesAdmin() {
   const toast = useToast();
   const [status, setStatus] = useState("");
+  const [claim, setClaim] = useState<"" | "claimed" | "unclaimed">("");
   const [q, setQ] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
@@ -42,16 +43,16 @@ export default function EnquiriesAdmin() {
   const dq = useDebounced(q);
 
   useEffect(() => { setStatus(new URLSearchParams(window.location.search).get("status") || ""); }, []);
-  useEffect(() => setPage(1), [status, dq, from, to]);
+  useEffect(() => setPage(1), [status, dq, from, to, claim]);
 
   const load = useCallback(() => {
     setLoading(true);
     setErr("");
-    api<Res>(`/enquiries${qs({ status, q: dq, from, to, page })}`)
+    api<Res>(`/enquiries${qs({ status, q: dq, from, to, page, claim: claim || undefined })}`)
       .then((r) => { setRes(r); setSelected(new Set()); })
       .catch((e) => setErr(e.message))
       .finally(() => setLoading(false));
-  }, [status, dq, from, to, page]);
+  }, [status, dq, from, to, page, claim]);
   useEffect(load, [load]);
 
   const counts = res?.meta.counts;
@@ -171,7 +172,24 @@ export default function EnquiriesAdmin() {
                   <tr key={r._id} onClick={() => { setOpen(r); setNote(r.adminNote || ""); }} className={cx("cursor-pointer transition hover:bg-[#F6FAFD]", r.status === "new" && "bg-[#FDE8EF]/25")}>
                     <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}><input type="checkbox" aria-label={`Select ${r.parentName}`} className="h-4 w-4 accent-[#0795DC]" checked={selected.has(r._id)} onChange={() => setSelected((s) => { const n = new Set(s); n.has(r._id) ? n.delete(r._id) : n.add(r._id); return n; })} /></td>
                     <td className="px-2 py-3"><p className="font-bold">{r.parentName}</p><p className="text-xs text-[#5C6A7B]">{r.mobile}{r.relation ? ` · ${r.relation}` : ""}</p></td>
-                    <td className="max-w-[16rem] px-3 py-3"><p className="truncate font-semibold">{r.schoolName}</p>{r.city && <p className="text-xs text-[#5C6A7B]">{r.city}</p>}</td>
+                    <td className="max-w-[17rem] px-3 py-3">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <p className="truncate font-semibold">{r.schoolName}</p>
+                          {r.isClaimed ? (
+                            <span className="inline-flex items-center gap-1 rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200" title={r.ownerName ? `Claimed by: ${r.ownerName}` : "Claimed School"}>
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Claimed
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 border border-amber-200" title="Unclaimed School - No registered owner">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Unclaimed
+                            </span>
+                          )}
+                        </div>
+                        {r.isClaimed && r.ownerName && (
+                          <p className="text-[11px] text-emerald-700 font-medium truncate">Owner: {r.ownerName}</p>
+                        )}
+                        {r.city && <p className="text-xs text-[#5C6A7B]">{r.city}</p>}
+                      </td>
                     <td className="px-3 py-3 text-[#4E5A68]">{r.childName || "—"}{r.className && <span className="block text-xs text-[#8896A6]">Class {r.className}{r.session ? ` · ${r.session}` : ""}</span>}</td>
                     <td className="whitespace-nowrap px-3 py-3 text-[#5C6A7B]" title={fmtDate(r.createdAt)}>{timeAgo(r.createdAt)}</td>
                     <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
@@ -202,7 +220,18 @@ export default function EnquiriesAdmin() {
               <div>
                 <p className="text-xs font-bold uppercase tracking-wide text-white/70">Enquiry · {fmtDate(open.createdAt)}</p>
                 <h2 className="mt-1 text-xl font-extrabold">{open.parentName}</h2>
-                <p className="text-sm text-white/85">{open.schoolName}</p>
+                <div className="mt-1 flex items-center gap-2 flex-wrap">
+                    <p className="text-sm font-medium text-white/90">{open.schoolName}</p>
+                    {open.isClaimed ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/25 px-2.5 py-0.5 text-[11px] font-bold text-emerald-100 border border-emerald-400/40">
+                        ✓ Claimed {open.ownerName ? `(${open.ownerName})` : ""}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/25 px-2.5 py-0.5 text-[11px] font-bold text-amber-100 border border-amber-400/40">
+                        ⚠ Unclaimed School
+                      </span>
+                    )}
+                  </div>
               </div>
               <button onClick={() => setOpen(null)} aria-label="Close" className="rounded-lg bg-white/15 px-2.5 py-1 text-lg hover:bg-white/25">×</button>
             </div>

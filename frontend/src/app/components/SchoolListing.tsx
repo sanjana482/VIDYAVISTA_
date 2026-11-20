@@ -342,29 +342,27 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
     savePreference({ type: heroType, location });
   }
 
-  // State is SINGLE-CHOICE (a listing page represents one state at a time).
-  // Click the same state again to clear it.
-  const pickState = (stateName: string) =>
-    setDraft((d) => {
-      const on = d.state[0] === stateName;
-      const nextState = on ? [] : [stateName];
-      // Reset cities/areas when state changes
-      let next: Filters = { ...d, state: nextState, city: [], area: [] };
-      return next;
-    });
-
-  // Multi-choice toggle for city, area, board, cls
-  const toggleMulti = (key: "city" | "area" | "board" | "cls", value: string) =>
+  // Multi-choice toggle for state, city, area, board, cls
+  const toggleMulti = (key: "state" | "city" | "area" | "board" | "cls", value: string) =>
     setDraft((d) => {
       const cur = d[key] || [];
       const on = cur.includes(value);
       const nextArr = on ? cur.filter((x) => x !== value) : [...cur, value];
       let next: Filters = { ...d, [key]: nextArr };
 
+      if (key === "state") {
+        if (nextArr.length > 0) {
+          const allowedCities = new Set(
+            schools.filter((s) => nextArr.includes(stateFor(s))).map((s) => s.city)
+          );
+          next = { ...next, city: next.city.filter((c) => allowedCities.has(c)) };
+        }
+      }
+
       if (key === "city" && !on) {
         const st = stateFor(schools.find((x) => x.city === value) ?? { city: value });
-        if (st && (!next.state.length || !next.state.includes(st))) {
-          next = { ...next, state: [st] };
+        if (st && !next.state.includes(st)) {
+          next = { ...next, state: [...next.state, st] };
         }
       }
 
@@ -626,9 +624,9 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
                         noun="states"
                         searchable
                         options={stateOpts}
-                        value={draft.state[0]}
-                        onPick={(v) => pickState(v)}
-                        multi={false}
+                        values={draft.state}
+                        onToggle={(v) => toggleMulti("state", v)}
+                        multi
                       />
                     </FilterGroup>
                     <FilterGroup title={draft.state.length === 1 ? `City in ${draft.state[0]}` : "City"}>
@@ -806,9 +804,9 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
                           noun="states"
                           searchable
                           options={stateOpts}
-                          value={draft.state[0]}
-                          onPick={(v) => pickState(v)}
-                          multi={false}
+                          values={draft.state}
+                          onToggle={(v) => toggleMulti("state", v)}
+                          multi
                         />
                       </FilterGroup>
                       <FilterGroup title={draft.state.length === 1 ? `City in ${draft.state[0]}` : "City"}>

@@ -150,7 +150,13 @@ export default async function TypePlacePage({ typeKey, slug }: { typeKey: TypeKe
 
       {list.length > 0 && (
         <section className="mx-auto max-w-[1720px] px-4 sm:px-6 pt-10 lg:px-8 xl:px-12">
-          <h2 className="text-2xl font-extrabold text-[#0B2A47] sm:text-3xl">About {heading}</h2>
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <h2 className="text-2xl font-extrabold text-[#0B2A47] sm:text-3xl">About {heading}</h2>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+              Updated for 2027-28 Session
+            </span>
+          </div>
           <div className="mt-4 max-w-4xl"><ClampedText text={description} lines={5} className="leading-8 text-[#4E5A68]" /></div>
         </section>
       )}
