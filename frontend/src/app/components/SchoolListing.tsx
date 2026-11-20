@@ -110,17 +110,44 @@ function Radio({ label, checked, onPick, count }: { label: string; checked: bool
 type Opt = { value: string; label?: string; count?: number };
 
 /** list with an optional search box and a "Show more" button (for long lists: states, cities, classes) */
-function FilterList({ options, value, onPick, searchable = false, limit = 6, noun }: {
-  options: Opt[]; value?: string; onPick: (v: string) => void; searchable?: boolean; limit?: number; noun: string;
+function FilterList({
+  options,
+  value,
+  values = [],
+  onPick,
+  onToggle,
+  multi = false,
+  searchable = false,
+  limit = 6,
+  noun,
+}: {
+  options: Opt[];
+  value?: string;
+  values?: string[];
+  onPick?: (v: string) => void;
+  onToggle?: (v: string) => void;
+  multi?: boolean;
+  searchable?: boolean;
+  limit?: number;
+  noun: string;
 }) {
   const [q, setQ] = useState("");
   const [all, setAll] = useState(false);
   const term = q.trim().toLowerCase();
   const matches = options.filter((o) => (o.label ?? o.value).toLowerCase().includes(term));
   let shown = term || all ? matches : matches.slice(0, limit);
-  // the selected one is always visible, even when it is beyond the first few
-  const sel = options.find((o) => o.value === value);
-  if (sel && !shown.includes(sel)) shown = [sel, ...shown];
+
+  // Ensure selected ones are visible even if beyond the limit
+  if (multi && values.length > 0) {
+    const selectedOpts = options.filter((o) => values.includes(o.value) && !shown.some((s) => s.value === o.value));
+    if (selectedOpts.length > 0) {
+      shown = [...selectedOpts, ...shown];
+    }
+  } else if (!multi && value) {
+    const sel = options.find((o) => o.value === value);
+    if (sel && !shown.some((s) => s.value === sel.value)) shown = [sel, ...shown];
+  }
+
   return (
     <>
       {searchable && options.length > limit && (
@@ -129,15 +156,45 @@ function FilterList({ options, value, onPick, searchable = false, limit = 6, nou
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder={`Search ${noun}…`}
-          className="mb-2 h-10 w-full rounded-lg border border-[#D6DDE5] bg-white px-3 text-sm outline-none focus:border-[#0795DC]"
+          className="mb-2 h-9 w-full rounded-lg border border-[#D6DDE5] bg-white px-3 text-xs sm:text-sm outline-none focus:border-[#0795DC]"
         />
       )}
-      {shown.map((o) => (
-        <Radio key={o.value} label={o.label ?? o.value} count={o.count} checked={value === o.value} onPick={() => onPick(o.value)} />
-      ))}
-      {matches.length === 0 && <p className="px-1 py-2 text-sm text-[#8896A6]">No {noun} found</p>}
+      {shown.map((o) =>
+        multi ? (
+          <label
+            key={o.value}
+            className="flex cursor-pointer items-center gap-3 rounded-lg px-1 py-2 text-sm text-[#4E5A68] transition hover:bg-[#F1F8FC]"
+          >
+            <input
+              type="checkbox"
+              checked={values.includes(o.value)}
+              onChange={() => onToggle && onToggle(o.value)}
+              className="h-4 w-4 rounded accent-[#0795DC]"
+            />
+            <span className="flex-1 text-xs sm:text-sm">{o.label ?? o.value}</span>
+            {typeof o.count === "number" && (
+              <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-xs text-[#64748B] font-semibold">
+                {o.count}
+              </span>
+            )}
+          </label>
+        ) : (
+          <Radio
+            key={o.value}
+            label={o.label ?? o.value}
+            count={o.count}
+            checked={value === o.value}
+            onPick={() => onPick && onPick(o.value)}
+          />
+        )
+      )}
+      {matches.length === 0 && <p className="px-1 py-2 text-xs sm:text-sm text-[#8896A6]">No {noun} found</p>}
       {!term && matches.length > limit && (
-        <button type="button" onClick={() => setAll(!all)} className="px-1 pt-1 text-sm font-bold text-[#0A7BBF] hover:underline">
+        <button
+          type="button"
+          onClick={() => setAll(!all)}
+          className="px-1 pt-1 text-xs sm:text-sm font-bold text-[#0A7BBF] hover:underline"
+        >
           {all ? "Show less" : `Show more (${matches.length - limit})`}
         </button>
       )}
@@ -282,21 +339,41 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
     savePreference({ type: heroType, location });
   }
 
-  // every filter group allows ONE choice. State and City depend on each other.
-  const pick = (key: "state" | "city" | "area" | "type" | "board" | "gender" | "cls", value: string) =>
+  // Multi-choice toggle for state, city, area, board, cls
+  const toggleMulti = (key: "state" | "city" | "area" | "board" | "cls", value: string) =>
+    setDraft((d) => {
+      const cur = d[key] || [];
+      const on = cur.includes(value);
+      const nextArr = on ? cur.filter((x) => x !== value) : [...cur, value];
+      let next: Filters = { ...d, [key]: nextArr };
+
+      if (key === "state") {
+        if (nextArr.length > 0) {
+          const allowedCities = new Set(
+            schools.filter((s) => nextArr.includes(stateFor(s))).map((s) => s.city)
+          );
+          next = { ...next, city: next.city.filter((c) => allowedCities.has(c)) };
+        }
+      }
+
+      if (key === "city" && !on) {
+        const st = stateFor(schools.find((x) => x.city === value) ?? { city: value });
+        if (st && !next.state.includes(st)) {
+          next = { ...next, state: [...next.state, st] };
+        }
+      }
+
+      return next;
+    });
+
+  // Single-choice option for type and gender
+  const pick = (key: "type" | "gender", value: string) =>
     setDraft((d) => {
       const on = d[key][0] === value;
-      if (key === "type" && on) return d; // day / boarding stays chosen, only the other one can replace it
+      if (key === "type" && on) return d;
       let next: Filters = { ...d, [key]: on ? [] : [value] };
-      if (key === "state") next = { ...next, city: [], area: [] }; // another state -> its cities and areas reset
-      if (key === "city" && !on) {
-        next = { ...next, area: [] };
-        next = normalize(next); // city -> its state gets ticked automatically
-      }
       if (key === "type") {
-        if (value === "Day School" || value === "Play School") {
-          next = { ...next, state: [] };
-        } else if (value === "Boarding School") {
+        if (value === "Boarding School") {
           next = { ...next, area: [] };
         }
       }
@@ -344,7 +421,15 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
   // schools whose class range includes the chosen class
   const offersClass = (sc: School, cls: string) => classList(sc).some((c) => c.cls === cls);
 
-  const activeCount = [applied.state, applied.city, applied.area, applied.type, applied.board, applied.gender, applied.cls].filter((a) => a && a.length).length + (applied.min || applied.max ? 1 : 0);
+  const activeCount =
+    draft.state.length +
+    draft.city.length +
+    draft.area.length +
+    draft.type.length +
+    draft.board.length +
+    draft.gender.length +
+    draft.cls.length +
+    (draft.min || draft.max ? 1 : 0);
 
   // no page scroll behind the open filter panel (phones)
   useEffect(() => {
@@ -370,11 +455,11 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
         (!q || `${s.name} ${s.area} ${s.city} ${s.board}`.toLowerCase().includes(q)) &&
         (!applied.state.length || applied.state.includes(stateFor(s))) &&
         (!applied.city.length || applied.city.includes(s.city)) &&
-        (!applied.area?.length || (s.area && s.area.toLowerCase() === applied.area[0].toLowerCase())) &&
+        (!applied.area?.length || (s.area && applied.area.map((a) => a.toLowerCase()).includes(s.area.toLowerCase()))) &&
         (!applied.type.length || applied.type.includes(s.type)) &&
         (!applied.board.length || applied.board.includes(s.board)) &&
         (!applied.gender.length || applied.gender.includes(s.gender)) &&
-        (!applied.cls.length || offersClass(s, applied.cls[0])) &&
+        (!applied.cls.length || applied.cls.some((c) => offersClass(s, c))) &&
         (!(applied.min || applied.max) || s.fee > 0) &&
         s.fee >= min &&
         s.fee <= max
@@ -446,8 +531,8 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
 
   const cityOpts: Opt[] = useMemo(() => {
     const m = new Map<string, number>();
-    const pool = (isBoarding && draft.state[0])
-      ? typeScopedSchools.filter((x) => stateFor(x) === draft.state[0])
+    const pool = draft.state.length > 0
+      ? typeScopedSchools.filter((x) => draft.state.includes(stateFor(x)))
       : typeScopedSchools;
     pool.forEach((x) => {
       if (x.city) m.set(x.city, (m.get(x.city) ?? 0) + 1);
@@ -455,12 +540,12 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
     return [...m.entries()]
       .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
       .map(([value, count]) => ({ value, count }));
-  }, [typeScopedSchools, draft.state, isBoarding]);
+  }, [typeScopedSchools, draft.state]);
 
   const areaOpts: Opt[] = useMemo(() => {
     const m = new Map<string, number>();
-    const pool = draft.city[0]
-      ? typeScopedSchools.filter((x) => x.city.toLowerCase() === draft.city[0].toLowerCase())
+    const pool = draft.city.length > 0
+      ? typeScopedSchools.filter((x) => draft.city.map((c) => c.toLowerCase()).includes(x.city.toLowerCase()))
       : typeScopedSchools;
     pool.forEach((x) => {
       if (x.area) m.set(x.area, (m.get(x.area) ?? 0) + 1);
@@ -493,55 +578,129 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
             <span className="flex items-center gap-2"><Icon name="filters" className="h-4 w-4" /> Filters{activeCount > 0 && <span className="rounded-full bg-[#EC0E58] px-2 py-0.5 text-[11px] text-white">{activeCount}</span>}</span> <span className="text-xs font-semibold text-[#707E8F]">{results.length} schools</span>
           </button>
 
-          {/* phone: the filters slide in as a full-height panel; desktop: sticky sidebar */}
+          {/* phone: the filters slide in as a full-height fixed panel with z-[150] (above bottom navigation bar); desktop: sticky sidebar */}
           <div
-            className={`${showFilters ? "fixed inset-0 z-[60] flex bg-[#0B2A47]/55" : "hidden"} lg:sticky lg:top-24 lg:block`}
+            className={`${showFilters ? "fixed inset-0 z-[150] flex bg-[#0B2A47]/60 backdrop-blur-sm" : "hidden"} lg:sticky lg:top-24 lg:block`}
             onClick={(e) => { if (e.target === e.currentTarget) setShowFilters(false); }}
           >
-            <div className="flex h-full w-[90%] max-w-sm flex-col bg-white shadow-2xl lg:h-auto lg:max-h-[calc(100vh-7.5rem)] lg:w-auto lg:max-w-none lg:rounded-2xl lg:border lg:border-[#E1E7EE] lg:shadow-lg lg:shadow-[#0B2A47]/5">
-              <div className="flex items-center justify-between gap-3 border-b border-[#E1E7EE] px-4 py-3">
-                <h2 className="flex items-center gap-2 text-lg font-extrabold text-[#0B2A47]"><Icon name="filters" className="h-5 w-5" /> Filters</h2>
+            <div className="flex h-full w-full max-w-sm flex-col bg-white shadow-2xl sm:max-w-md lg:h-auto lg:max-h-[calc(100vh-7.5rem)] lg:w-auto lg:max-w-none lg:rounded-2xl lg:border lg:border-[#E1E7EE] lg:shadow-lg lg:shadow-[#0B2A47]/5">
+              {/* Sticky Top Header */}
+              <div className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-[#E1E7EE] bg-white px-4 py-3.5">
+                <h2 className="flex items-center gap-2 text-base sm:text-lg font-extrabold text-[#0B2A47]">
+                  <Icon name="filters" className="h-5 w-5 text-[#0A7BBF]" /> Filters
+                  {activeCount > 0 && (
+                    <span className="rounded-full bg-[#EC0E58] px-2 py-0.5 text-xs text-white font-bold">
+                      {activeCount}
+                    </span>
+                  )}
+                </h2>
                 <div className="flex items-center gap-3">
-                  <button type="button" onClick={clearAll} className="vv-wiggle-host inline-flex items-center gap-1.5 text-sm font-semibold text-[#EC0E58] hover:text-[#C8104F]">
+                  <button
+                    type="button"
+                    onClick={clearAll}
+                    className="vv-wiggle-host inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[#EC0E58] hover:text-[#C8104F]"
+                  >
                     <Icon name="trash" className="vv-wiggle h-4 w-4" /> Clear all
                   </button>
-                  <button type="button" aria-label="Close filters" onClick={() => setShowFilters(false)} className="flex h-9 w-9 items-center justify-center rounded-full bg-[#EEF3F8] text-[#0B2A47] lg:hidden">
+                  <button
+                    type="button"
+                    aria-label="Close filters"
+                    onClick={() => setShowFilters(false)}
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-[#EEF3F8] text-[#0B2A47] hover:bg-[#DDE7F0] transition lg:hidden"
+                  >
                     <Icon name="x" className="h-5 w-5" />
                   </button>
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-4 py-3.5">
+              {/* Scrollable Middle Filters */}
+              <div className="flex-1 overflow-y-auto px-4 py-3.5 space-y-1">
                 {isBoarding || (!isDay && !isPlay) ? (
                   <>
                     <FilterGroup title="State">
-                      <FilterList noun="states" searchable options={stateOpts} value={draft.state[0]} onPick={(v) => pick("state", v)} />
+                      <FilterList
+                        noun="states"
+                        searchable
+                        options={stateOpts}
+                        values={draft.state}
+                        onToggle={(v) => toggleMulti("state", v)}
+                        multi
+                      />
                     </FilterGroup>
-                    <FilterGroup title={draft.state[0] ? `City in ${draft.state[0]}` : "City"}>
-                      <FilterList noun="cities" searchable options={cityOpts} value={draft.city[0]} onPick={(v) => pick("city", v)} />
+                    <FilterGroup title={draft.state.length === 1 ? `City in ${draft.state[0]}` : "City"}>
+                      <FilterList
+                        noun="cities"
+                        searchable
+                        options={cityOpts}
+                        values={draft.city}
+                        onToggle={(v) => toggleMulti("city", v)}
+                        multi
+                      />
                     </FilterGroup>
                   </>
                 ) : (
                   <>
                     <FilterGroup title="City">
-                      <FilterList noun="cities" searchable options={cityOpts} value={draft.city[0]} onPick={(v) => pick("city", v)} />
+                      <FilterList
+                        noun="cities"
+                        searchable
+                        options={cityOpts}
+                        values={draft.city}
+                        onToggle={(v) => toggleMulti("city", v)}
+                        multi
+                      />
                     </FilterGroup>
-                    <FilterGroup title={draft.city[0] ? `Area in ${draft.city[0]}` : "Area / Locality"}>
-                      <FilterList noun="areas" searchable options={areaOpts} value={draft.area[0]} onPick={(v) => pick("area", v)} />
+                    <FilterGroup title={draft.city.length === 1 ? `Area in ${draft.city[0]}` : "Area / Locality"}>
+                      <FilterList
+                        noun="areas"
+                        searchable
+                        options={areaOpts}
+                        values={draft.area}
+                        onToggle={(v) => toggleMulti("area", v)}
+                        multi
+                      />
                     </FilterGroup>
                   </>
                 )}
 
                 <FilterGroup title="School type">
-                  {TYPES.map((c) => <Radio key={c} label={c} checked={draft.type[0] === c} onPick={() => pick("type", c)} />)}
+                  {TYPES.map((c) => (
+                    <Radio
+                      key={c}
+                      label={c}
+                      checked={draft.type[0] === c}
+                      onPick={() => pick("type", c)}
+                    />
+                  ))}
                 </FilterGroup>
+
                 <FilterGroup title="Class">
-                  <FilterList noun="classes" options={classOpts} value={draft.cls[0]} onPick={(v) => pick("cls", v)} limit={6} />
+                  <FilterList
+                    noun="classes"
+                    options={classOpts}
+                    values={draft.cls}
+                    onToggle={(v) => toggleMulti("cls", v)}
+                    limit={6}
+                    multi
+                  />
                 </FilterGroup>
+
                 <FilterGroup title="Annual fees">
                   <div className="grid grid-cols-2 gap-2 pb-2">
-                    <input inputMode="numeric" placeholder="Min ₹" value={draft.min} onChange={(e) => setDraft({ ...draft, min: e.target.value.replace(/\D/g, "") })} className={numInput} />
-                    <input inputMode="numeric" placeholder="Max ₹" value={draft.max} onChange={(e) => setDraft({ ...draft, max: e.target.value.replace(/\D/g, "") })} className={numInput} />
+                    <input
+                      inputMode="numeric"
+                      placeholder="Min ₹"
+                      value={draft.min}
+                      onChange={(e) => setDraft({ ...draft, min: e.target.value.replace(/\D/g, "") })}
+                      className={numInput}
+                    />
+                    <input
+                      inputMode="numeric"
+                      placeholder="Max ₹"
+                      value={draft.max}
+                      onChange={(e) => setDraft({ ...draft, max: e.target.value.replace(/\D/g, "") })}
+                      className={numInput}
+                    />
                   </div>
                   {FEE_PRESETS.map((p) => (
                     <Check
@@ -552,22 +711,54 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
                     />
                   ))}
                 </FilterGroup>
+
                 <FilterGroup title="School board">
-                  {BOARDS.map((c) => <Radio key={c} label={BOARD_LABEL[c]} checked={draft.board[0] === c} onPick={() => pick("board", c)} />)}
+                  {BOARDS.map((c) => (
+                    <label
+                      key={c}
+                      className="flex cursor-pointer items-center gap-3 rounded-lg px-1 py-2 text-sm text-[#4E5A68] transition hover:bg-[#F1F8FC]"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={draft.board.includes(c)}
+                        onChange={() => toggleMulti("board", c)}
+                        className="h-4 w-4 rounded accent-[#0795DC]"
+                      />
+                      <span className="flex-1 text-xs sm:text-sm">{BOARD_LABEL[c] || c}</span>
+                    </label>
+                  ))}
                 </FilterGroup>
+
                 <FilterGroup title="Gender">
-                  {GENDERS.map((c) => <Radio key={c} label={c} checked={draft.gender[0] === c} onPick={() => pick("gender", c)} />)}
+                  {GENDERS.map((c) => (
+                    <Radio
+                      key={c}
+                      label={c}
+                      checked={draft.gender[0] === c}
+                      onPick={() => pick("gender", c)}
+                    />
+                  ))}
                 </FilterGroup>
               </div>
 
-              <div className="border-t border-[#E1E7EE] p-3">
-                <button
-                  type="button"
-                  onClick={apply}
-                  className="w-full rounded-lg bg-gradient-to-r from-[#0A5C91] to-[#0795DC] py-2.5 text-xs sm:text-sm font-extrabold text-white shadow-md shadow-[#0A5C91]/20 transition hover:-translate-y-0.5 vv-btn"
-                >
-                  Apply filters
-                </button>
+              {/* Sticky Bottom Bar with Apply button (Sticky and always visible on mobile, above bottom bar) */}
+              <div className="sticky bottom-0 z-20 border-t border-[#E1E7EE] bg-white p-3.5 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(11,42,71,0.08)]">
+                <div className="flex items-center gap-2.5">
+                  <button
+                    type="button"
+                    onClick={apply}
+                    className="flex-1 rounded-xl bg-gradient-to-r from-[#0A5C91] to-[#0795DC] py-3 text-sm font-extrabold text-white shadow-md shadow-[#0A5C91]/25 transition hover:brightness-105 active:scale-[0.99] vv-btn"
+                  >
+                    Apply Filters
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowFilters(false)}
+                    className="rounded-xl border border-[#D6DDE5] bg-[#F8FAFC] px-4 py-3 text-sm font-bold text-[#4E5A68] hover:bg-[#EEF3F8] transition lg:hidden"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -768,7 +959,14 @@ export default function SchoolListing({ schools, initial, showReviews = true }: 
       {showReviews && place && (
         <LocationReviews
           place={place}
-          schools={schools.filter((x) => (applied.city[0] ? x.city === applied.city[0] : stateFor(x) === applied.state[0]))}
+          type={typeName}
+          schools={schools.filter((x) =>
+            applied.city.length
+              ? applied.city.includes(x.city)
+              : applied.state.length
+              ? applied.state.includes(stateFor(x))
+              : true
+          )}
         />
       )}
 

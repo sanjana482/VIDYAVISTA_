@@ -1,4 +1,4 @@
-﻿// /day-schools/pune, /boarding-schools/maharashtra, /play-schools/mumbai
+// /day-schools/pune, /boarding-schools/maharashtra, /play-schools/mumbai
 // One shared server page. Google sees: title, heading, description, highlights, school names, reviews, FAQs.
 // Visitors get the interactive filter list on the same URL (filters change in place, no new page).
 import type { Metadata } from "next";
@@ -187,7 +187,7 @@ export default async function TypePlacePage({ typeKey, slug }: { typeKey: TypeKe
         </ol>
       </section>
 
-      <LocationReviews place={P} schools={list} />
+      <LocationReviews place={P} type={typeKey} schools={list} />
 
       {faqs.length > 0 && (
         <section className="mx-auto max-w-4xl px-5 pb-12 lg:px-8">
